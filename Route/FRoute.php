@@ -74,9 +74,24 @@ class FRoute implements IRoute
 
                 $this->client_data->controller_name = $route[0];
                 $this->client_data->method_name = $route[1];
-                $this->client_data->middleware = getInstance()->dispatchMiddleware($info[1]);
+                $this->client_data->handler = $info[1];
+                $this->client_data->params = $info[2];
                 break;
         }
+    }
+
+    public function getHandler()
+    {
+        return $this->client_data->handler;
+    }
+
+
+
+
+
+    public function getMiddlewareMethodName()
+    {
+        return $this->client_data->middleware_method_name;
     }
 
     /**

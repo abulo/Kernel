@@ -220,9 +220,9 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
         if ($this->config->get('consul.enable', false)) {
             ProcessManager::getInstance()->addProcess(ConsulProcess::class, false);
         }
-        if ($this->config->get('backstage.enable', false)) {
-            ProcessManager::getInstance()->addProcess(BackstageProcess::class, false);
-        }
+        // if ($this->config->get('backstage.enable', false)) {
+        //     ProcessManager::getInstance()->addProcess(BackstageProcess::class, false);
+        // }
         //Cluster进程
         ProcessManager::getInstance()->addProcess(ClusterProcess::class);
         //CatCache进程

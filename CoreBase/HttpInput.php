@@ -29,6 +29,17 @@ class HttpInput
         $this->session = new Session($this->request->cookie['client_id']);
     }
 
+    public function getRoute()
+    {
+        return $this->request->route;
+    }
+
+    public function getRouteName()
+    {
+        $route = $this->getRoute();
+        return getInstance()->nameMapRoute[$route];
+    }
+
     /**
      * 重置
      */

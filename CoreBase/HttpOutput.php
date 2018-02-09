@@ -133,6 +133,7 @@ class HttpOutput
         return;
     }
 
+
     /**
      * 设置HTTP响应的cookie信息。此方法参数与PHP的setcookie完全一致。
      * @param string $key

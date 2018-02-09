@@ -28,8 +28,9 @@ abstract class SwooleHttpServer extends SwooleServer
 
     public $router = null;
     public $routes = [];
-    public $routeAlias = [];
-    public $middleware = [];
+    public $routeMapName= [];
+    public $nameMapRoute= [];
+    // public $middleware = [];
 
 
 
@@ -47,7 +48,7 @@ abstract class SwooleHttpServer extends SwooleServer
     {
         $this->router = $this->createRouter();
         $this->registerRoutes();
-        $this->registerMiddleware();
+        // $this->registerMiddleware();
     }
 
 
@@ -96,14 +97,14 @@ abstract class SwooleHttpServer extends SwooleServer
      * Middleware.php
      * @return Middleware
      */
-    protected function registerMiddleware()
-    {
-        $files = glob(MIDDLEWARE_PATH.DS."*.middleware.php");
-        foreach ($files as $file) {
-            $middleware = is_file($file) ? include_once $file : array();
-            $this->middleware = array_merge($this->middleware, $middleware);
-        }
-    }
+    // protected function registerMiddleware()
+    // {
+    //     $files = glob(MIDDLEWARE_PATH.DS."*.middleware.php");
+    //     foreach ($files as $file) {
+    //         $middleware = is_file($file) ? include_once $file : array();
+    //         $this->middleware = array_merge($this->middleware, $middleware);
+    //     }
+    // }
 
 
 
@@ -112,13 +113,13 @@ abstract class SwooleHttpServer extends SwooleServer
      * @param  string $router
      * @return middleware or bool
      */
-    public function dispatchMiddleware($router)
-    {
-        if (!isset($this->middleware[$router])) {
-            return false;
-        }
-        return $this->middleware[$router];
-    }
+    // public function dispatchMiddleware($router)
+    // {
+    //     if (!isset($this->middleware[$router])) {
+    //         return false;
+    //     }
+    //     return $this->middleware[$router];
+    // }
 
 
 
@@ -157,7 +158,8 @@ abstract class SwooleHttpServer extends SwooleServer
     protected function route($method, $route, $handler, $routeAlias)
     {
         $this->router->addRoute($method, $route, $handler);
-        $this->routeAlias[$routeAlias] = $route;
+        $this->routeMapName[$routeAlias] = $handler;
+        $this->nameMapRoute[$handler] = $routeAlias;
         return $this;
     }
     /**
@@ -172,7 +174,8 @@ abstract class SwooleHttpServer extends SwooleServer
         $this->router->addGroup($group, function (FastRoute\RouteCollector $router) use ($group, $routes) {
             foreach ($routes as list($method, $route, $handler,$routeAlias)) {
                 $router->addRoute($method, $route, $handler);
-                $this->routeAlias[$routeAlias] = $group.$route;
+                $this->routeMapName[$routeAlias] = $handler;
+                $this->nameMapRoute[$handler] = $routeAlias;
             }
         });
         return $this;
@@ -262,16 +265,21 @@ abstract class SwooleHttpServer extends SwooleServer
                 $route = $this->portManager->getRoute($server_port);
                 try {
                     $route->handleClientRequest($request);
+
+
                     $controller_name = $route->getControllerName();
                     $method_name = $this->portManager->getMethodPrefix($server_port) . $route->getMethodName();
                     $path = $route->getPath();
                     $controller_instance = ControllerFactory::getInstance()->getController($controller_name);
+
                     if ($controller_instance != null) {
                         $controller_instance->setContext($context);
                         if ($route->getMethodName() == ConsulHelp::HEALTH) {//健康检查
                             $response->end('ok');
                             $controller_instance->destroy();
                         } else {
+                            $cHandler = $route->getHandler();
+                            $request->route = $cHandler;
                             yield $controller_instance->setRequestResponse($request, $response, $controller_name, $method_name, $route->getParams());
                         }
                     } else {
