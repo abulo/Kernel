@@ -29,6 +29,7 @@ abstract class SwooleHttpServer extends SwooleServer
     public $router = null;
     public $routes = [];
     public $routeMapName= [];
+    public $routeMapUrl= [];
     public $nameMapRoute= [];
     // public $middleware = [];
 
@@ -159,6 +160,7 @@ abstract class SwooleHttpServer extends SwooleServer
     {
         $this->router->addRoute($method, $route, $handler);
         $this->routeMapName[$routeAlias] = $handler;
+        $this->routeMapUrl[$routeAlias] = $route;
         $this->nameMapRoute[$handler] = $routeAlias;
         return $this;
     }
@@ -176,6 +178,7 @@ abstract class SwooleHttpServer extends SwooleServer
                 $router->addRoute($method, $route, $handler);
                 $this->routeMapName[$routeAlias] = $handler;
                 $this->nameMapRoute[$handler] = $routeAlias;
+                $this->routeMapUrl[$routeAlias] = $group.$route;
             }
         });
         return $this;
