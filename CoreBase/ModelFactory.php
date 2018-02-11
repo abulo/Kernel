@@ -61,24 +61,6 @@ class ModelFactory
             $this->addNewCount($old_model);
             return $model_instance;
         }
-
-        $class_name = "app\\Models\\$model";
-
-        if (class_exists($class_name)) {
-            $model_instance = new $class_name;
-            $model_instance->core_name = $old_model;
-            $this->addNewCount($old_model);
-        } else {
-            $class_name = "Kernel\\Models\\$model";
-            if (class_exists($class_name)) {
-                $model_instance = new $class_name;
-                $model_instance->core_name = $old_model;
-                $this->addNewCount($old_model);
-            } else {
-                throw new SwooleException("class $model is not exist");
-            }
-        }
-        return $model_instance;
     }
 
     /**
