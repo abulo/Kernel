@@ -90,4 +90,9 @@ class Loader implements ILoader
         $template = getInstance()->templateEngine->make($template);
         return $template;
     }
+
+    public function tpl($template)
+    {
+        return $this->view(TPL_PATH.DS.$template);
+    }
 }

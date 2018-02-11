@@ -101,6 +101,14 @@ class HttpOutput
         return $this;
     }
 
+
+    public function html($output = '', $gzip = true, $destroy = true)
+    {
+        $this->setHeader('Content-Type', 'text/html; charset=UTF-8');
+        $this->end($output, $gzip, $destroy);
+        return;
+    }
+
     /**
      * 发送
      * @param string $output
