@@ -39,8 +39,6 @@ abstract class SwooleHttpServer extends SwooleServer
     public function __construct()
     {
         parent::__construct();
-
-        $this->initializeRoute();
     }
 
 
@@ -233,6 +231,7 @@ abstract class SwooleHttpServer extends SwooleServer
     public function onSwooleWorkerStart($serv, $workerId)
     {
         parent::onSwooleWorkerStart($serv, $workerId);
+        $this->initializeRoute();
         $this->setTemplateEngine();
         $template = $this->loader->view(KERNEL_PATH.DS.'Views'.DS.'error_404');
         $this->cache404 = $template->render();
@@ -255,11 +254,6 @@ abstract class SwooleHttpServer extends SwooleServer
     {
         //规整 URL 数据
         $request = $this->beforeSwooleHttpRequest($request);
-
-        if ('/favicon.ico'==$request->server['request_uri']) {
-            $response->end();
-            return ;
-        }
         $server_port = $this->getServerPort($request->fd);
         Coroutine::startCoroutine(function () use ($request, $response, $server_port) {
             $middleware_names = $this->portManager->getMiddlewares($server_port);

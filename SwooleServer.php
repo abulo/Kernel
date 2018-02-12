@@ -356,6 +356,7 @@ abstract class SwooleServer extends ProcessRPC
         }
         // 重新加载配置
         $this->config = $this->config->load(getConfigDir());
+        $this->container = new Container;
         // $this->container = new Container;
         if (!$serv->taskworker) {//worker进程
             if ($this->needCoroutine) {//启动协程调度器
