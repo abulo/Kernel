@@ -87,4 +87,12 @@ class MysqlSyncHelp implements ArrayAccess
     {
         return $this->elements['insert_id'];
     }
+
+	/**
+     * @return mixed
+     */
+	public function affected_rows()
+	{
+		return $this->elements['affected_rows'];
+	}
 }

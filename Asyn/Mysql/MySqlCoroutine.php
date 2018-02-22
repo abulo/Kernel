@@ -162,4 +162,16 @@ class MySqlCoroutine extends CoroutineBase
         };
         return $this;
     }
+
+
+	/**
+     * @return $this
+     */
+    public function affected_rows()
+    {
+        $this->resultHandle = function ($result) {
+            return $result['affected_rows'];
+        };
+        return $this;
+    }
 }
