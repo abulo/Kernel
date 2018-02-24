@@ -10,9 +10,9 @@ class Paginator
     protected $itemsPerPage;
     protected $currentPage;
     protected $urlPattern;
-    protected $maxPagesToShow = 10;
-    protected $previousText = '上一页';
-    protected $nextText = '下一页';
+    protected $maxPagesToShow = 9;
+    // protected $previousText = '上一页';
+    // protected $nextText = '下一页';
     /**
      * @param int $totalItems
      * @param int $itemsPerPage
@@ -246,7 +246,7 @@ class Paginator
         }
         $html = '<div class="layui-box layui-laypage layui-laypage-default">';
         if ($this->getPrevUrl()) {
-            $html .= '<a class="layui-laypage-prev" href="' . $this->getPrevUrl() . '">'. $this->previousText .'</a>';
+            // $html .= '<a class="layui-laypage-prev" href="' . $this->getPrevUrl() . '">'. $this->previousText .'</a>';
         }
         foreach ($this->getPages() as $page) {
             if ($page['url']) {
@@ -260,7 +260,7 @@ class Paginator
             }
         }
         if ($this->getNextUrl()) {
-            $html .= '<a  class ="layui-laypage-next" href="' . $this->getNextUrl() . '">'. $this->nextText .'</a>';
+            // $html .= '<a  class ="layui-laypage-next" href="' . $this->getNextUrl() . '">'. $this->nextText .'</a>';
         }
         $html .= '</div>';
         return $html;
