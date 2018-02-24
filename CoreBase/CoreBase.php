@@ -85,7 +85,11 @@ class CoreBase extends Child
     {
         return getInstance()->getRedisPool($name);
     }
-
+	/**
+	 * 获取 mysql pool
+	 * @param   $name
+	 * @return
+	 */
     public function getMysqlPool($name)
     {
         return getInstance()->getMysqlPool($name);
@@ -93,15 +97,19 @@ class CoreBase extends Child
 
     /**
      * 获取一个代理链接
-     * @param  [type] $name [description]
-     * @return [type]       [description]
+     * @param
+     * @return mysql
      */
     public function getMysqlProxy($name)
     {
         return getInstance()->getMysqlProxy($name);
     }
 
-
+	/**
+	 * 获取 redis 代理
+	 * @param    $name
+	 * @return
+	 */
     public function getRedisProxy($name)
     {
         return getInstance()->getRedisProxy($name);
