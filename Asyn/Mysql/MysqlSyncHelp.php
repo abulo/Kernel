@@ -72,6 +72,15 @@ class MysqlSyncHelp implements ArrayAccess
         return $this->elements['result'][0] ?? null;
     }
 
+
+	/**
+     * @return null
+     */
+    public function val($k)
+    {
+        return $this->elements['result'][0][$k] ?? null;
+    }
+
     /**
      * @return int
      */

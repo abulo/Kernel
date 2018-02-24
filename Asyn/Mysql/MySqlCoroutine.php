@@ -140,6 +140,20 @@ class MySqlCoroutine extends CoroutineBase
         return $this;
     }
 
+
+	/**
+     * 返回某一个
+     * @param $index
+     * @return $this
+     */
+    public function val($k)
+    {
+        $this->resultHandle = function ($result) use ($k) {
+            return $result['result'][0][$k] ?? null;
+        };
+        return $this;
+    }
+
     /**
      * 返回数量
      * @return $this
