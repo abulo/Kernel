@@ -132,13 +132,17 @@ abstract class SwooleHttpServer extends SwooleServer
         $files = glob(ROUTE_PATH.DS."*.route.php");
         foreach ($files as $file) {
             $routes = is_file($file) ? include_once $file : array();
-            $this->routes = array_merge($this->routes, $routes);
+            if (is_array($routes)) {
+                $this->routes = array_merge($this->routes, $routes);
+            }
         }
-        foreach ($this->routes as $value) {
-            if (!is_array($value[0]) && is_array($value[1])) {
-                $this->group($value[0], $value[1]);
-            } else {
-                $this->route($value[0], $value[1], $value[2], $value[3]);
+        if (is_array($this->routes)) {
+            foreach ($this->routes as $value) {
+                if (!is_array($value[0]) && is_array($value[1])) {
+                    $this->group($value[0], $value[1]);
+                } else {
+                    $this->route($value[0], $value[1], $value[2], $value[3]);
+                }
             }
         }
     }
