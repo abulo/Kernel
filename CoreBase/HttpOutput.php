@@ -109,6 +109,15 @@ class HttpOutput
         return;
     }
 
+
+
+	public function json($output = '', $gzip = true, $destroy = true)
+    {
+        $this->setHeader('Content-Type', 'application/json; charset=UTF-8');
+        $this->end($output, $gzip, $destroy);
+        return;
+    }
+
     /**
      * 发送
      * @param string $output
