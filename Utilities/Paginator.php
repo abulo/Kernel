@@ -244,19 +244,19 @@ class Paginator
         if ($this->numPages <= 1) {
             return '';
         }
-        $html = '<div class="layui-box layui-laypage layui-laypage-default">';
+        $html = '<div class="layui-box layui-laypage layui-laypage-default" style="margin:0px;">';
         if ($this->getPrevUrl()) {
             // $html .= '<a class="layui-laypage-prev" href="' . $this->getPrevUrl() . '">'. $this->previousText .'</a>';
         }
         foreach ($this->getPages() as $page) {
             if ($page['url']) {
                 if ($page['isCurrent']) {
-                    $html .= '<span class="layui-laypage-curr"><em class="layui-laypage-em"></em><em>'.$page['num'].'</em></span>';
+                    $html .= '<span class="layui-laypage-curr" ><em class="layui-laypage-em"></em><em>'.$page['num'].'</em></span>';
                 } else {
                     $html .= '<a href="'.$page['url'].'">'.$page['num'].'</a>';
                 }
             } else {
-                $html .= '<span>' . $page['num'] . '</span>';
+                $html .= '<span  style="margin:0px;">' . $page['num'] . '</span>';
             }
         }
         if ($this->getNextUrl()) {
