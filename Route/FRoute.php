@@ -76,6 +76,13 @@ class FRoute implements IRoute
                 $this->client_data->method_name = $route[1];
                 $this->client_data->handler = $info[1];
                 $this->client_data->params = $info[2];
+                $this->client_data->middleware = null;
+                $middleware = getInstance()->middlewareMap[$info[1]] ?? null;
+                if ($middleware) {
+                    $m = getInstance()->middleware[$middleware] ?? null;
+                    $this->client_data->middleware = $m;
+                }
+
                 break;
         }
     }
@@ -89,19 +96,43 @@ class FRoute implements IRoute
 
 
 
-    public function getMiddlewareMethodName()
+    public function getMiddleware()
     {
-        return $this->client_data->middleware_method_name;
+        return $this->client_data->middleware ?? null;
     }
 
+    public function getMiddlewareControllerName()
+    {
+        if ($this->client_data->middleware) {
+            $result = explode('@', $this->client_data->middleware);
+            return $result[0];
+        } else {
+            return null;
+        }
+    }
+
+    public function getMiddlewareMethodName()
+    {
+        if ($this->client_data->middleware) {
+            $result = explode('@', $this->client_data->middleware);
+            return $result[1];
+        } else {
+            return null;
+        }
+    }
+
+
     /**
-     * 获取控制器名称
-     * @return string
-     */
+    * 获取控制器名称
+    * @return string
+    */
     public function getControllerName()
     {
         return $this->client_data->controller_name;
     }
+
+
+
 
     /**
      * 获取方法名称

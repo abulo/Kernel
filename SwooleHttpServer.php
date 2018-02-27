@@ -31,7 +31,8 @@ abstract class SwooleHttpServer extends SwooleServer
     public $routeMapName= [];
     public $routeMapUrl= [];
     public $nameMapRoute= [];
-    // public $middleware = [];
+    public $middleware = [];
+    public $middlewareMap = [];
 
 
 
@@ -47,7 +48,7 @@ abstract class SwooleHttpServer extends SwooleServer
     {
         $this->router = $this->createRouter();
         $this->registerRoutes();
-        // $this->registerMiddleware();
+        $this->registerMiddleware();
     }
 
 
@@ -96,14 +97,16 @@ abstract class SwooleHttpServer extends SwooleServer
      * Middleware.php
      * @return Middleware
      */
-    // protected function registerMiddleware()
-    // {
-    //     $files = glob(MIDDLEWARE_PATH.DS."*.middleware.php");
-    //     foreach ($files as $file) {
-    //         $middleware = is_file($file) ? include_once $file : array();
-    //         $this->middleware = array_merge($this->middleware, $middleware);
-    //     }
-    // }
+    protected function registerMiddleware()
+    {
+        $files = glob(MIDDLEWARE_PATH.DS."*.middleware.php");
+        foreach ($files as $file) {
+            $middleware = is_file($file) ? include_once $file : array();
+            if (is_array($middleware)) {
+                $this->middleware = array_merge($this->middleware, $middleware);
+            }
+        }
+    }
 
 
 
@@ -140,8 +143,10 @@ abstract class SwooleHttpServer extends SwooleServer
             foreach ($this->routes as $value) {
                 if (!is_array($value[0]) && is_array($value[1])) {
                     $this->group($value[0], $value[1]);
+                    $this->group($value);
                 } else {
-                    $this->route($value[0], $value[1], $value[2], $value[3]);
+                    // $this->route($value[0], $value[1], $value[2], $value[3]);
+                    $this->route($value);
                 }
             }
         }
@@ -158,12 +163,27 @@ abstract class SwooleHttpServer extends SwooleServer
      * @param  string $handler
      * @return
      */
-    protected function route($method, $route, $handler, $routeAlias)
+     // protected function route($method, $route, $handler, $routeAlias)
+    protected function route($val)
     {
+
+        if (isset($val[4])) {
+            @list($method, $route, $handler, $routeAlias,$middleware) = $val;
+        } else {
+            @list($method, $route, $handler, $routeAlias) = $val;
+            $middleware = null;
+        }
+
+
+
         $this->router->addRoute($method, $route, $handler);
         $this->routeMapName[$routeAlias] = $handler;
         $this->routeMapUrl[$routeAlias] = $route;
         $this->nameMapRoute[$handler] = $routeAlias;
+        //如果 middleware 不为空
+        if ($middleware) {
+            $this->middlewareMap[$handler] = $middleware;
+        }
         return $this;
     }
     /**
@@ -173,14 +193,40 @@ abstract class SwooleHttpServer extends SwooleServer
      * @param  string $handler
      * @return
      */
-    protected function group($group, $routes)
+     // protected function group($group, $routes)
+    protected function group($g)
     {
-        $this->router->addGroup($group, function (FastRoute\RouteCollector $router) use ($group, $routes) {
-            foreach ($routes as list($method, $route, $handler,$routeAlias)) {
-                $router->addRoute($method, $route, $handler);
-                $this->routeMapName[$routeAlias] = $handler;
-                $this->nameMapRoute[$handler] = $routeAlias;
-                $this->routeMapUrl[$routeAlias] = $group.$route;
+        if (isset($g[2])) {
+            @list($group, $routes ,$middleware) = $g;
+        } else {
+            @list($group, $routes ) = $g;
+            $middleware = null;
+        }
+
+        $this->router->addGroup($group, function (FastRoute\RouteCollector $router) use ($group, $routes, $middleware) {
+            if (is_array($routes)) {
+                foreach ($routes as $item) {
+                    if (isset($item[4])) {
+                        @list($method, $route, $handler,$routeAlias,$r_middleware) = $item;
+                    } else {
+                        @list($method, $route, $handler,$routeAlias) = $item;
+                        $r_middleware = null;
+                    }
+
+
+                    $router->addRoute($method, $route, $handler);
+                    $this->routeMapName[$routeAlias] = $handler;
+                    $this->nameMapRoute[$handler] = $routeAlias;
+                    $this->routeMapUrl[$routeAlias] = $group.$route;
+
+                    if ($middleware) {
+                        $this->middlewareMap[$handler] = $middleware;
+                    }
+
+                    if ($r_middleware) {
+                        $this->middlewareMap[$handler] = $r_middleware;
+                    }
+                }
             }
         });
         return $this;
@@ -272,10 +318,35 @@ abstract class SwooleHttpServer extends SwooleServer
                 try {
                     $route->handleClientRequest($request);
 
+                    $cHandler = $route->getHandler();
+                    $path = $route->getPath();
+                    $middleware_route = $route->getMiddleware();
+
+
+                    //路由上的中间件
+                    if ($middleware_route) {
+                        $middleware_controller_name = $route->getMiddlewareControllerName();
+                        $middleware_method_name = $this->portManager->getMethodPrefix($server_port) . $route->getMiddlewareMethodName();
+
+                        $middleware_controller_instance = ControllerFactory::getInstance()->getController($middleware_method_name);
+                        if ($middleware_controller_instance != null) {
+                            $request->route = $cHandler;
+                            $middleware_result = yield $middleware_controller_instance->setRequestResponse($request, $response, $middleware_controller_name, $middleware_method_name, []);
+                            if ($middleware_result!=null) {
+                                $response->status($middleware_result['status']);
+                                $response->header($middleware_result['header'][0], $middleware_result['header'][1]);
+                                $response->end($middleware_result['content']);
+                                $middleware_controller_instance->destroy();
+                                return ;
+                            }
+                        } else {
+                            throw new \Exception('no controller');
+                        }
+                    }
 
                     $controller_name = $route->getControllerName();
                     $method_name = $this->portManager->getMethodPrefix($server_port) . $route->getMethodName();
-                    $path = $route->getPath();
+
                     $controller_instance = ControllerFactory::getInstance()->getController($controller_name);
 
                     if ($controller_instance != null) {
@@ -284,7 +355,6 @@ abstract class SwooleHttpServer extends SwooleServer
                             $response->end('ok');
                             $controller_instance->destroy();
                         } else {
-                            $cHandler = $route->getHandler();
                             $request->route = $cHandler;
                             yield $controller_instance->setRequestResponse($request, $response, $controller_name, $method_name, $route->getParams());
                         }

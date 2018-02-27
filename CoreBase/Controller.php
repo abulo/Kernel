@@ -137,7 +137,7 @@ class Controller extends CoreBase
         $this->isRPC = empty($this->rpc_request_id) ? false : true;
         $this->request_type = SwooleMarco::HTTP_REQUEST;
         $this->fd = $request->fd;
-        yield $this->execute($controller_name, $method_name, $params);
+        return yield $this->execute($controller_name, $method_name, $params);
     }
 
     /**
@@ -155,9 +155,9 @@ class Controller extends CoreBase
         try {
             yield $this->initialization($controller_name, $method_name);
             if ($params == null) {
-                yield call_user_func([$this->getProxy(), $method_name]);
+                return yield call_user_func([$this->getProxy(), $method_name]);
             } else {
-                yield call_user_func_array([$this->getProxy(), $method_name], $params);
+                return yield call_user_func_array([$this->getProxy(), $method_name], $params);
             }
         } catch (\Exception $e) {
             yield $this->getProxy()->onExceptionHandle($e);

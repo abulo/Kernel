@@ -117,6 +117,43 @@ class HttpOutput
         $this->end($output, $gzip, $destroy);
         return;
     }
+	/**
+	 * 中间件
+	 * @param  string $output
+	 * @return
+	 */
+	public function middleware_end_json($output = null,$code=200)
+    {
+		if(null == $output)
+		{
+			return $output;
+		}
+		$response = [
+			'status' => $code,
+			'header' => ['Content-Type','application/json; charset=UTF-8'],
+			'content'=> $output,
+		];
+		return $response;
+	}
+
+	/**
+	 * 中间件
+	 * @param  string $output
+	 * @return
+	 */
+	public function middleware_end_html($output = null,$code=200)
+	{
+		if(null == $output)
+		{
+			return $output;
+		}
+		$response = [
+			'status' => $code,
+			'header' => ['Content-Type','text/html; charset=UTF-8'],
+			'content'=> $output,
+		];
+		return $response;
+	}
 
     /**
      * 发送
