@@ -69,7 +69,8 @@ class HttpInput
      */
     public function post($index, $default = null)
     {
-        return $this->request->post[$index]??$default;
+		return XssClean::getXssClean()->xss_clean($this->request->post[$index]??$default);
+        // return $this->request->post[$index]??$default;
     }
 
     /**
@@ -80,7 +81,8 @@ class HttpInput
      */
     public function get($index, $default = null)
     {
-        return $this->request->get[$index]??$default;
+		return XssClean::getXssClean()->xss_clean($this->request->get[$index]??$default);
+        // return $this->request->get[$index]??$default;
     }
 
     /**
@@ -101,7 +103,15 @@ class HttpInput
      */
     public function getAllPost()
     {
-        return $this->request->post ?? [];
+		$result = [];
+		if(is_array($this->request->post))
+		{
+			foreach($this->request->post as $item => $val)
+			{
+				$result[$item] = XssClean::getXssClean()->xss_clean($val);
+			}
+		}
+        return $result;
     }
 
     /**
@@ -109,14 +119,25 @@ class HttpInput
      */
     public function getAllGet()
     {
-        return $this->request->get ?? [];
+		$result = [];
+
+		if(is_array($this->request->get))
+		{
+			foreach($this->request->get as $item => $val)
+			{
+				$result[$item] = XssClean::getXssClean()->xss_clean($val);
+			}
+		}
+        return $result;
+
+        // return $this->request->get ?? [];
     }
     /**
      * 获取所有的post和get
      */
     public function getAllPostGet()
     {
-        return array_merge($this->request->post ?? [], $this->request->get ?? []);
+        return array_merge($this->getAllPost() ?? [], $this->getAllGet() ?? []);
     }
 
     /**
@@ -126,7 +147,8 @@ class HttpInput
      */
     public function header($index, $default = null)
     {
-        return $this->request->header[$index]??$default;
+        //return $this->request->header[$index]??$default;
+		return XssClean::getXssClean()->xss_clean($this->request->header[$index]??$default);
     }
 
     /**
