@@ -131,7 +131,7 @@ class HttpOutput
 		$response = [
 			'status' => $code,
 			'header' => ['Content-Type','application/json; charset=UTF-8'],
-			'content'=> $output,
+			'content'=> json_encode($output),
 		];
 		return $response;
 	}
