@@ -114,7 +114,7 @@ class HttpOutput
 	public function json($output = '', $gzip = true, $destroy = true)
     {
         $this->setHeader('Content-Type', 'application/json; charset=UTF-8');
-        $this->end($output, $gzip, $destroy);
+        $this->end(json_encode($output), $gzip, $destroy);
         return;
     }
 	/**
