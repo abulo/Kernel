@@ -321,14 +321,12 @@ abstract class SwooleHttpServer extends SwooleServer
                     $cHandler = $route->getHandler();
                     $path = $route->getPath();
                     $middleware_route = $route->getMiddleware();
-
-
                     //路由上的中间件
                     if ($middleware_route) {
                         $middleware_controller_name = $route->getMiddlewareControllerName();
                         $middleware_method_name = $this->portManager->getMethodPrefix($server_port) . $route->getMiddlewareMethodName();
-
-                        $middleware_controller_instance = ControllerFactory::getInstance()->getController($middleware_method_name);
+						//
+                        $middleware_controller_instance = ControllerFactory::getInstance()->getController($middleware_controller_name);
                         if ($middleware_controller_instance != null) {
                             $request->route = $cHandler;
                             $middleware_result = yield $middleware_controller_instance->setRequestResponse($request, $response, $middleware_controller_name, $middleware_method_name, []);
