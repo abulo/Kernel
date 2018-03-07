@@ -28,7 +28,7 @@ class NormalHttpMiddleware extends HttpMiddleware
         list($host) = explode(':', $this->request->header['host'] ?? '');
         $path = $this->request->server['request_uri'];
         if ($path == '/404') {
-            $this->response->status(400);
+            $this->response->status(404);
             $this->response->header('HTTP/1.1', '404 Not Found');
             $this->response->end(NormalHttpMiddleware::$cache404);
             $this->interrupt();
@@ -38,7 +38,11 @@ class NormalHttpMiddleware extends HttpMiddleware
             $www_path = $this->getHostRoot($host) . $this->getHostIndex($host);
             $result = httpEndFile($www_path, $this->request, $this->response);
             if (!$result) {
-                $this->redirect404();
+				$this->response->status(404);
+	            $this->response->header('HTTP/1.1', '404 Not Found');
+	            $this->response->end(NormalHttpMiddleware::$cache404);
+	            $this->interrupt();
+                // $this->redirect404();
             } else {
                 $this->interrupt();
             }
@@ -46,7 +50,11 @@ class NormalHttpMiddleware extends HttpMiddleware
             $www_path = $this->getHostRoot($host) . $path;
             $result = httpEndFile($www_path, $this->request, $this->response);
             if (!$result) {
-                $this->redirect404();
+				$this->response->status(404);
+	            $this->response->header('HTTP/1.1', '404 Not Found');
+	            $this->response->end(NormalHttpMiddleware::$cache404);
+	            $this->interrupt();
+                // $this->redirect404();
             } else {
                 $this->interrupt();
             }
