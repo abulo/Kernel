@@ -27,6 +27,7 @@ use Kernel\CoreBase\SwooleException;
 use Kernel\Coroutine\Coroutine;
 use Kernel\Memory\Pool;
 use Kernel\Test\TestModule;
+use Kernel\Asyn\HttpClient\HttpClientPool;
 
 /**
  * Created by PhpStorm.
@@ -666,6 +667,12 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                 $asynPools[MysqlAsynPool::AsynName . $poolKey] = new MysqlAsynPool($this->config, $poolKey);
             }
         }
+
+		if ($this->config->get('http_clinet', false)) {
+			foreach ($this->config->get('http_clinet') as $poolKey => $url) {
+                $asynPools[$poolKey] = new HttpClientPool($this->config, $url);
+            }
+		}
 
 
         $this->asynPools = $asynPools;
