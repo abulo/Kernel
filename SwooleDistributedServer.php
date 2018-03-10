@@ -668,8 +668,8 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
             }
         }
 
-		if ($this->config->get('http_clinet', false)) {
-			foreach ($this->config->get('http_clinet') as $poolKey => $url) {
+		if ($this->config->get('http_client', false)) {
+			foreach ($this->config->get('http_client') as $poolKey => $url) {
                 $asynPools[$poolKey] = new HttpClientPool($this->config, $url);
             }
 		}
