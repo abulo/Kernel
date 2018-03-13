@@ -33,6 +33,7 @@ return [
         dirname(__DIR__).DS.'Library'.DS.'mongodb'.DS.'mongo-php-library'.DS.'src'.DS.'functions.php',
         dirname(__DIR__).DS.'Library'.DS.'reactphp'.DS.'promise'.DS.'src'.DS.'functions_include.php',
 		dirname(__DIR__).DS.'Library'.DS.'guzzle'.DS.'psr7'.DS.'src'.DS.'functions_include.php',
+		dirname(__DIR__).DS.'Library'.DS.'aliyun-php-sdk'.DS.'aliyun-php-sdk-core'.DS.'Config.php',
         dirname(__DIR__).DS.'Helpers'.DS.'Common.php',
     ],
 ];
