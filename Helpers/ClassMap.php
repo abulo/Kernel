@@ -23,13 +23,16 @@ return [
         'Elasticsearch'=>dirname(__DIR__).DS.'Library'.DS.'elastic'.DS.'elasticsearch-php'.DS.'src'.DS.'Elasticsearch',
         'PhpAmqpLib'=>dirname(__DIR__).DS.'Library'.DS.'php-amqplib'.DS.'php-amqplib'.DS.'PhpAmqpLib',
         'Ds'=>dirname(__DIR__).DS.'Library'.DS.'php-ds'.DS.'polyfill'.DS.'src',//'.DS.'//need ext-ds
-        // 'League\Plates'=>dirname(__DIR__).DS.'Library'.DS.'thephpleague'.DS.'plates'.DS.'src',
+		'GuzzleHttp\Psr7'=>dirname(__DIR__).DS.'Library'.DS.'guzzle'.DS.'psr7'.DS.'src',
+		'Intervention\Image'=>dirname(__DIR__).DS.'Library'.DS.'Intervention'.DS.'image'.DS.'src'.DS.'Intervention'.DS.'Image',
+		// 'League\Plates'=>dirname(__DIR__).DS.'Library'.DS.'thephpleague'.DS.'plates'.DS.'src',
         'Kernel'=>dirname(__DIR__),
     ],
     'files' => [
         dirname(__DIR__).DS.'Library'.DS.'nikic'.DS.'FastRoute'.DS.'src'.DS.'functions.php',
         dirname(__DIR__).DS.'Library'.DS.'mongodb'.DS.'mongo-php-library'.DS.'src'.DS.'functions.php',
         dirname(__DIR__).DS.'Library'.DS.'reactphp'.DS.'promise'.DS.'src'.DS.'functions_include.php',
+		dirname(__DIR__).DS.'Library'.DS.'guzzle'.DS.'psr7'.DS.'src'.DS.'functions_include.php',
         dirname(__DIR__).DS.'Helpers'.DS.'Common.php',
     ],
 ];
