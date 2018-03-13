@@ -55,3 +55,6 @@
 [submodule "Library/php-ds/polyfill"]
 	path = Library/php-ds/polyfill
 	url = https://github.com/php-ds/polyfill.git
+[submodule "Library/guzzle/psr7"]
+	path = Library/guzzle/psr7
+	url = https://github.com/guzzle/psr7.git
