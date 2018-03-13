@@ -1,6 +1,6 @@
 <?php
 
-namespace Kernel\Utilities\QrCode;
+namespace Kernel\Utilities\QRcode;
 
 class QRencode
 {
@@ -99,7 +99,7 @@ class QRencode
                 QRtools::log($outfile, $err);
             }
 
-            $maxSize = (int)(QR_PNG_MAXIMUM_SIZE / (count($tab)+2*$this->margin));
+            $maxSize = (int)(QRConst::QR_PNG_MAXIMUM_SIZE / (count($tab)+2*$this->margin));
 
             QRimage::png($tab, $outfile, min(max(1, $this->size), $maxSize), $this->margin, $saveandprint);
         } catch (Exception $e) {

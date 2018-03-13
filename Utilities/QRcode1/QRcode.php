@@ -1,6 +1,6 @@
 <?php
 
-namespace Kernel\Utilities\QrCode;
+namespace Kernel\Utilities\QRcode;
 
 class QRcode
 {
@@ -12,7 +12,7 @@ class QRcode
     //----------------------------------------------------------------------
     public function encodeMask(QRinput $input, $mask)
     {
-        if ($input->getVersion() < 0 || $input->getVersion() > QRSPEC_VERSION_MAX) {
+        if ($input->getVersion() < 0 || $input->getVersion() > QRConst::QRSPEC_VERSION_MAX) {
             throw new Exception('wrong version');
         }
         if ($input->getErrorCorrectionLevel() > QRConst::QR_ECLEVEL_H) {
@@ -61,10 +61,10 @@ class QRcode
         // masking
         $maskObj = new QRmask();
         if ($mask < 0) {
-            if (QR_FIND_BEST_MASK) {
+            if (QRConst::QR_FIND_BEST_MASK) {
                 $masked = $maskObj->mask($width, $frame, $input->getErrorCorrectionLevel());
             } else {
-                $masked = $maskObj->makeMask($width, $frame, (intval(QR_DEFAULT_MASK) % 8), $input->getErrorCorrectionLevel());
+                $masked = $maskObj->makeMask($width, $frame, (intval(QRConst::QR_DEFAULT_MASK) % 8), $input->getErrorCorrectionLevel());
             }
         } else {
             $masked = $maskObj->makeMask($width, $frame, $mask, $input->getErrorCorrectionLevel());

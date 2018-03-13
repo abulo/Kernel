@@ -1,6 +1,6 @@
 <?php
 
-namespace Kernel\Utilities\QrCode;
+namespace Kernel\Utilities\QRcode;
 
 class QRtools
 {
@@ -63,10 +63,10 @@ class QRtools
         QRtools::markTime('before_build_cache');
 
         $mask = new QRmask();
-        for ($a=1; $a <= QRSPEC_VERSION_MAX; $a++) {
+        for ($a=1; $a <= QRConst::QRSPEC_VERSION_MAX; $a++) {
             $frame = QRspec::newFrame($a);
-            if (QR_IMAGE) {
-                $fileName = QR_CACHE_DIR.'frame_'.$a.'.png';
+            if (QRConst::QR_IMAGE) {
+                $fileName = QRConst::QR_CACHE_DIR.'frame_'.$a.'.png';
                 QRimage::png(self::binarize($frame), $fileName, 1, 0);
             }
 
@@ -83,12 +83,12 @@ class QRtools
     //----------------------------------------------------------------------
     public static function log($outfile, $err)
     {
-        if (QR_LOG_DIR !== false) {
+        if (QRConst::QR_LOG_DIR !== false) {
             if ($err != '') {
                 if ($outfile !== false) {
-                    file_put_contents(QR_LOG_DIR.basename($outfile).'-errors.txt', date('Y-m-d H:i:s').': '.$err, FILE_APPEND);
+                    file_put_contents(QRConst::QR_LOG_DIR.basename($outfile).'-errors.txt', date('Y-m-d H:i:s').': '.$err, FILE_APPEND);
                 } else {
-                    file_put_contents(QR_LOG_DIR.'errors.txt', date('Y-m-d H:i:s').': '.$err, FILE_APPEND);
+                    file_put_contents(QRConst::QR_LOG_DIR.'errors.txt', date('Y-m-d H:i:s').': '.$err, FILE_APPEND);
                 }
             }
         }

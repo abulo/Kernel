@@ -1,6 +1,6 @@
 <?php
 
-namespace Kernel\Utilities\QrCode;
+namespace Kernel\Utilities\QRcode;
 
 class QRimage
 {

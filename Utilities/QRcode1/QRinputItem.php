@@ -1,6 +1,6 @@
 <?php
 
-namespace Kernel\Utilities\QrCode;
+namespace Kernel\Utilities\QRcode;
 
 class QRinputItem
 {
@@ -183,7 +183,7 @@ class QRinputItem
                 $bits = QRinput::estimateBitsModeKanji($this->size);
                 break;
             case QRConst::QR_MODE_STRUCTURE:
-                return STRUCTURE_HEADER_BITS;
+                return QRConst::STRUCTURE_HEADER_BITS;
             default:
                 return 0;
         }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Kernel\Utilities\QrCode;
+namespace Kernel\Utilities\QRcode;
 
 class QRmask
 {
@@ -10,7 +10,7 @@ class QRmask
     //----------------------------------------------------------------------
     public function __construct()
     {
-        $this->runLength = array_fill(0, QRSPEC_WIDTH_MAX + 1, 0);
+        $this->runLength = array_fill(0, QRConst::QRSPEC_WIDTH_MAX + 1, 0);
     }
 
     //----------------------------------------------------------------------
@@ -141,15 +141,15 @@ class QRmask
         $b = 0;
         $bitMask = array();
 
-        $fileName = QR_CACHE_DIR.'mask_'.$maskNo.DIRECTORY_SEPARATOR.'mask_'.$width.'_'.$maskNo.'.dat';
+        $fileName = QRConst::QR_CACHE_DIR.'mask_'.$maskNo.DIRECTORY_SEPARATOR.'mask_'.$width.'_'.$maskNo.'.dat';
 
-        if (QR_CACHEABLE) {
+        if (QRConst::QR_CACHEABLE) {
             if (file_exists($fileName)) {
                 $bitMask = self::unserial(file_get_contents($fileName));
             } else {
                 $bitMask = $this->generateMaskNo($maskNo, $width, $s, $d);
-                if (!file_exists(QR_CACHE_DIR.'mask_'.$maskNo)) {
-                    mkdir(QR_CACHE_DIR.'mask_'.$maskNo);
+                if (!file_exists(QRConst::QR_CACHE_DIR.'mask_'.$maskNo)) {
+                    mkdir(QRConst::QR_CACHE_DIR.'mask_'.$maskNo);
                 }
                 file_put_contents($fileName, self::serial($bitMask));
             }
@@ -192,7 +192,7 @@ class QRmask
 
         for ($i=0; $i<$length; $i++) {
             if ($this->runLength[$i] >= 5) {
-                $demerit += (N1 + ($this->runLength[$i] - 5));
+                $demerit += (QRConst::N1 + ($this->runLength[$i] - 5));
             }
             if ($i & 1) {
                 if (($i >= 3) && ($i < ($length-2)) && ($this->runLength[$i] % 3 == 0)) {
@@ -202,9 +202,9 @@ class QRmask
                        ($this->runLength[$i+1] == $fact) &&
                        ($this->runLength[$i+2] == $fact)) {
                         if (($this->runLength[$i-3] < 0) || ($this->runLength[$i-3] >= (4 * $fact))) {
-                            $demerit += N3;
+                            $demerit += QRConst::N3;
                         } elseif ((($i+3) >= $length) || ($this->runLength[$i+3] >= (4 * $fact))) {
-                            $demerit += N3;
+                            $demerit += QRConst::N3;
                         }
                     }
                 }
@@ -235,7 +235,7 @@ class QRmask
                     $w22 = ord($frameY[$x]) | ord($frameY[$x-1]) | ord($frameYM[$x]) | ord($frameYM[$x-1]);
 
                     if (($b22 | ($w22 ^ 1))&1) {
-                        $demerit += N2;
+                        $demerit += QRConst::N2;
                     }
                 }
                 if (($x == 0) && (ord($frameY[$x]) & 1)) {
@@ -290,8 +290,8 @@ class QRmask
 
         $checked_masks = array(0,1,2,3,4,5,6,7);
 
-        if (QR_FIND_FROM_RANDOM !== false) {
-            $howManuOut = 8-(QR_FIND_FROM_RANDOM % 9);
+        if (QRConst::QR_FIND_FROM_RANDOM !== false) {
+            $howManuOut = 8-(QRConst::QR_FIND_FROM_RANDOM % 9);
             for ($i = 0; $i <  $howManuOut; $i++) {
                 $remPos = rand(0, count($checked_masks)-1);
                 unset($checked_masks[$remPos]);
@@ -309,7 +309,7 @@ class QRmask
             $blacks  = $this->makeMaskNo($i, $width, $frame, $mask);
             $blacks += $this->writeFormatInformation($width, $mask, $i, $level);
             $blacks  = (int)(100 * $blacks / ($width * $width));
-            $demerit = (int)((int)(abs($blacks - 50) / 5) * N4);
+            $demerit = (int)((int)(abs($blacks - 50) / 5) * QRConst::N4);
             $demerit += $this->evaluateSymbol($width, $mask);
 
             if ($demerit < $minDemerit) {

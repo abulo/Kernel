@@ -1,6 +1,6 @@
 <?php
 
-namespace Kernel\Utilities\QrCode;
+namespace Kernel\Utilities\QRcode;
 
 class QRinput
 {
@@ -13,7 +13,7 @@ class QRinput
     //----------------------------------------------------------------------
     public function __construct($version = 0, $level = QRConst::QR_ECLEVEL_L)
     {
-        if ($version < 0 || $version > QRSPEC_VERSION_MAX || $level > QRConst::QR_ECLEVEL_H) {
+        if ($version < 0 || $version > QRConst::QRSPEC_VERSION_MAX || $level > QRConst::QR_ECLEVEL_H) {
             throw new Exception('Invalid version no');
             return null;
         }
@@ -31,7 +31,7 @@ class QRinput
     //----------------------------------------------------------------------
     public function setVersion($version)
     {
-        if ($version < 0 || $version > QRSPEC_VERSION_MAX) {
+        if ($version < 0 || $version > QRConst::QRSPEC_VERSION_MAX) {
             throw new Exception('Invalid version no');
             return -1;
         }
@@ -82,11 +82,11 @@ class QRinput
 
     public function insertStructuredAppendHeader($size, $index, $parity)
     {
-        if ($size > MAX_STRUCTURED_SYMBOLS) {
+        if ($size > QRConst::MAX_STRUCTURED_SYMBOLS) {
             throw new Exception('insertStructuredAppendHeader wrong size');
         }
 
-        if ($index <= 0 || $index > MAX_STRUCTURED_SYMBOLS) {
+        if ($index <= 0 || $index > QRConst::MAX_STRUCTURED_SYMBOLS) {
             throw new Exception('insertStructuredAppendHeader wrong index');
         }
 
