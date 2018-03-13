@@ -204,9 +204,9 @@ class UploadFile
         // if (!defined('SWOOLE_SERVER')) {
         //     return move_uploaded_file($tmpfile, $newfile);
         // } else {
-            if (rename($tmpfile, $newfile) === false) {
-                return false;
-            }
+        if (rename($tmpfile, $newfile) === false) {
+            return false;
+        }
             return chmod($newfile, 0777);
         // }
     }
