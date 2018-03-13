@@ -58,3 +58,6 @@
 [submodule "Library/guzzle/psr7"]
 	path = Library/guzzle/psr7
 	url = https://github.com/guzzle/psr7.git
+[submodule "Library/Intervention/image"]
+	path = Library/Intervention/image
+	url = https://github.com/Intervention/image.git
