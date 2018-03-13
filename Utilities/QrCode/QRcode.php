@@ -15,7 +15,7 @@ class QRcode
         if ($input->getVersion() < 0 || $input->getVersion() > QRSPEC_VERSION_MAX) {
             throw new Exception('wrong version');
         }
-        if ($input->getErrorCorrectionLevel() > QR_ECLEVEL_H) {
+        if ($input->getErrorCorrectionLevel() > QRConst::QR_ECLEVEL_H) {
             throw new Exception('wrong level');
         }
 
@@ -102,7 +102,7 @@ class QRcode
             return null;
         }
 
-        $ret = $input->append($input, QR_MODE_8, strlen($string), str_split($string));
+        $ret = $input->append($input, QRConst::QR_MODE_8, strlen($string), str_split($string));
         if ($ret < 0) {
             unset($input);
             return null;
@@ -114,7 +114,7 @@ class QRcode
     public function encodeString($string, $version, $level, $hint, $casesensitive)
     {
 
-        if ($hint != QR_MODE_8 && $hint != QR_MODE_KANJI) {
+        if ($hint != QRConst::QR_MODE_8 && $hint != QRConst::QR_MODE_KANJI) {
             throw new Exception('bad hint');
             return null;
         }
@@ -133,21 +133,21 @@ class QRcode
     }
 
     //----------------------------------------------------------------------
-    public static function png($text, $outfile = false, $level = QR_ECLEVEL_L, $size = 3, $margin = 4, $saveandprint = false)
+    public static function png($text, $outfile = false, $level = QRConst::QR_ECLEVEL_L, $size = 3, $margin = 4, $saveandprint = false)
     {
         $enc = QRencode::factory($level, $size, $margin);
         return $enc->encodePNG($text, $outfile, $saveandprint = false);
     }
 
     //----------------------------------------------------------------------
-    public static function text($text, $outfile = false, $level = QR_ECLEVEL_L, $size = 3, $margin = 4)
+    public static function text($text, $outfile = false, $level = QRConst::QR_ECLEVEL_L, $size = 3, $margin = 4)
     {
         $enc = QRencode::factory($level, $size, $margin);
         return $enc->encode($text, $outfile);
     }
 
     //----------------------------------------------------------------------
-    public static function raw($text, $outfile = false, $level = QR_ECLEVEL_L, $size = 3, $margin = 4)
+    public static function raw($text, $outfile = false, $level = QRConst::QR_ECLEVEL_L, $size = 3, $margin = 4)
     {
         $enc = QRencode::factory($level, $size, $margin);
         return $enc->encodeRAW($text, $outfile);

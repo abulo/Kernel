@@ -14,11 +14,11 @@ class QRencode
 
     public $structured = 0; // not supported yet
 
-    public $level = QR_ECLEVEL_L;
-    public $hint = QR_MODE_8;
+    public $level = QRConst::QR_ECLEVEL_L;
+    public $hint = QRConst::QR_MODE_8;
 
     //----------------------------------------------------------------------
-    public static function factory($level = QR_ECLEVEL_L, $size = 3, $margin = 4)
+    public static function factory($level = QRConst::QR_ECLEVEL_L, $size = 3, $margin = 4)
     {
         $enc = new QRencode();
         $enc->size = $size;
@@ -33,19 +33,19 @@ class QRencode
                 break;
             case 'l':
             case 'L':
-                    $enc->level = QR_ECLEVEL_L;
+                    $enc->level = QRConst::QR_ECLEVEL_L;
                 break;
             case 'm':
             case 'M':
-                    $enc->level = QR_ECLEVEL_M;
+                    $enc->level = QRConst::QR_ECLEVEL_M;
                 break;
             case 'q':
             case 'Q':
-                    $enc->level = QR_ECLEVEL_Q;
+                    $enc->level = QRConst::QR_ECLEVEL_Q;
                 break;
             case 'h':
             case 'H':
-                    $enc->level = QR_ECLEVEL_H;
+                    $enc->level = QRConst::QR_ECLEVEL_H;
                 break;
         }
 

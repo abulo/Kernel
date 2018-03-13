@@ -11,9 +11,9 @@ class QRinput
     private $level;
 
     //----------------------------------------------------------------------
-    public function __construct($version = 0, $level = QR_ECLEVEL_L)
+    public function __construct($version = 0, $level = QRConst::QR_ECLEVEL_L)
     {
-        if ($version < 0 || $version > QRSPEC_VERSION_MAX || $level > QR_ECLEVEL_H) {
+        if ($version < 0 || $version > QRSPEC_VERSION_MAX || $level > QRConst::QR_ECLEVEL_H) {
             throw new Exception('Invalid version no');
             return null;
         }
@@ -50,7 +50,7 @@ class QRinput
     //----------------------------------------------------------------------
     public function setErrorCorrectionLevel($level)
     {
-        if ($level > QR_ECLEVEL_H) {
+        if ($level > QRConst::QR_ECLEVEL_H) {
             throw new Exception('Invalid ECLEVEL');
             return -1;
         }
@@ -93,7 +93,7 @@ class QRinput
         $buf = array($size, $index, $parity);
 
         try {
-            $entry = new QRinputItem(QR_MODE_STRUCTURE, 3, buf);
+            $entry = new QRinputItem(QRConst::QR_MODE_STRUCTURE, 3, buf);
             array_unshift($this->items, $entry);
             return 0;
         } catch (Exception $e) {
@@ -107,7 +107,7 @@ class QRinput
         $parity = 0;
 
         foreach ($this->items as $item) {
-            if ($item->mode != QR_MODE_STRUCTURE) {
+            if ($item->mode != QRConst::QR_MODE_STRUCTURE) {
                 for ($i=$item->size-1; $i>=0; $i--) {
                     $parity ^= $item->data[$i];
                 }
@@ -234,19 +234,19 @@ class QRinput
         }
 
         switch ($mode) {
-            case QR_MODE_NUM:
+            case QRConst::QR_MODE_NUM:
                 return self::checkModeNum($size, $data);
             break;
-            case QR_MODE_AN:
+            case QRConst::QR_MODE_AN:
                 return self::checkModeAn($size, $data);
             break;
-            case QR_MODE_KANJI:
+            case QRConst::QR_MODE_KANJI:
                 return self::checkModeKanji($size, $data);
             break;
-            case QR_MODE_8:
+            case QRConst::QR_MODE_8:
                 return true;
             break;
-            case QR_MODE_STRUCTURE:
+            case QRConst::QR_MODE_STRUCTURE:
                 return true;
             break;
 
@@ -292,7 +292,7 @@ class QRinput
     {
         $payload = $bits - 4 - QRspec::lengthIndicator($mode, $version);
         switch ($mode) {
-            case QR_MODE_NUM:
+            case QRConst::QR_MODE_NUM:
                 $chunks = (int)($payload / 10);
                 $remain = $payload - $chunks * 10;
                 $size = $chunks * 3;
@@ -302,7 +302,7 @@ class QRinput
                     $size += 1;
                 }
                 break;
-            case QR_MODE_AN:
+            case QRConst::QR_MODE_AN:
                 $chunks = (int)($payload / 11);
                 $remain = $payload - $chunks * 11;
                 $size = $chunks * 2;
@@ -310,13 +310,13 @@ class QRinput
                     $size++;
                 }
                 break;
-            case QR_MODE_8:
+            case QRConst::QR_MODE_8:
                 $size = (int)($payload / 8);
                 break;
-            case QR_MODE_KANJI:
+            case QRConst::QR_MODE_KANJI:
                 $size = (int)(($payload / 13) * 2);
                 break;
-            case QR_MODE_STRUCTURE:
+            case QRConst::QR_MODE_STRUCTURE:
                 $size = (int)($payload / 8);
                 break;
             default:

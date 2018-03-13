@@ -99,7 +99,7 @@ class QRspec
     //----------------------------------------------------------------------
     public static function lengthIndicator($mode, $version)
     {
-        if ($mode == QR_MODE_STRUCTURE) {
+        if ($mode == QRConst::QR_MODE_STRUCTURE) {
             return 0;
         }
 
@@ -117,7 +117,7 @@ class QRspec
     //----------------------------------------------------------------------
     public static function maximumWords($mode, $version)
     {
-        if ($mode == QR_MODE_STRUCTURE) {
+        if ($mode == QRConst::QR_MODE_STRUCTURE) {
             return 3;
         }
 
@@ -132,7 +132,7 @@ class QRspec
         $bits = self::$lengthTableBits[$mode][$l];
         $words = (1 << $bits) - 1;
 
-        if ($mode == QR_MODE_KANJI) {
+        if ($mode == QRConst::QR_MODE_KANJI) {
             $words *= 2; // the number of bytes is required
         }
 
