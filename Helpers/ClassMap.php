@@ -28,7 +28,7 @@ return [
 		// 'League\Plates'=>dirname(__DIR__).DS.'Library'.DS.'thephpleague'.DS.'plates'.DS.'src',
 
 		// 二维码相关库
-		'BaconQrCode' => dirname(__DIR__).DS.'Library'.DS.'Bacon'.DS.'BaconQrCode'.DS.'src',
+		'BaconQrCode' => dirname(__DIR__).DS.'Library'.DS.'Bacon'.DS.'BaconQrCode'.DS.'src'.DS.'BaconQrCode',
 		'Endroid\QrCode' => dirname(__DIR__).DS.'Library'.DS.'endroid'.DS.'qr-code'.DS.'src',
 		'Zxing' => dirname(__DIR__).DS.'Library'.DS.'khanamiryan'.DS.'php-qrcode-detector-decoder'.DS.'lib',
 		'MyCLabs\Enum' => dirname(__DIR__).DS.'Library'.DS.'myclabs'.DS.'php-enum'.DS.'src',
