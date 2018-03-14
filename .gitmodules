@@ -67,9 +67,6 @@
 [submodule "Library/endroid/qr-code"]
 	path = Library/endroid/qr-code
 	url = https://github.com/endroid/qr-code.git
-[submodule "Library/khanamiryan/php-qrcode-detector-decoder"]
-	path = Library/khanamiryan/php-qrcode-detector-decoder
-	url = https://github.com/khanamiryan/php-qrcode-detector-decoder.git
 [submodule "Library/myclabs/php-enum"]
 	path = Library/myclabs/php-enum
 	url = https://github.com/myclabs/php-enum.git
