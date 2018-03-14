@@ -26,6 +26,15 @@ return [
 		'GuzzleHttp\Psr7'=>dirname(__DIR__).DS.'Library'.DS.'guzzle'.DS.'psr7'.DS.'src',
 		'Intervention\Image'=>dirname(__DIR__).DS.'Library'.DS.'Intervention'.DS.'image'.DS.'src'.DS.'Intervention'.DS.'Image',
 		// 'League\Plates'=>dirname(__DIR__).DS.'Library'.DS.'thephpleague'.DS.'plates'.DS.'src',
+
+		// 二维码相关库
+		'BaconQrCode' => dirname(__DIR__).DS.'Library'.DS.'Bacon'.DS.'BaconQrCode'.DS.'src',
+		'Endroid\QrCode' => dirname(__DIR__).DS.'Library'.DS.'endroid'.DS.'qr-code'.DS.'src',
+		'Zxing' => dirname(__DIR__).DS.'Library'.DS.'khanamiryan'.DS.'php-qrcode-detector-decoder'.DS.'lib',
+		'MyCLabs\Enum' => dirname(__DIR__).DS.'Library'.DS.'myclabs'.DS.'php-enum'.DS.'src',
+		'Symfony\Component\Inflector' => dirname(__DIR__).DS.'Library'.DS.'symfony'.DS.'inflector',
+		'Symfony\Component\OptionsResolver' => dirname(__DIR__).DS.'Library'.DS.'symfony'.DS.'options-resolver',
+		'Symfony\Component\PropertyAccess' => dirname(__DIR__).DS.'Library'.DS.'symfony'.DS.'property-access',
         'Kernel'=>dirname(__DIR__),
     ],
     'files' => [
@@ -34,6 +43,7 @@ return [
         dirname(__DIR__).DS.'Library'.DS.'reactphp'.DS.'promise'.DS.'src'.DS.'functions_include.php',
 		dirname(__DIR__).DS.'Library'.DS.'guzzle'.DS.'psr7'.DS.'src'.DS.'functions_include.php',
 		dirname(__DIR__).DS.'Library'.DS.'aliyun-php-sdk'.DS.'aliyun-php-sdk-core'.DS.'Config.php',
+		dirname(__DIR__).DS.'Library'.DS.'khanamiryan'.DS.'php-qrcode-detector-decoder'.DS.'lib'.'common'.DS.'customFunctions.php',
         dirname(__DIR__).DS.'Helpers'.DS.'Common.php',
     ],
 ];

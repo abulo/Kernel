@@ -61,3 +61,24 @@
 [submodule "Library/Intervention/image"]
 	path = Library/Intervention/image
 	url = https://github.com/Intervention/image.git
+[submodule "Library/Bacon/BaconQrCode"]
+	path = Library/Bacon/BaconQrCode
+	url = https://github.com/Bacon/BaconQrCode.git
+[submodule "Library/endroid/qr-code"]
+	path = Library/endroid/qr-code
+	url = https://github.com/endroid/qr-code.git
+[submodule "Library/khanamiryan/php-qrcode-detector-decoder"]
+	path = Library/khanamiryan/php-qrcode-detector-decoder
+	url = https://github.com/khanamiryan/php-qrcode-detector-decoder.git
+[submodule "Library/myclabs/php-enum"]
+	path = Library/myclabs/php-enum
+	url = https://github.com/myclabs/php-enum.git
+[submodule "Library/symfony/inflector"]
+	path = Library/symfony/inflector
+	url = https://github.com/symfony/inflector.git
+[submodule "Library/symfony/options-resolver"]
+	path = Library/symfony/options-resolver
+	url = https://github.com/symfony/options-resolver.git
+[submodule "Library/symfony/property-access"]
+	path = Library/symfony/property-access
+	url = https://github.com/symfony/property-access.git
