@@ -161,10 +161,11 @@ class FRoute implements IRoute
 
     public function errorHttpHandle(\Exception $e, $request, $response)
     {
-        //重定向到404
-        $response->status(302);
-        $location = 'http://' . $request->header['host'] . "/" . '404';
-        $response->header('Location', $location);
-        $response->end('');
+
+		$template = getInstance()->loader->view(KERNEL_PATH.DS.'Views'.DS.'error_404');
+		$content = $template->render();
+		$response->status(404);
+		$response->header('HTTP/1.1', '404 Not Found');
+		$response->end($content);
     }
 }
