@@ -79,3 +79,6 @@
 [submodule "Library/symfony/property-access"]
 	path = Library/symfony/property-access
 	url = https://github.com/symfony/property-access.git
+[submodule "Library/khanamiryan/php-qrcode-detector-decoder"]
+	path = Library/khanamiryan/php-qrcode-detector-decoder
+	url = https://github.com/abulo/php-qrcode-detector-decoder.git

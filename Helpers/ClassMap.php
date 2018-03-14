@@ -43,7 +43,8 @@ return [
         dirname(__DIR__).DS.'Library'.DS.'reactphp'.DS.'promise'.DS.'src'.DS.'functions_include.php',
 		dirname(__DIR__).DS.'Library'.DS.'guzzle'.DS.'psr7'.DS.'src'.DS.'functions_include.php',
 		dirname(__DIR__).DS.'Library'.DS.'aliyun-php-sdk'.DS.'aliyun-php-sdk-core'.DS.'Config.php',
-		dirname(__DIR__).DS.'Library'.DS.'khanamiryan'.DS.'php-qrcode-detector-decoder'.DS.'lib'.'common'.DS.'customFunctions.php',
+		dirname(__DIR__).DS.'Library'.DS.'khanamiryan'.DS.'php-qrcode-detector-decoder'.DS.'lib'.'Common'.DS.'customFunctions.php',
+		dirname(__DIR__).DS.'Library'.DS.'khanamiryan'.DS.'php-qrcode-detector-decoder'.DS.'lib'.DS.'QrReader.php',
         dirname(__DIR__).DS.'Helpers'.DS.'Common.php',
     ],
 ];
