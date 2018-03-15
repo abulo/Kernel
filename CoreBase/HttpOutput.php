@@ -216,14 +216,13 @@ class HttpOutput
 
     /**
      * 输出文件
-     * @param $root_file
-     * @param $file_name
+     * @param $file_path
      * @param bool $destroy
      * @return mixed
      */
-    public function endFile($root_file, $file_name, $destroy = true)
+    public function endFile($file_path, $destroy = true)
     {
-        $result = httpEndFile($root_file . '/' . $file_name, $this->request, $this->response);
+        $result = httpEndFile($file_path, $this->request, $this->response);
         if ($destroy) {
             $this->controller->getProxy()->destroy();
         }
