@@ -8,7 +8,7 @@
 
 namespace Kernel\CoreBase;
 
-use Kernel\Xss\AntiXSS;
+use Kernel\XSS\AntiXSS;
 
 class XssClean
 {
