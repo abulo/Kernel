@@ -8,7 +8,6 @@
  */
 namespace Kernel\Components\Session;
 
-use Kernel\Utilities\Arr;
 
 /**
  * Class Session
@@ -47,8 +46,10 @@ class Session
     public function del($key)
     {
         $value = yield  $this->sessionHandler->get($this->sessionId);
+		$value = json_decode($value,true);
 
         unset($value[$key]);
+		$value = json_encode($value);
         $result = yield  $this->sessionHandler->set($this->sessionId, $value, 1800);
         return $result;
     }
@@ -57,19 +58,12 @@ class Session
     public function set($key, $val = null)
     {
         $session = yield  $this->sessionHandler->get($this->sessionId);
+		$session = json_decode($session,true);
         if (!$session) {
             $session = [];
         }
-        $data = [];
-        if (is_array($key)) {
-            $data = $key;
-        } else {
-            $data = [
-                $key => $val
-            ];
-        }
-        $newSession = Arr::merge($session, $data);
-		$newSession = json_encode($newSession);
+        $session[$key] = $val;
+		$session = json_encode($session);
         $result = yield  $this->sessionHandler->set($this->sessionId, $newSession, 1800);
         return $result;
     }
