@@ -105,6 +105,7 @@ class HttpOutput
     public function html($output = '', $gzip = true, $destroy = true)
     {
         $this->setHeader('Content-Type', 'text/html; charset=UTF-8');
+		$this->clientId();
         $this->end($output, $gzip, $destroy);
         return;
     }
@@ -114,6 +115,7 @@ class HttpOutput
 	public function json($output = '', $gzip = true, $destroy = true)
     {
         $this->setHeader('Content-Type', 'application/json; charset=UTF-8');
+		$this->clientId();
         $this->end(json_encode($output), $gzip, $destroy);
         return;
     }
@@ -124,6 +126,7 @@ class HttpOutput
 	 */
 	public function middleware_end_json($output = null,$code=200)
     {
+		// $this->clientId();
 		if(null == $output)
 		{
 			return $output;
@@ -143,6 +146,7 @@ class HttpOutput
 	 */
 	public function middleware_end_html($output = null,$code=200)
 	{
+		// $this->clientId();
 		if(null == $output)
 		{
 			return $output;
@@ -180,6 +184,7 @@ class HttpOutput
             $output = json_encode($output, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
             $output = "<pre>$output</pre>";
         }
+		$this->clientId();
         $this->response->end($output);
         if ($destroy) {
             $this->controller->getProxy()->destroy();
@@ -228,4 +233,17 @@ class HttpOutput
         }
         return $result;
     }
+
+	/**
+	 * 给客户端返回 client_id
+	 * @var [type]
+	 */
+	public function clientId()
+	{
+		$client = $this->request->cookie['client_id'] ?? 0;
+		if($client)
+		{
+			$this->setCookie('client_id', $client, time()+86400,  '/',  '',  false, true);
+		}
+	}
 }
