@@ -33,12 +33,14 @@ class Session
     public function get($key)
     {
         $value = yield  $this->sessionHandler->get($this->sessionId);
+		$value = json_decode($value,true);
         return $value[$key] ?? null;
     }
 
     public function getAll()
     {
         $value = yield  $this->sessionHandler->get($this->sessionId);
+		$value = json_decode($value,true);
         return $value;
     }
 
@@ -67,6 +69,7 @@ class Session
             ];
         }
         $newSession = Arr::merge($session, $data);
+		$newSession = json_encode($newSession);
         $result = yield  $this->sessionHandler->set($this->sessionId, $newSession, 1800);
         return $result;
     }
