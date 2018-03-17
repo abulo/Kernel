@@ -64,7 +64,7 @@ class Session
         }
         $session[$key] = $val;
 		$session = json_encode($session);
-        $result = yield  $this->sessionHandler->set($this->sessionId, $newSession, 1800);
+        $result = yield  $this->sessionHandler->set($this->sessionId, $session, 1800);
         return $result;
     }
 }
