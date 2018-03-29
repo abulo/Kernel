@@ -82,3 +82,6 @@
 [submodule "Library/khanamiryan/php-qrcode-detector-decoder"]
 	path = Library/khanamiryan/php-qrcode-detector-decoder
 	url = https://github.com/abulo/php-qrcode-detector-decoder.git
+[submodule "Library/filp/whoops"]
+	path = Library/filp/whoops
+	url = https://github.com/filp/whoops.git
