@@ -11,10 +11,10 @@ namespace Kernel;
 
 use Kernel\Layout\Engine;
 use Kernel\Components\Consul\ConsulHelp;
+use Kernel\Components\Whoops\Handler\SDPageHandler;
 use Kernel\CoreBase\ControllerFactory;
-use Kernel\Coroutine\Coroutine;
+use Whoops\Run;
 use FastRoute;
-
 abstract class SwooleHttpServer extends SwooleServer
 {
     /**
@@ -22,6 +22,12 @@ abstract class SwooleHttpServer extends SwooleServer
      * @var Engine
      */
     public $templateEngine;
+    /**
+     * @var Run
+     */
+    public $whoops;
+
+    protected $cachePath;
     protected $cache404;
 
 
@@ -40,6 +46,10 @@ abstract class SwooleHttpServer extends SwooleServer
     public function __construct()
     {
         parent::__construct();
+        $this->cachePath = BIN_DIR . "/bladeCache";
+        if (!is_dir($this->cachePath)) {
+            mkdir($this->cachePath);
+        }
     }
 
 
@@ -281,10 +291,27 @@ abstract class SwooleHttpServer extends SwooleServer
     public function onSwooleWorkerStart($serv, $workerId)
     {
         parent::onSwooleWorkerStart($serv, $workerId);
-        $this->initializeRoute();
-        $this->setTemplateEngine();
-        $template = $this->loader->view(KERNEL_PATH.DS.'Views'.DS.'error_404');
-        $this->cache404 = $template->render();
+
+
+
+
+        if (!$this->isTaskWorker()) {
+            $this->whoops = new Run();
+            $this->whoops->writeToOutput(false);
+            $this->whoops->allowQuit(false);
+            $handler = new SDPageHandler();
+            $handler->setPageTitle("出现错误了");
+            $this->whoops->pushHandler($handler);
+            $this->setTemplateEngine();
+            $this->initializeRoute();
+            $template = $this->loader->view(KERNEL_PATH.DS.'Views'.DS.'error_404');
+            $this->cache404 = $template->render();
+        }
+
+
+
+
+
     }
 
     /**
@@ -295,6 +322,22 @@ abstract class SwooleHttpServer extends SwooleServer
         $this->templateEngine = new Engine();
     }
 
+
+
+    public function getWhoops()
+    {
+        return $this->whoops;
+    }
+
+    /**
+     * @return
+     */
+    public function getTemplateEngine()
+    {
+        return $this->templateEngine;
+    }
+
+
     /**
      * http服务器发来消息
      * @param $request
@@ -302,78 +345,83 @@ abstract class SwooleHttpServer extends SwooleServer
      */
     public function onSwooleRequest($request, $response)
     {
-        //规整 URL 数据
-        $request = $this->beforeSwooleHttpRequest($request);
-        $server_port = $this->getServerPort($request->fd);
-        Coroutine::startCoroutine(function () use ($request, $response, $server_port) {
-            $middleware_names = $this->portManager->getMiddlewares($server_port);
-            $context = [];
-            $path = $request->server['request_uri'];
-            $middlewares = $this->middlewareManager->create($middleware_names, $context, [$request, $response], true);
-            //before
+        if (Start::$testUnity) {
+            $server_port = $request->server_port;
+        } else {
+            $server_port = $this->getServerPort($request->fd);
+        }
+
+        $middleware_names = $this->portManager->getMiddlewares($server_port);
+        $context = [];
+        $path = $request->server['request_uri'];
+        $middlewares = $this->middlewareManager->create($middleware_names, $context, [$request, $response], true);
+
+
+        try {
+            $this->middlewareManager->before($middlewares);
+            //client_data进行处理
+            $route = $this->portManager->getRoute($server_port);
+
             try {
-                yield $this->middlewareManager->before($middlewares);
-                //client_data进行处理
-                $route = $this->portManager->getRoute($server_port);
-                try {
-                    $route->handleClientRequest($request);
+                $route->handleClientRequest($request);
+                $cHandler = $route->getHandler();
+                $path = $route->getPath();
+                $middleware_route = $route->getMiddleware();
 
-                    $cHandler = $route->getHandler();
-                    $path = $route->getPath();
-                    $middleware_route = $route->getMiddleware();
-                    //路由上的中间件
-                    if ($middleware_route) {
-                        $middleware_controller_name = $route->getMiddlewareControllerName();
-                        $middleware_method_name = $this->portManager->getMethodPrefix($server_port) . $route->getMiddlewareMethodName();
-						//
-                        $middleware_controller_instance = ControllerFactory::getInstance()->getController($middleware_controller_name);
-                        if ($middleware_controller_instance != null) {
-                            $request->route = $cHandler;
-                            $middleware_result = yield $middleware_controller_instance->setRequestResponse($request, $response, $middleware_controller_name, $middleware_method_name, []);
-                            if ($middleware_result!=null) {
-                                $response->status($middleware_result['status']);
-                                $response->header($middleware_result['header'][0], $middleware_result['header'][1]);
-                                $response->end($middleware_result['content']);
-                                $middleware_controller_instance->destroy();
-                                return ;
-                            }
-                        } else {
-                            throw new \Exception('no controller');
-                        }
-                    }
+                $request->route = $cHandler;
+                //路由上的中间件
+                if ($middleware_route) {
+                    $middleware_controller_name = $route->getMiddlewareControllerName();
+                    $middleware_method_name = $this->portManager->getMethodPrefix($server_port) . $route->getMiddlewareMethodName();
+                    $middleware_controller_instance = ControllerFactory::getInstance()->getController($middleware_controller_name);
+                    if ($middleware_controller_instance != null) {
+                        $middleware_result =  $middleware_controller_instance->setRequestResponse($request, $response, $middleware_controller_name, $middleware_method_name, []);
 
-                    $controller_name = $route->getControllerName();
-                    $method_name = $this->portManager->getMethodPrefix($server_port) . $route->getMethodName();
-
-                    $controller_instance = ControllerFactory::getInstance()->getController($controller_name);
-
-                    if ($controller_instance != null) {
-                        $controller_instance->setContext($context);
-                        if ($route->getMethodName() == ConsulHelp::HEALTH) {//健康检查
-                            $response->end('ok');
-                            $controller_instance->destroy();
-                        } else {
-                            $request->route = $cHandler;
-                            yield $controller_instance->setRequestResponse($request, $response, $controller_name, $method_name, $route->getParams());
+                        if ($middleware_result!=null) {
+                            $response->status($middleware_result['status']);
+                            $response->header($middleware_result['header'][0], $middleware_result['header'][1]);
+                            $response->end($middleware_result['content']);
+                            return ;
                         }
                     } else {
                         throw new \Exception('no controller');
                     }
-                } catch (\Exception $e) {
-                    $route->errorHttpHandle($e, $request, $response);
                 }
-            } catch (\Exception $e) {
-            }
-            //after
-            try {
-                yield $this->middlewareManager->after($middlewares, $path);
-            } catch (\Exception $e) {
-            }
-            $this->middlewareManager->destory($middlewares);
-            unset($context);
-        });
-    }
+                $controller_name = $route->getControllerName();
+                $method_name = $this->portManager->getMethodPrefix($server_port) . $route->getMethodName();
+                $controller_instance = ControllerFactory::getInstance()->getController($controller_name);
 
+                if ($controller_instance != null) {
+                    $controller_instance->setContext($context);
+                    if ($route->getMethodName() == ConsulHelp::HEALTH) {//健康检查
+                        $response->end('ok');
+                        $controller_instance->destroy();
+                    } else {
+                        $request->route = $cHandler;
+                        $controller_instance->setRequestResponse($request, $response, $controller_name, $method_name, $route->getParams());
+                    }
+                } else {
+                    throw new \Exception('no controller');
+                }
+
+            } catch (\Throwable $e) {
+                $route->errorHttpHandle($e, $request, $response);
+            }
+
+        } catch (\Throwable $e) {
+        }
+
+
+        try {
+            $this->middlewareManager->after($middlewares, $path);
+        } catch (\Throwable $e) {
+        }
+        $this->middlewareManager->destory($middlewares);
+        if (Start::getDebug()) {
+            secho("DEBUG", $context);
+        }
+        unset($context);
+    }
 
 
     /**
