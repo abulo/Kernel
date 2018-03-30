@@ -8,7 +8,6 @@
 
 namespace Kernel\Asyn\TcpClient;
 
-
 use Kernel\Asyn\AsynPool;
 use Kernel\CoreBase\PortManager;
 use Kernel\CoreBase\SwooleException;

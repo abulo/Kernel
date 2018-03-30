@@ -38,10 +38,10 @@ class RedisCoroutine extends CoroutineBase
             $this->coPush($result);
         });
         $this->token = $data['token'];
-        $d = "[$name ".implode(" ",$data['arguments'])."]";
+        $d = "[$name ".implode(" ", $data['arguments'])."]";
         $this->request = "[redis]$d";
-        if (Start::getDebug()){
-            secho("REDIS",$d);
+        if (Start::getDebug()) {
+            secho("REDIS", $d);
         }
         return $this->returnInit();
     }

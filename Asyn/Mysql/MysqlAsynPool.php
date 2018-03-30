@@ -34,7 +34,9 @@ class MysqlAsynPool implements IAsynPool
         $this->active = $active;
         $this->config = getInstance()->config;
         $this->client_max_count = $this->config->get('mysql.asyn_max_count', 10);
-        if (getInstance()->isTaskWorker()) return;
+        if (getInstance()->isTaskWorker()) {
+            return;
+        }
         $this->pool_chan = new \chan($this->client_max_count);
         for ($i = 0; $i < $this->client_max_count; $i++) {
             $client = new \Swoole\Coroutine\MySQL();
@@ -77,7 +79,9 @@ class MysqlAsynPool implements IAsynPool
             $client->query("commit");
         } catch (\Throwable $e) {
             $client->query("rollback");
-            if ($errorFuc != null) $errorFuc($client);
+            if ($errorFuc != null) {
+                $errorFuc($client);
+            }
         } finally {
             $this->dbQueryBuilder->setClient(null);
         }
@@ -123,8 +127,7 @@ class MysqlAsynPool implements IAsynPool
             return $result;
         }
         $mysqlCoroutine->destroy();
-        if ($delayRecv)//延迟收包
-        {
+        if ($delayRecv) {//延迟收包
             $data['delay_recv_fuc'] = function () use ($client) {
                 $res = $client->recv();
                 $data['result'] = $res;
@@ -192,8 +195,7 @@ class MysqlAsynPool implements IAsynPool
             return $result;
         }
         $mysqlCoroutine->destroy();
-        if ($delayRecv)//延迟收包
-        {
+        if ($delayRecv) {//延迟收包
             $data['delay_recv_fuc'] = function () use ($client) {
                 $res = $client->recv();
                 $data['result'] = $res;
@@ -227,7 +229,9 @@ class MysqlAsynPool implements IAsynPool
 
     public function getSync()
     {
-        if ($this->mysql_client != null) return $this->mysql_client;
+        if ($this->mysql_client != null) {
+            return $this->mysql_client;
+        }
         $activeConfig = $this->config['mysql'][$this->active];
         $this->mysql_client = new Miner();
         $this->mysql_client->pdoConnect($activeConfig);

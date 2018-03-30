@@ -18,7 +18,7 @@ class Utility
      * @param string $replace   Default Control Character to '.'
      * @return string
      */
-    static public function ASCII2Visible($char, $replace='.')
+    public static function ASCII2Visible($char, $replace = '.')
     {
         $c = ord($char);
         if ($c >= 0x20 && $c <= 0x7F) {
@@ -37,7 +37,7 @@ class Utility
      * @param bool   $with_ascii
      * @return void|string
      */
-    static public function PrintHex($chars, $return=false, $width=0, $with_ascii=false)
+    public static function PrintHex($chars, $return = false, $width = 0, $with_ascii = false)
     {
         $output = '';
 
@@ -55,9 +55,7 @@ class Utility
             if ($with_ascii) {
                 $output .= "ASCII CHR: \t" . $ascii_str . "\n";
             }
-
         } else {
-
             for ($i=0; isset($chars[$i]); $i++) {
                 $hex_str   .= sprintf('%02x ', ord($chars[$i]));
                 $ascii_str .= sprintf('%s', self::ASCII2Visible($chars[$i], '.'));
@@ -99,7 +97,7 @@ class Utility
      * @return string      returned string
      * @throws Exception
      */
-    static public function PackStringWithLength($str)
+    public static function PackStringWithLength($str)
     {
         $len = strlen($str);
         # UTF-8
@@ -116,7 +114,7 @@ class Utility
      * @param int &  $pos
      * @return string
      */
-    static public function UnpackStringWithLength($str, &$pos)
+    public static function UnpackStringWithLength($str, &$pos)
     {
         $length = self::ExtractUShort($str, $pos);
 
@@ -133,7 +131,7 @@ class Utility
      * @param int &  $pos
      * @return int
      */
-    static public function ExtractUShort($str, &$pos)
+    public static function ExtractUShort($str, &$pos)
     {
         $bytes = substr($str, $pos, 2);
         $ushort = Utility::Word2UShort($bytes);
@@ -148,7 +146,7 @@ class Utility
      * @param int $length
      * @throws Exception
      */
-    static public function CheckMessageLength($length)
+    public static function CheckMessageLength($length)
     {
         if ($length > Message::MAX_DATA_LENGTH) {
             throw new Exception('Too much data');
@@ -161,18 +159,20 @@ class Utility
      * @param int $length
      * @return string
      */
-    static public function EncodeLength($length)
+    public static function EncodeLength($length)
     {
         self::CheckMessageLength($length);
 
         $string = "";
-        do{
+        do {
             $digit = $length % 0x80;
             $length = $length >> 7;
             // if there are more digits to encode, set the top bit of this digit
-            if ( $length > 0 ) $digit = ($digit | 0x80);
+            if ($length > 0) {
+                $digit = ($digit | 0x80);
+            }
             $string .= chr($digit);
-        } while ( $length > 0 );
+        } while ($length > 0);
 
         return $string;
     }
@@ -184,11 +184,11 @@ class Utility
      * @param int &  $pos
      * @return int
      */
-    static public function DecodeLength($msg, &$pos)
+    public static function DecodeLength($msg, &$pos)
     {
         $multiplier = 1;
         $value = 0 ;
-        do{
+        do {
             $digit = ord($msg[$pos]);
             $value += ($digit & 0x7F) * $multiplier;
             $multiplier *= 0x80;
@@ -204,7 +204,7 @@ class Utility
      * @param int $qos
      * @throws Exception
      */
-    static public function CheckQoS($qos)
+    public static function CheckQoS($qos)
     {
         if ($qos > 2 || $qos < 0) {
             throw new Exception('QoS must be an integer in (0,1,2).');
@@ -216,7 +216,7 @@ class Utility
      * @param string $client_id
      * @throws Exception
      */
-    static public function CheckClientID($client_id)
+    public static function CheckClientID($client_id)
     {
         if (strlen($client_id) > 23) {
             throw new Exception('Client identifier exceeds 23 bytes.');
@@ -229,7 +229,7 @@ class Utility
      * @param int $msgid
      * @throws Exception
      */
-    static public function CheckPacketIdentifier($msgid)
+    public static function CheckPacketIdentifier($msgid)
     {
         if (!is_int($msgid) || $msgid < 1 || $msgid > 65535) {
             throw new Exception('Packet identifier must be non-zero 16-bit.');
@@ -242,7 +242,7 @@ class Utility
      * @param int $keepalive
      * @throws Exception
      */
-    static public function CheckKeepAlive($keepalive)
+    public static function CheckKeepAlive($keepalive)
     {
         if (!is_int($keepalive) || $keepalive < 1 || $keepalive > 65535) {
             throw new Exception('Keep alive must be non-zero 16-bit.');
@@ -257,7 +257,7 @@ class Utility
      * @param string $topic_name
      * @throws Exception
      */
-    static public function CheckTopicName($topic_name)
+    public static function CheckTopicName($topic_name)
     {
         if (!isset($topic_name[0]) || isset($topic_name[65535])) {
             throw new Exception('Topic name must be at 1~65535 bytes long');
@@ -284,7 +284,7 @@ class Utility
      * @param string $topic_filter
      * @throws Exception
      */
-    static public function CheckTopicFilter($topic_filter)
+    public static function CheckTopicFilter($topic_filter)
     {
         if (!isset($topic_filter[0]) || isset($topic_filter[65535])) {
             throw new Exception('Topic filter must be at 1~65535 bytes long');
@@ -304,7 +304,7 @@ class Utility
         if (($p = strpos($topic_filter, '#')) !== false) {
             if ($p != $length - 1) {
                 throw new Exception('"#" MUST be the last char in topic filter');
-            } else if ($length > 1 && $topic_filter[$length - 2] != '/') {
+            } elseif ($length > 1 && $topic_filter[$length - 2] != '/') {
                 throw new Exception('"#" MUST occupy an entire level of the filter');
             }
         }
@@ -313,7 +313,7 @@ class Utility
         foreach ($levels as $l) {
             if ($l == '') {
                 continue;
-            } else if (strpos($l, '+') !== false && isset($l[1])) {
+            } elseif (strpos($l, '+') !== false && isset($l[1])) {
                 /*
                  The single-level wildcard can be used at any level in the Topic Filter, including first and last levels.
                  Where it is used it MUST occupy an entire level of the filter [MQTT-4.7.1-3].
@@ -333,7 +333,7 @@ class Utility
      * @param string $word
      * @return int
      */
-    static public function Word2UShort($word)
+    public static function Word2UShort($word)
     {
         $c = unpack('n', $word);
         return $c[1];
@@ -345,7 +345,7 @@ class Utility
      * @param int $cmd
      * @return array array(message_type=>int, flags=>int)
      */
-    static public function ParseCommand($cmd)
+    public static function ParseCommand($cmd)
     {
         # check Message type
         $message_type = $cmd >> 4;
@@ -365,7 +365,7 @@ class Utility
      * @param int $flags
      * @return array     array(dup=>int, qos=>int, retain=>int)
      */
-    static public function ParseFlags($flags)
+    public static function ParseFlags($flags)
     {
         $dup = ($flags & 0x08) >> 3;
         $qos = ($flags & 0x06) >> 1;
@@ -384,7 +384,7 @@ class Utility
      * @param int $cmd
      * @return array
      */
-    static public function UnpackCommand($cmd)
+    public static function UnpackCommand($cmd)
     {
         # check Message type
         $message_type = $cmd >> 4;
@@ -407,7 +407,7 @@ class Utility
      * @return bool
      * @throws Exception\BadUTF8
      */
-    static public function ValidateUTF8($string)
+    public static function ValidateUTF8($string)
     {
         $pop_10s = 0;
 
@@ -424,7 +424,7 @@ class Utility
                     $unicode_char |= $c & 0x3F;
                     --$pop_10s;
                 }
-            } else if (($c & 0x7F) == $c) {
+            } elseif (($c & 0x7F) == $c) {
                 # single ASCII char
                 $unicode_char = 0;
 
@@ -439,31 +439,31 @@ class Utility
 
                  */
                 continue;
-            } else if (($c & 0xFE) == 0xFC) {
+            } elseif (($c & 0xFE) == 0xFC) {
                 # leading 1111110x
                 $pop_10s = 5;
 
                 $unicode_char = 0;
                 $unicode_char |= $c & 0x01;
-            } else if (($c & 0xFC) == 0xF8) {
+            } elseif (($c & 0xFC) == 0xF8) {
                 # leading 111110xx
                 $pop_10s = 4;
 
                 $unicode_char = 0;
                 $unicode_char |= $c & 0x03;
-            } else if (($c & 0xF8) == 0xF0) {
+            } elseif (($c & 0xF8) == 0xF0) {
                 # leading 11110xxx
                 $pop_10s = 3;
 
                 $unicode_char = 0;
                 $unicode_char |= $c & 0x07;
-            } else if (($c & 0xF0) == 0xE0) {
+            } elseif (($c & 0xF0) == 0xE0) {
                 # leading 1110xxxx
                 $pop_10s = 2;
 
                 $unicode_char = 0;
                 $unicode_char |= $c & 0x0F;
-            } else if (($c & 0xE0) == 0xC0) {
+            } elseif (($c & 0xE0) == 0xC0) {
                 # leading 110xxxxx
                 $pop_10s = 1;
 

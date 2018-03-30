@@ -28,8 +28,8 @@ class MySqlCoroutine extends CoroutineBase
     public function setRequest($sql)
     {
         $this->request = "[sql]$sql";
-        if(Start::getDebug()){
-            secho("SQL",$sql);
+        if (Start::getDebug()) {
+            secho("SQL", $sql);
         }
     }
 

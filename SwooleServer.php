@@ -16,7 +16,7 @@ use Noodlehaus\Config;
 use Kernel\Components\Backstage\BackstageHelp;
 use Kernel\Components\Event\EventDispatcher;
 use Kernel\Components\GrayLog\UdpTransport;
-use Kernel\Components\log\SDJsonFormatter;
+use Kernel\Components\Log\SDJsonFormatter;
 use Kernel\Components\Middleware\MiddlewareManager;
 use Kernel\Components\Process\ProcessRPC;
 use Kernel\CoreBase\ControllerFactory;
@@ -159,7 +159,6 @@ abstract class SwooleServer extends ProcessRPC
         $logHandle->setTimezone(new DateTimeZone($this->config->get('common.timezone', 'PRC')));
         switch ($this->config->get('log.active', 'file')) {
             case 'file':
-
                 $handel = new RotatingFileHandler(
                     STORAGE_LOG_PATH . DS . $this->name .getNodeName(). '.log',
                     $this->config->get('log.file.log_max_files', 15),
@@ -259,7 +258,7 @@ abstract class SwooleServer extends ProcessRPC
             'aio_mode' => SWOOLE_AIO_BASE,
             'thread_num' => 100,
             'socket_buffer_size' => 128 * 1024 * 1024,
-			'dns_server' => '114.114.114.114',
+            'dns_server' => '114.114.114.114',
         ]);
     }
 
@@ -439,7 +438,6 @@ abstract class SwooleServer extends ProcessRPC
         try {
             $this->middlewareManager->after($middlewares, $path);
         } catch (\Throwable $e) {
-
         }
         $this->middlewareManager->destory($middlewares);
         if (Start::getDebug()) {

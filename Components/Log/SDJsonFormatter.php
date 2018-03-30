@@ -6,7 +6,7 @@
  * Time: 下午3:16
  */
 
-namespace Kernel\Components\log;
+namespace Kernel\Components\Log;
 
 use Monolog\Formatter\JsonFormatter;
 

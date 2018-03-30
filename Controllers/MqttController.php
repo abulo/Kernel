@@ -8,7 +8,6 @@
 
 namespace Kernel\Controllers;
 
-
 use Kernel\Asyn\MQTT\Message\CONNACK;
 use Kernel\Asyn\MQTT\Message\CONNECT;
 use Kernel\Asyn\MQTT\Message\DISCONNECT;

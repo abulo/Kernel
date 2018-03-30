@@ -8,19 +8,18 @@
 
 namespace Kernel\Models;
 
-
 use Kernel\CoreBase\Model;
 
 class TestModel2 extends Model
 {
     public function test()
     {
-        $test = $this->loader->model("TestModel",$this);
+        $test = $this->loader->model("TestModel", $this);
         return $test->test1();
     }
     public function test2()
     {
-        $test = $this->loader->model("TestModel",$this);
+        $test = $this->loader->model("TestModel", $this);
         return $test->test1();
     }
 }

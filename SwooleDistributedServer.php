@@ -244,7 +244,9 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     {
         $send_data = $this->packServerMessageBody($type, $uns_data, $callStaticFuc);
         for ($i = 0; $i < $this->worker_num + $this->task_num; $i++) {
-            if ($this->server->worker_id == $i) continue;
+            if ($this->server->worker_id == $i) {
+                continue;
+            }
             $this->server->sendMessage($send_data, $i);
         }
         //自己的进程是收不到消息的所以这里执行下
@@ -261,7 +263,9 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     {
         $send_data = $this->packServerMessageBody($type, $uns_data, $callStaticFuc);
         for ($i = 0; $i < $this->worker_num; $i++) {
-            if ($this->server->worker_id == $i) continue;
+            if ($this->server->worker_id == $i) {
+                continue;
+            }
             $this->server->sendMessage($send_data, $i);
         }
         //自己的进程是收不到消息的所以这里执行下
@@ -393,7 +397,9 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                 }
             }
         }
-        if ($fromDispatch) return;
+        if ($fromDispatch) {
+            return;
+        }
         if ($this->isCluster()) {
             ProcessManager::getInstance()->getRpcCall(ClusterProcess::class, true)->my_sendToAllFd($data);
         }
@@ -418,7 +424,9 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                 }
             }
         }
-        if ($fromDispatch) return;
+        if ($fromDispatch) {
+            return;
+        }
         if ($this->isCluster()) {
             ProcessManager::getInstance()->getRpcCall(ClusterProcess::class, true)->my_sendToAll($data);
         }
@@ -436,7 +444,9 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
             $fd = $this->uid_fd_table->get($uid)['fd'];
             $this->send($fd, $data, true);
         } else {
-            if ($fromDispatch) return;
+            if ($fromDispatch) {
+                return;
+            }
             if ($this->isCluster()) {
                 ProcessManager::getInstance()->getRpcCall(ClusterProcess::class, true)->my_sendToUid($uid, $data);
             }
@@ -487,7 +497,9 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                 $this->send($fd, $data, true);
             }
         }
-        if ($fromDispatch) return;
+        if ($fromDispatch) {
+            return;
+        }
         //本机处理不了的发给dispatch
         if ($this->isCluster()) {
             if (count($uids) > 0) {
@@ -717,11 +729,11 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
             }
         }
 
-		if ($this->config->get('http_client', false)) {
-			foreach ($this->config->get('http_client') as $poolKey => $url) {
+        if ($this->config->get('http_client', false)) {
+            foreach ($this->config->get('http_client') as $poolKey => $url) {
                 $asynPools[$poolKey] = new HttpClientPool($this->config, $url);
             }
-		}
+        }
 
 
 
@@ -829,7 +841,9 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
             $fd = $this->uid_fd_table->get($uid)['fd'];
             $this->close($fd);
         } else {
-            if ($fromDispatch) return;
+            if ($fromDispatch) {
+                return;
+            }
             if ($this->isCluster()) {
                 ProcessManager::getInstance()->getRpcCall(ClusterProcess::class, true)->my_kickUid($uid);
             }
@@ -1040,7 +1054,9 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
         $status = ['pool' => [], 'model_pool' => [], 'controller_pool' => [], 'coroutine_num' => 0];
         for ($i = 0; $i < $this->worker_num; $i++) {
             $result = ProcessManager::getInstance()->getRpcCallWorker(self::getInstance()->workerId)->getPoolStatus();
-            if (empty($result)) return;
+            if (empty($result)) {
+                return;
+            }
             $this->helpMerge($status['pool'], $result['pool']);
             $this->helpMerge($status['model_pool'], $result['model_pool']);
             $this->helpMerge($status['controller_pool'], $result['controller_pool']);

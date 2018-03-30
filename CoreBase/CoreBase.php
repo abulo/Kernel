@@ -85,11 +85,11 @@ class CoreBase extends Child
     {
         return getInstance()->getRedisPool($name);
     }
-	/**
-	 * 获取 mysql pool
-	 * @param   $name
-	 * @return
-	 */
+    /**
+     * 获取 mysql pool
+     * @param   $name
+     * @return
+     */
     public function getMysqlPool($name)
     {
         return getInstance()->getMysqlPool($name);
@@ -105,11 +105,11 @@ class CoreBase extends Child
         return getInstance()->getMysqlProxy($name);
     }
 
-	/**
-	 * 获取 redis 代理
-	 * @param    $name
-	 * @return
-	 */
+    /**
+     * 获取 redis 代理
+     * @param    $name
+     * @return
+     */
     public function getRedisProxy($name)
     {
         return getInstance()->getRedisProxy($name);
@@ -148,7 +148,6 @@ class CoreBase extends Child
         try {
             $this->logger->addRecord($level, $message, $this->getContext());
         } catch (\Exception $e) {
-
         }
     }
 }

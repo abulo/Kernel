@@ -71,9 +71,9 @@ class AMQP extends AbstractConnection
     public function channel($channel_id = null)
     {
         $channel =  parent::channel($channel_id);
-        swoole_event_add($this->getSocket(),function ()use(&$channel){
-            $channel->wait(null,true);
-        },null,SWOOLE_EVENT_READ);
+        swoole_event_add($this->getSocket(), function () use (&$channel) {
+            $channel->wait(null, true);
+        }, null, SWOOLE_EVENT_READ);
         return $channel;
     }
 }

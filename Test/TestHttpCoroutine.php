@@ -8,7 +8,6 @@
 
 namespace Kernel\Test;
 
-
 use Kernel\Coroutine\CoroutineBase;
 
 class TestHttpCoroutine extends CoroutineBase
@@ -30,6 +29,5 @@ class TestHttpCoroutine extends CoroutineBase
 
     public function send($callback)
     {
-
     }
 }

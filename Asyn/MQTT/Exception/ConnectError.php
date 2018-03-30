@@ -7,6 +7,7 @@
 
 
 namespace Kernel\Asyn\MQTT\Exception;
+
 use Kernel\Asyn\MQTT\Exception;
 
 /**
@@ -15,7 +16,9 @@ use Kernel\Asyn\MQTT\Exception;
  *
  *
  */
-class ConnectError extends Exception {}
+class ConnectError extends Exception
+{
+}
 
 
 # EOF

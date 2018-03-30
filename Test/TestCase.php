@@ -40,22 +40,22 @@ abstract class TestCase extends CoreBase
     /**
      * setUpBeforeClass() 与 tearDownAfterClass() 模板方法将分别在测试用例类的第一个测试运行之前和测试用例类的最后一个测试运行之后调用。
      */
-    public abstract function setUpBeforeClass();
+    abstract public function setUpBeforeClass();
 
     /**
      * setUpBeforeClass() 与 tearDownAfterClass() 模板方法将分别在测试用例类的第一个测试运行之前和测试用例类的最后一个测试运行之后调用。
      */
-    public abstract function tearDownAfterClass();
+    abstract public function tearDownAfterClass();
 
     /**
      * 测试类的每个测试方法都会运行一次 setUp() 和 tearDown() 模板方法
      */
-    public abstract function setUp();
+    abstract public function setUp();
 
     /**
      * 测试类的每个测试方法都会运行一次 setUp() 和 tearDown() 模板方法
      */
-    public abstract function tearDown();
+    abstract public function tearDown();
 
     /**
      * 跳过测试

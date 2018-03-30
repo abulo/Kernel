@@ -316,7 +316,6 @@ function secho($tile, $message)
             getInstance()->pub('$SYS/' . getNodeName() . "/echo", $send);
         }
     } catch (Exception $e) {
-
     }
 }
 

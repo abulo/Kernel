@@ -9,7 +9,6 @@
 
 namespace Kernel\Asyn\Redis;
 
-
 use Kernel\Asyn\AsynPool;
 use Kernel\CoreBase\SwooleException;
 use Kernel\Memory\Pool;
@@ -453,7 +452,9 @@ class RedisAsynPool extends AsynPool
      */
     public function getSync()
     {
-        if ($this->redis_client != null) return $this->redis_client;
+        if ($this->redis_client != null) {
+            return $this->redis_client;
+        }
         //同步redis连接，给task使用
         $this->redis_client = new \Redis();
         if ($this->redis_client->connect($this->config['redis'][$this->active]['ip'], $this->config['redis'][$this->active]['port']) == false) {

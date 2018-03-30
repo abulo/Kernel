@@ -8,7 +8,6 @@
 
 namespace Kernel\Asyn\TcpClient;
 
-
 use Kernel\Asyn\AsynPool;
 use Kernel\CoreBase\PortManager;
 use Kernel\CoreBase\SwooleException;
@@ -134,7 +133,6 @@ class TcpClientPool extends AsynPool
                 $cli->close();
             });
             $client->on("close", function ($cli) {
-
             });
             $client->connect($this->host, $this->port);
         }
@@ -171,5 +169,4 @@ class TcpClientPool extends AsynPool
     {
         $client->close();
     }
-
 }

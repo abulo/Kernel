@@ -8,7 +8,6 @@
 
 namespace Kernel\CoreBase;
 
-
 use Kernel\Components\AOP\AOP;
 use Kernel\Components\AOP\Proxy;
 
@@ -53,7 +52,9 @@ class Child extends AOP
      */
     public function addChild($child)
     {
-        if ($child == null) return;
+        if ($child == null) {
+            return;
+        }
         $child->onAddChild($this);
         $this->child_list[$child->core_name] = $child;
     }

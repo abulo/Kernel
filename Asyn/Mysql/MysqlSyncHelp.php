@@ -8,7 +8,6 @@
 
 namespace Kernel\Asyn\Mysql;
 
-
 use ArrayAccess;
 
 class MysqlSyncHelp implements ArrayAccess

@@ -9,7 +9,6 @@
 
 namespace Kernel;
 
-
 use Kernel\Components\Process\ProcessManager;
 use Kernel\Components\SDHelp\SDHelpProcess;
 use Kernel\CoreBase\ControllerFactory;
@@ -144,7 +143,9 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer
             return;
         }
         $fdinfo = $this->server->connection_info($fd);
-        if (empty($fdinfo)) return;
+        if (empty($fdinfo)) {
+            return;
+        }
         $server_port = $fdinfo['server_port'];
         if ($ifPack) {
             $pack = $this->portManager->getPack($server_port);
@@ -226,12 +227,10 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer
                 $route->errorHandle($e, $fd);
             }
         } catch (\Throwable $e) {
-
         }
         try {
             $this->middlewareManager->after($middlewares, $path);
         } catch (\Throwable $e) {
-
         }
         $this->middlewareManager->destory($middlewares);
         if (Start::getDebug()) {

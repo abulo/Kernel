@@ -8,7 +8,6 @@
 
 namespace Kernel\CoreBase;
 
-
 use Kernel\Components\CatCache\CatCacheRpcProxy;
 
 class ActorContext implements \ArrayAccess

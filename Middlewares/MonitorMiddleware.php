@@ -8,7 +8,6 @@
 
 namespace Kernel\Middlewares;
 
-
 use Monolog\Logger;
 use Kernel\Components\Middleware\Middleware;
 use Kernel\Components\Process\ProcessManager;
@@ -37,12 +36,12 @@ class MonitorMiddleware extends Middleware
     {
         $this->context['path'] = $path;
         $count = count($this->context['RunStack']);
-        for ($i = 0; $i<$count; $i++){
-            if($i==0){
+        for ($i = 0; $i<$count; $i++) {
+            if ($i==0) {
                 $this->context['RunStack'][$i] = "┌".$this->context['RunStack'][$i];
-            }else if ($i == $count-1){
+            } elseif ($i == $count-1) {
                 $this->context['RunStack'][$i] = "└".$this->context['RunStack'][$i];
-            }else{
+            } else {
                 $this->context['RunStack'][$i] = "├".$this->context['RunStack'][$i];
             }
         }
@@ -50,7 +49,7 @@ class MonitorMiddleware extends Middleware
         ProcessManager::getInstance()->getRpcCall(SDHelpProcess::class, true)->addStatistics($path, $this->context['execution_time']);
         if (isset($this->context['error_message'])) {
             $this->log($this->context['error_message'], Logger::ERROR);
-        } else if (self::$efficiency_monitor_enable) {
+        } elseif (self::$efficiency_monitor_enable) {
             $this->log('Monitor');
         }
     }

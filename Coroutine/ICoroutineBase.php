@@ -8,7 +8,6 @@
 
 namespace Kernel\Coroutine;
 
-
 interface ICoroutineBase
 {
     function send($callback);

@@ -7,6 +7,7 @@
 
 
 namespace Kernel\Asyn\MQTT\Exception;
+
 use Kernel\Asyn\MQTT\Exception;
 
 /**
@@ -15,7 +16,9 @@ use Kernel\Asyn\MQTT\Exception;
  * Those clients MUST close connections.
  *
  */
-class Protocol extends Exception {}
+class Protocol extends Exception
+{
+}
 
 
 # EOF

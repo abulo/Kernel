@@ -115,7 +115,6 @@ class Controller extends CoreBase
         $this->http_input = new HttpInput();
         $this->http_output = new HttpOutput($this);
         $this->isEnableError = $this->config->get('error.enable');
-
     }
 
     /**
@@ -276,9 +275,8 @@ class Controller extends CoreBase
         $error_data = getInstance()->getWhoops()->handleException($e);
         if ($this->isEnableError) {
             try {
-                $this->Error->push($e->getMessage(),$error_data);
+                $this->Error->push($e->getMessage(), $error_data);
             } catch (Throwable $e) {
-
             }
         }
 
@@ -459,7 +457,9 @@ class Controller extends CoreBase
      */
     protected function unBindUid()
     {
-        if (empty($this->uid)) return;
+        if (empty($this->uid)) {
+            return;
+        }
         if (Start::$testUnity) {
             $this->testUnitSendStack[] = ['action' => 'unBindUid', 'uid' => $this->uid];
         } else {
@@ -531,7 +531,9 @@ class Controller extends CoreBase
      */
     protected function addSub($topic)
     {
-        if (empty($this->uid)) return;
+        if (empty($this->uid)) {
+            return;
+        }
         getInstance()->addSub($topic, $this->uid);
     }
 
@@ -540,7 +542,9 @@ class Controller extends CoreBase
      */
     protected function removeSub($topic)
     {
-        if (empty($this->uid)) return;
+        if (empty($this->uid)) {
+            return;
+        }
         getInstance()->removeSub($topic, $this->uid);
     }
 

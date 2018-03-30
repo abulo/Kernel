@@ -8,7 +8,6 @@
 
 namespace Kernel\Coroutine;
 
-
 use Kernel\CoreBase\RPCThrowable;
 use Kernel\CoreBase\SwooleException;
 
@@ -88,7 +87,9 @@ abstract class CoroutineBase implements ICoroutineBase
     protected function coPush($data)
     {
         $this->result = $data;
-        if ($this->chan == null) return;
+        if ($this->chan == null) {
+            return;
+        }
         if (!$this->delayRecv || $this->startRecv) {
             go(function () use ($data) {
                 $this->chan->push($data);
@@ -175,7 +176,7 @@ abstract class CoroutineBase implements ICoroutineBase
         return $result;
     }
 
-    public abstract function send($callback);
+    abstract public function send($callback);
 
     /**
      * dump
@@ -199,7 +200,6 @@ abstract class CoroutineBase implements ICoroutineBase
      */
     protected function onTimerOutHandle()
     {
-
     }
 
     /**

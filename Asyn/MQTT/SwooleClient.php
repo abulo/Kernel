@@ -56,7 +56,7 @@ class SwooleClient
      * @param $onClose
      * @return bool
      */
-    public function connect($onConnect,$onReceive,$onError,$onClose)
+    public function connect($onConnect, $onReceive, $onError, $onClose)
     {
         Debug::Log(Debug::DEBUG, 'swoole_connect(): connect to='.$this->address);
         $this->client = new \swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);
@@ -69,10 +69,9 @@ class SwooleClient
         $this->client->on("error", $onError);
         $this->client->on("close", $onClose);
         $arr = parse_url($this->address);
-        swoole_async_dns_lookup($arr['host'], function($host, $ip) use($arr){
+        swoole_async_dns_lookup($arr['host'], function ($host, $ip) use ($arr) {
             $this->client->connect($ip, $arr['port']);
         });
-
     }
 
     /**
@@ -94,7 +93,7 @@ class SwooleClient
      */
     public function close()
     {
-        if($this->isConnected()) {
+        if ($this->isConnected()) {
             $this->client->close();
         }
     }

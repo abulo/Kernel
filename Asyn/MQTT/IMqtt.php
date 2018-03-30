@@ -8,7 +8,6 @@
 
 namespace Kernel\Asyn\MQTT;
 
-
 interface IMqtt
 {
     public function version();

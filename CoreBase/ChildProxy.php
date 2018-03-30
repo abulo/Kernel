@@ -8,7 +8,6 @@
 
 namespace Kernel\CoreBase;
 
-
 use Kernel\Components\AOP\Proxy;
 
 class ChildProxy extends Proxy
@@ -33,7 +32,7 @@ class ChildProxy extends Proxy
 
     public function beforeCall($name, $arguments = null)
     {
-        if(!isset($this->own->getContext()['RunStack'])){
+        if (!isset($this->own->getContext()['RunStack'])) {
             $this->own->getContext()['RunStack'] = [];
         }
         $run_index = count($this->own->getContext()['RunStack']);

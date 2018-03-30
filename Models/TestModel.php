@@ -8,7 +8,6 @@
 
 namespace Kernel\Models;
 
-
 use Kernel\CoreBase\Model;
 
 class TestModel extends Model

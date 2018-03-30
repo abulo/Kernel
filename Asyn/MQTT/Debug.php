@@ -31,7 +31,7 @@ class Debug
     /**
      * Enable Debug
      */
-    static public function Enable()
+    public static function Enable()
     {
         self::$enabled = true;
     }
@@ -39,7 +39,7 @@ class Debug
     /**
      * Disable Debug
      */
-    static public function Disable()
+    public static function Disable()
     {
         self::$enabled = false;
     }
@@ -56,7 +56,7 @@ class Debug
      *
      * @param int $priority
      */
-    static public function SetLogPriority($priority)
+    public static function SetLogPriority($priority)
     {
         self::$priority = (int) $priority;
     }
@@ -71,7 +71,7 @@ class Debug
      * @param string  $message
      * @param string  $bin_dump         If $bin_dump is not empty, hex/ascii char will be dumped
      */
-    static public function Log($priority, $message, $bin_dump='')
+    public static function Log($priority, $message, $bin_dump = '')
     {
         static $DEBUG_NAME = array(
             self::DEBUG  => 'DEBUG',

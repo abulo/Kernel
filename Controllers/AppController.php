@@ -8,17 +8,14 @@
 
 namespace Kernel\Controllers;
 
-
 use Kernel\CoreBase\Controller;
 
 class AppController extends Controller
 {
     public function onConnect()
     {
-
     }
     public function onClose()
     {
-
     }
 }

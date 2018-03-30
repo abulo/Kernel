@@ -138,13 +138,13 @@ abstract class Base
      * @return string
      * @throws Exception
      */
-    final public function build(&$length=0)
+    final public function build(&$length = 0)
     {
         if ($this->protocol_type == self::FIXED_ONLY) {
             $payload = $this->payload();
-        } else if ($this->protocol_type == self::WITH_VARIABLE) {
+        } elseif ($this->protocol_type == self::WITH_VARIABLE) {
             $payload = $this->payload();
-        } else if ($this->protocol_type == self::WITH_PAYLOAD) {
+        } elseif ($this->protocol_type == self::WITH_PAYLOAD) {
             $payload = $this->payload();
         } else {
             throw new Exception('Invalid protocol type');

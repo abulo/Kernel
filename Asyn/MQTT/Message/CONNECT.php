@@ -143,10 +143,12 @@ class CONNECT extends Base
         $messages = $this->readUTF($message);
         $this->client_id = array_shift($messages);
         if ($this->header->getWillFlag()) {
-            $this->will = new Will(array_shift($messages),
+            $this->will = new Will(
+                array_shift($messages),
                 array_shift($messages),
                 $this->header->getWillQos(),
-                $this->header->getWillRetain());
+                $this->header->getWillRetain()
+            );
         }
         if ($this->header->getUserNameFlag()) {
             $this->username = array_shift($messages);
@@ -174,11 +176,11 @@ class CONNECT extends Base
         }
 
         # Append Username
-        if ($this->username != NULL) {
+        if ($this->username != null) {
             $payload .= Utility::PackStringWithLength($this->username);
         }
         # Append Password
-        if ($this->password != NULL) {
+        if ($this->password != null) {
             $payload .= Utility::PackStringWithLength($this->password);
         }
 

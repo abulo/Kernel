@@ -15,6 +15,7 @@ use Kernel\Components\Whoops\Handler\SDPageHandler;
 use Kernel\CoreBase\ControllerFactory;
 use Whoops\Run;
 use FastRoute;
+
 abstract class SwooleHttpServer extends SwooleServer
 {
     /**
@@ -307,11 +308,6 @@ abstract class SwooleHttpServer extends SwooleServer
             $template = $this->loader->view(KERNEL_PATH.DS.'Views'.DS.'error_404');
             $this->cache404 = $template->render();
         }
-
-
-
-
-
     }
 
     /**
@@ -404,11 +400,9 @@ abstract class SwooleHttpServer extends SwooleServer
                 } else {
                     throw new \Exception('no controller');
                 }
-
             } catch (\Throwable $e) {
                 $route->errorHttpHandle($e, $request, $response);
             }
-
         } catch (\Throwable $e) {
         }
 

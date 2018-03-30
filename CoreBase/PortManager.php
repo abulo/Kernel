@@ -92,7 +92,9 @@ class PortManager
     public function buildPort(SwooleServer $swoole_server, $first_port)
     {
         foreach ($this->portConfig as $key => $value) {
-            if ($value['socket_port'] == $first_port) continue;
+            if ($value['socket_port'] == $first_port) {
+                continue;
+            }
             //获得set
             $set = $this->getProbufSet($value['socket_port']);
             if (array_key_exists('ssl_cert_file', $value)) {

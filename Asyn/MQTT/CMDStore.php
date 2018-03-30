@@ -22,7 +22,7 @@ class CMDStore
      * @param int $msgid
      * @return bool
      */
-    public function isEmpty($message_type, $msgid=null)
+    public function isEmpty($message_type, $msgid = null)
     {
         if ($msgid) {
             return empty($this->command_awaits[$message_type][$msgid]);

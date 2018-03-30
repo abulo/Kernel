@@ -39,8 +39,8 @@ class HttpClientRequestCoroutine extends CoroutineBase
         $d = "[".$pool->baseUrl . $data['path']."]";
         $this->request = "[httpClient]$d";
         $this->set($set);
-        if (Start::getDebug()){
-            secho("HTTP",$d);
+        if (Start::getDebug()) {
+            secho("HTTP", $d);
         }
         if ($this->fuse()) {//启动断路器
             $this->send(function ($result) {

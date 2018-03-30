@@ -8,7 +8,6 @@
 
 namespace Kernel\CoreBase;
 
-
 use Kernel\Asyn\Mysql\Miner;
 use Kernel\Components\CatCache\CatCacheRpcProxy;
 use Kernel\Components\Cluster\ClusterProcess;
@@ -109,7 +108,9 @@ abstract class Actor extends CoreBase
      */
     private function execRegistHandle()
     {
-        if ($this->saveContext['@status'] == null) return;
+        if ($this->saveContext['@status'] == null) {
+            return;
+        }
         foreach ($this->saveContext['@status'] as $key => $value) {
             $this->registStatusHandle($key, $value);
         }
@@ -197,7 +198,9 @@ abstract class Actor extends CoreBase
         //邮箱中有消息
         if (count($this->mailbox) > 0) {
             while (true) {
-                if (count($this->mailbox) == 0) break;
+                if (count($this->mailbox) == 0) {
+                    break;
+                }
                 $data = array_shift($this->mailbox);
                 $this->handle($data);
                 if ($data['call'] == "begin") {

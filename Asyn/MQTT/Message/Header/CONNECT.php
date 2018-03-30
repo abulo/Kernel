@@ -11,7 +11,6 @@ use Kernel\Asyn\MQTT\Exception;
 use Kernel\Asyn\MQTT\MQTT;
 use Kernel\Asyn\MQTT\Utility;
 
-
 /**
  * Fixed Header definition for CONNECT
  *
@@ -123,7 +122,6 @@ class CONNECT extends Base
         # Protocol Name
         if ($this->message->mqtt->version() == MQTT::VERSION_3_1_1) {
             $buffer .= Utility::PackStringWithLength('MQTT');
-
         } else {
             $buffer .= Utility::PackStringWithLength('MQIsdp');
         }
@@ -145,11 +143,11 @@ class CONNECT extends Base
         }
 
         # User name flag
-        if ($this->message->username != NULL) {
+        if ($this->message->username != null) {
             $var |= 0x80;
         }
         # Password flag
-        if ($this->message->password != NULL) {
+        if ($this->message->password != null) {
             $var |= 0x40;
         }
 

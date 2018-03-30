@@ -50,7 +50,7 @@ class TestModule
             $value = str_replace('.php', '', $value);
             $class_name = "\\test\\" . $value;
             if (class_exists($class_name)) {
-                $reflection = new \ReflectionClass ($class_name);
+                $reflection = new \ReflectionClass($class_name);
                 $doc = $reflection->getDocComment();
                 $info = $this->docParser->parse($doc);
                 $this->tests[$class_name]['@info'] = $info;
@@ -92,8 +92,7 @@ class TestModule
             } else {
                 print_r("├──\e[30;42m[同步]\e[0m测试类[$className]:$description");
             }
-            if (array_key_exists('codeCoverageIgnore', $classData['@info']))//跳过代码块
-            {
+            if (array_key_exists('codeCoverageIgnore', $classData['@info'])) {//跳过代码块
                 print_r('->');
                 $this->printIgnore();
                 $this->ignoreCount += $count - 1;
@@ -252,12 +251,9 @@ class TestModule
 
     public function once()
     {
-
     }
 
     public function onExceptionHandle($e)
     {
-
     }
 }
-

@@ -8,7 +8,6 @@
 
 namespace Kernel\Controllers;
 
-
 use Kernel\CoreBase\Actor;
 use Kernel\CoreBase\Controller;
 
@@ -25,7 +24,6 @@ class Test extends Controller
         $test->test();
         $test->test2();
         $this->http_output->end($this->getContext());
-
     }
 
     public function http_actor()
@@ -41,9 +39,8 @@ class Test extends Controller
 
     public function http_mysql()
     {
-        $this->db->begin(function ($client){
+        $this->db->begin(function ($client) {
             $testModel = $this->loader->model("TestModel", $this);
         });
     }
-
 }

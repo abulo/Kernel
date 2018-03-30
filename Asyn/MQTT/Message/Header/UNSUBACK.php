@@ -5,9 +5,9 @@
  */
 
 namespace Kernel\Asyn\MQTT\Message\Header;
+
 use Kernel\Asyn\MQTT\Message;
 use Kernel\Asyn\MQTT\Utility;
-
 
 /**
  * Fixed Header definition for UNSUBACK

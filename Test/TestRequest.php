@@ -8,7 +8,6 @@
 
 namespace Kernel\Test;
 
-
 use Exception;
 use Kernel\CoreBase\PortManager;
 

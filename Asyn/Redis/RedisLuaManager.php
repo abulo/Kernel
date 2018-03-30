@@ -61,7 +61,7 @@ class RedisLuaManager
     public function registerLuas($sha1s, $luas, $names)
     {
         $exists = $this->redis->script("exists", ...$sha1s);
-        if($exists==false){
+        if ($exists==false) {
             secho("REDIS", "该RedisServer不支持lua脚本。");
             return;
         }
@@ -73,7 +73,6 @@ class RedisLuaManager
             self::$registerMap[$names[$i]] = $sha1s[$i];
             secho("RLUA", "已加载$names[$i]脚本");
         }
-
     }
 
     /**
@@ -84,5 +83,4 @@ class RedisLuaManager
     {
         return self::$registerMap[$name]??false;
     }
-
 }

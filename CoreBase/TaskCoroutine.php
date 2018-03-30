@@ -32,8 +32,8 @@ class TaskCoroutine extends CoroutineBase
         });
         $d = "[".$task_proxy_data['message']['task_name'] ."::". $task_proxy_data['message']['task_fuc_name']."]";
         $this->request = "[Task]$d";
-        if (Start::getDebug()){
-            secho("TASK",$d);
+        if (Start::getDebug()) {
+            secho("TASK", $d);
         }
         return $this->returnInit();
     }

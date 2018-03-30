@@ -8,7 +8,6 @@
 
 namespace Kernel\CoreBase;
 
-
 class RPCThrowable
 {
     public $className;

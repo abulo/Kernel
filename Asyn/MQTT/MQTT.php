@@ -116,7 +116,7 @@ class MQTT implements IMqtt
         $this->cmdstore = new CMDStore();
 
         # Check Client ID
-        if($check23) {
+        if ($check23) {
             Utility::CheckClientID($clientid);
         }
 
@@ -225,7 +225,7 @@ class MQTT implements IMqtt
      * @param $name
      * @param $call
      */
-    public function on($name,$call)
+    public function on($name, $call)
     {
         $this->call_handlers[$name] = $call;
     }
@@ -238,7 +238,7 @@ class MQTT implements IMqtt
      */
     protected function call_handler($name, array $params = array())
     {
-        if(array_key_exists($name,$this->call_handlers)) {
+        if (array_key_exists($name, $this->call_handlers)) {
             go(function () use ($name, $params) {
                 \co::call_user_func_array($this->call_handlers[$name], $params);
             });
@@ -311,10 +311,10 @@ class MQTT implements IMqtt
             Debug::Log(Debug::DEBUG, 'connect(): bytes written=' . $bytes_written);
 
             $this->keepalive_time = swoole_timer_tick($this->keepalive * 500, [$this, 'keepalive']);
-        }, [$this, 'onReceive'],function (){
+        }, [$this, 'onReceive'], function () {
             secho("MQTT", "连接mqtt服务器失败,正在重试");
-            swoole_timer_after(1000,[$this,'connect']);
-        },function (){
+            swoole_timer_after(1000, [$this,'connect']);
+        }, function () {
             if ($this->keepalive_time!=null) {
                 swoole_timer_clear($this->keepalive_time);
                 $this->keepalive_time = null;
@@ -366,15 +366,14 @@ class MQTT implements IMqtt
                     //0直接执行
                     $this->call_handler('publish', array($this, $message_object));
                     # Do nothing
-                } else if ($qos == 1) {
+                } elseif ($qos == 1) {
                     # call handler
                     //1先执行再回复，可以结合飞行窗口实现顺序发送
                     $this->call_handler('publish', array($this, $message_object));
                     # PUBACK
                     $puback_bytes_written = $this->simpleCommand(Message::PUBACK, $msgid);
                     Debug::Log(Debug::DEBUG, 'loop(): PUBLISH QoS=1 PUBACK written=' . $puback_bytes_written);
-
-                } else if ($qos == 2) {
+                } elseif ($qos == 2) {
                     # PUBREC
                     $pubrec_bytes_written = $this->simpleCommand(Message::PUBREC, $msgid);
                     Debug::Log(Debug::DEBUG, 'loop(): PUBLISH QoS=2 PUBREC written=' . $pubrec_bytes_written);
@@ -398,7 +397,6 @@ class MQTT implements IMqtt
             # Process PUBACK
             # in: Client -> Server, QoS = 1, Step 2
             case Message::PUBACK:
-
                 /**
                  * @var Message\PUBACK $message_object
                  */
@@ -469,7 +467,6 @@ class MQTT implements IMqtt
             # Process PUBCOMP
             # in: Client -> Server, QoS = 2, Step 4
             case Message::PUBCOMP:
-
                 # Message has been published (QoS 2)
 
                 /**
@@ -486,7 +483,6 @@ class MQTT implements IMqtt
 
             # Process SUBACK
             case Message::SUBACK:
-
                 /**
                  * @var Message\SUBACK $message_object
                  */
@@ -578,7 +574,7 @@ class MQTT implements IMqtt
         Debug::Log(Debug::INFO, 'reconnect()');
         if ($close_current) {
             Debug::Log(Debug::DEBUG, 'reconnect(): close current');
-            if($this->socket->isConnected()) {
+            if ($this->socket->isConnected()) {
                 $this->disconnect();
             }
             $this->socket->close();
@@ -671,7 +667,7 @@ class MQTT implements IMqtt
                     )
                 );
             }
-        } else if ($qos == 2) {
+        } elseif ($qos == 2) {
             # QoS = 2, PUBLISH + PUBREC + PUBREL + PUBCOMP
             if (!$dup) {
                 $this->cmdstore->addWait(

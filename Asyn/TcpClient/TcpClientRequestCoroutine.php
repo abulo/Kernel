@@ -41,8 +41,8 @@ class TcpClientRequestCoroutine extends CoroutineBase
         }
         $d = "[".$pool->connect."]"."[". $data['path'] ."]";
         $this->request = "[tcpClient]$d";
-        if (Start::getDebug()){
-            secho("TCP",$d);
+        if (Start::getDebug()) {
+            secho("TCP", $d);
         }
         unset($this->data['path']);
         $this->set($set);

@@ -107,7 +107,9 @@ class Fuse
                 break;
             case self::OPEN://正常状态
                 $total = ($fuse['success'] + $fuse['fail']);
-                if ($total == 0) return self::OPEN;
+                if ($total == 0) {
+                    return self::OPEN;
+                }
                 $threshold = $fuse['fail'] / ($fuse['success'] + $fuse['fail']);
                 if ($threshold > $this->THRESHOLD) {
                     $fuse['state'] = self::CLOSE;

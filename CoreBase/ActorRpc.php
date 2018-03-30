@@ -8,7 +8,6 @@
 
 namespace Kernel\CoreBase;
 
-
 use Kernel\Components\Event\EventCoroutine;
 use Kernel\Memory\Pool;
 
@@ -44,7 +43,9 @@ class ActorRpc
             try {
                 $run();
             } catch (\Exception $e) {
-                if ($fail != null) $fail();
+                if ($fail != null) {
+                    $fail();
+                }
             } finally {
                 $this->end();
             }

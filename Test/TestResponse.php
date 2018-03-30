@@ -8,7 +8,6 @@
 
 namespace Kernel\Test;
 
-
 use Kernel\Coroutine\CoroutineNull;
 
 class TestResponse

@@ -8,7 +8,6 @@
 
 namespace Kernel\Asyn;
 
-
 interface IAsynPool
 {
     function getAsynName();

@@ -47,7 +47,9 @@ class ControllerFactory
      */
     public function getController($controller)
     {
-        if ($controller == null) return null;
+        if ($controller == null) {
+            return null;
+        }
         $controllers = $this->pool[$controller] ?? null;
         if ($controllers == null) {
             $controllers = $this->pool[$controller] = new \SplQueue();

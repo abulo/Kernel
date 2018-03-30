@@ -531,9 +531,14 @@ class Miner
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Miner
      */
-    private function criteria(array &$criteria, $column, $value, $operator = self::EQUALS,
-                              $connector = self::LOGICAL_AND, $quote = null)
-    {
+    private function criteria(
+        array &$criteria,
+        $column,
+        $value,
+        $operator = self::EQUALS,
+        $connector = self::LOGICAL_AND,
+        $quote = null
+    ) {
         $criteria[] = array('column' => $column,
             'value' => $value,
             'operator' => $operator,
@@ -596,9 +601,13 @@ class Miner
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Miner
      */
-    private function criteriaIn(array &$criteria, $column, array $values, $connector = self::LOGICAL_AND,
-                                $quote = null)
-    {
+    private function criteriaIn(
+        array &$criteria,
+        $column,
+        array $values,
+        $connector = self::LOGICAL_AND,
+        $quote = null
+    ) {
         return $this->criteria($criteria, $column, $values, self::IN, $connector, $quote);
     }
 
@@ -626,9 +635,13 @@ class Miner
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Miner
      */
-    private function criteriaNotIn(array &$criteria, $column, array $values, $connector = self::LOGICAL_AND,
-                                   $quote = null)
-    {
+    private function criteriaNotIn(
+        array &$criteria,
+        $column,
+        array $values,
+        $connector = self::LOGICAL_AND,
+        $quote = null
+    ) {
         return $this->criteria($criteria, $column, $values, self::NOT_IN, $connector, $quote);
     }
 
@@ -658,9 +671,14 @@ class Miner
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Miner
      */
-    private function criteriaBetween(array &$criteria, $column, $min, $max, $connector = self::LOGICAL_AND,
-                                     $quote = null)
-    {
+    private function criteriaBetween(
+        array &$criteria,
+        $column,
+        $min,
+        $max,
+        $connector = self::LOGICAL_AND,
+        $quote = null
+    ) {
         return $this->criteria($criteria, $column, array($min, $max), self::BETWEEN, $connector, $quote);
     }
 
@@ -690,9 +708,14 @@ class Miner
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Miner
      */
-    private function criteriaNotBetween(array &$criteria, $column, $min, $max, $connector = self::LOGICAL_AND,
-                                        $quote = null)
-    {
+    private function criteriaNotBetween(
+        array &$criteria,
+        $column,
+        $min,
+        $max,
+        $connector = self::LOGICAL_AND,
+        $quote = null
+    ) {
         return $this->criteria($criteria, $column, array($min, $max), self::NOT_BETWEEN, $connector, $quote);
     }
 
@@ -1174,9 +1197,11 @@ class Miner
      * @param  array $placeholderValues optional placeholder values array
      * @return string WHERE or HAVING portion of the statement
      */
-    private function getCriteriaString(array &$criteria, $usePlaceholders = true,
-                                       array &$placeholderValues = array())
-    {
+    private function getCriteriaString(
+        array &$criteria,
+        $usePlaceholders = true,
+        array &$placeholderValues = array()
+    ) {
         $statement = "";
         $placeholderValues = array();
 
@@ -2127,8 +2152,13 @@ class Miner
                     $Miner->closeHaving();
                 }
             } else {
-                $Miner->having($having['column'], $having['value'], $having['operator'],
-                    $having['connector'], $having['quote']);
+                $Miner->having(
+                    $having['column'],
+                    $having['value'],
+                    $having['operator'],
+                    $having['connector'],
+                    $having['quote']
+                );
             }
         }
 
@@ -2571,7 +2601,8 @@ class Miner
             $activeConfig["host"] . ';port=' . $activeConfig['port'] ?? 3306;
         $pdo = new \PDO(
             $dsn,
-            $activeConfig["user"], $activeConfig["password"],
+            $activeConfig["user"],
+            $activeConfig["password"],
             [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES ' . $activeConfig['charset'] ?? 'utf8']
         );
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
@@ -2586,9 +2617,11 @@ class Miner
      */
     public function getPlaceholderValues()
     {
-        return array_merge($this->getSetPlaceholderValues(),
+        return array_merge(
+            $this->getSetPlaceholderValues(),
             $this->getWherePlaceholderValues(),
-            $this->getHavingPlaceholderValues());
+            $this->getHavingPlaceholderValues()
+        );
     }
 
     /**

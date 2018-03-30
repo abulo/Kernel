@@ -8,6 +8,7 @@
  */
 
 namespace Kernel\Models;
+
 use Kernel\Asyn\HttpClient\HttpClientPool;
 use Kernel\CoreBase\ChildProxy;
 use Kernel\CoreBase\Model;
@@ -36,7 +37,7 @@ class Error extends Model
         $this->url = $this->config->get('error.url');
     }
 
-    public function push($title,$data)
+    public function push($title, $data)
     {
         $id = session_create_id();
         $key = $this->redis_prefix . $id;
