@@ -90,7 +90,7 @@ class Client extends BaseClient
 
     public function getAccessToken($code)
     {
-        $responseData = yield $this->getHttpClient()
+        $responseData =  $this->getHttpClient()
             ->setMethod('GET')
             ->setHeaders([
                 'Accept' => 'application/json',
@@ -141,9 +141,9 @@ class Client extends BaseClient
     {
         //TODO state
 
-        $token = $token ?: yield $this->getAccessToken($this->getCode());
+        $token = $token ?:  $this->getAccessToken($this->getCode());
 
-        $user = yield $this->getUserByToken($token);
+        $user =  $this->getUserByToken($token);
 
         return $user;
     }
@@ -167,7 +167,7 @@ class Client extends BaseClient
 
         $language = $this->withCountryCode ? null : (isset($this->parameters['lang']) ? $this->parameters['lang'] : 'zh_CN');
 
-        $responseData = yield $this->getHttpClient()
+        $responseData =  $this->getHttpClient()
             ->setMethod('GET')
             ->setQuery(array_filter([
                 'access_token' => $token->getToken(),

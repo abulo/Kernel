@@ -8,7 +8,6 @@
 
 namespace Kernel\Components\AOP;
 
-
 abstract class Proxy implements IProxy
 {
     /**
@@ -21,9 +20,9 @@ abstract class Proxy implements IProxy
         $this->own = $own;
     }
 
-    public abstract function beforeCall($name, $arguments = null);
+    abstract public function beforeCall($name, $arguments = null);
 
-    public abstract function afterCall($name, $arguments = null);
+    abstract public function afterCall($name, $arguments = null);
 
     public function __call($name, $arguments)
     {

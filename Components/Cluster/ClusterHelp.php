@@ -44,7 +44,9 @@ class ClusterHelp
 
     public function buildPort()
     {
-        if (!getInstance()->isCluster()) return;
+        if (!getInstance()->isCluster()) {
+            return;
+        }
         //创建dispatch端口用于连接dispatch
         $this->port = getInstance()->server->listen('0.0.0.0', $this->config['cluster']['port'], SWOOLE_SOCK_TCP);
         if ($this->port == false) {
@@ -57,7 +59,6 @@ class ClusterHelp
             $serv->protect($fd, true);
         });
         $this->port->on('close', function ($serv, $fd) {
-
         });
 
         $this->port->on('receive', function ($serv, $fd, $from_id, $data) {

@@ -8,7 +8,6 @@
 
 namespace Kernel\Components\Middleware;
 
-
 use Kernel\CoreBase\CoreBase;
 use Kernel\CoreBase\SwooleInterruptException;
 

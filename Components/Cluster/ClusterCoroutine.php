@@ -29,8 +29,8 @@ class ClusterCoroutine extends CoroutineBase
         $this->receive_call = $receive_call;
         $this->token = $token;
         $this->request = "[ClusterRPC]$token";
-        if (Start::getDebug()){
-            secho("CLUSTER",$token);
+        if (Start::getDebug()) {
+            secho("CLUSTER", $token);
         }
         $this->set($set);
         $receive_call[$token] = function ($data) {

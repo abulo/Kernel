@@ -8,7 +8,6 @@
 
 namespace Kernel\Components\GrayLog;
 
-
 class GrayLogHelp
 {
     public static function init()
@@ -21,5 +20,4 @@ class GrayLogHelp
             });
         }
     }
-
 }

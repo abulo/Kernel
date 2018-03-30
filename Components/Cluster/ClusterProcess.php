@@ -71,7 +71,9 @@ class ClusterProcess extends Process
     public function my_addActor($actor)
     {
         $node = $this->searchActor($actor);
-        if ($node) return false;
+        if ($node) {
+            return false;
+        }
         $this->th_addActor($this->node_name, $actor);
         foreach ($this->client as $client) {
             $client->addNodeActor($this->node_name, $actor);
@@ -119,7 +121,9 @@ class ClusterProcess extends Process
                 EventDispatcher::getInstance()->dispatch(Actor::SAVE_NAME . $actor, $data, false, true);
                 return;
             }
-            if (!isset($this->client[$node_name])) return;
+            if (!isset($this->client[$node_name])) {
+                return;
+            }
             $this->client[$node_name]->callActor($actor, $data);
         }
     }
@@ -138,7 +142,9 @@ class ClusterProcess extends Process
                 EventDispatcher::getInstance()->dispathToWorkerId($workerId, $token, $result);
                 return;
             }
-            if (!isset($this->client[$node_name])) return;
+            if (!isset($this->client[$node_name])) {
+                return;
+            }
             $this->client[$node_name]->callActorBack($workerId, $token, $result);
         }
     }
@@ -150,7 +156,9 @@ class ClusterProcess extends Process
      */
     protected function searchActor($actor)
     {
-        if (empty($actor)) return false;
+        if (empty($actor)) {
+            return false;
+        }
         foreach ($this->actorMap as $node_name => $set) {
             if ($set->contains($actor)) {
                 return $node_name;
@@ -198,10 +206,14 @@ class ClusterProcess extends Process
      */
     public function my_kickUid($uid)
     {
-        if (empty($uid)) return;
+        if (empty($uid)) {
+            return;
+        }
         $node_name = $this->searchUid($uid);
         if ($node_name) {
-            if (!isset($this->client[$node_name])) return;
+            if (!isset($this->client[$node_name])) {
+                return;
+            }
             $this->client[$node_name]->kickUid($uid);
         }
     }
@@ -212,10 +224,14 @@ class ClusterProcess extends Process
      */
     public function my_sendToUid($uid, $data)
     {
-        if (empty($uid)) return;
+        if (empty($uid)) {
+            return;
+        }
         $node_name = $this->searchUid($uid);
         if ($node_name) {
-            if (!isset($this->client[$node_name])) return;
+            if (!isset($this->client[$node_name])) {
+                return;
+            }
             $this->client[$node_name]->sendToUid($uid, $data);
         }
     }
@@ -263,7 +279,9 @@ class ClusterProcess extends Process
      */
     public function my_addSub($topic, $uid)
     {
-        if (empty($uid)) return;
+        if (empty($uid)) {
+            return;
+        }
         if (!isset($this->subArr[$topic])) {
             $this->subArr[$topic] = new Set();
         }
@@ -277,7 +295,9 @@ class ClusterProcess extends Process
      */
     public function my_removeSub($topic, $uid)
     {
-        if (empty($uid)) return;
+        if (empty($uid)) {
+            return;
+        }
         if (isset($this->subArr[$topic])) {
             $this->subArr[$topic]->remove($uid);
             if ($this->subArr[$topic]->count() == 0) {
@@ -355,10 +375,14 @@ class ClusterProcess extends Process
     {
         $count = count($arr);
         $m = 0;
-        if ($isSYS) $m = 1;
+        if ($isSYS) {
+            $m = 1;
+        }
         for ($i = $m; $i < $count; $i++) {
             $new = $arr;
-            if ($new[$i] == '+') continue;
+            if ($new[$i] == '+') {
+                continue;
+            }
             $new[$i] = '+';
             $temp[] = $new;
             $value = implode('/', $new);
@@ -375,7 +399,9 @@ class ClusterProcess extends Process
      */
     public function my_clearUidSub($uid)
     {
-        if (empty($uid)) return;
+        if (empty($uid)) {
+            return;
+        }
         foreach ($this->subArr as $sub) {
             $sub->remove($uid);
         }
@@ -476,8 +502,12 @@ class ClusterProcess extends Process
                 foreach ($body as $value) {
                     $node_name = $value['Node'];
                     $ips = $value['TaggedAddresses'];
-                    if (!isset($ips['lan'])) continue;
-                    if ($ips['lan'] == getBindIp()) continue;
+                    if (!isset($ips['lan'])) {
+                        continue;
+                    }
+                    if ($ips['lan'] == getBindIp()) {
+                        continue;
+                    }
                     if (!isset($this->client[$node_name])) {
                         $this->addNode($node_name, $ips['lan']);
                     }
@@ -499,7 +529,6 @@ class ClusterProcess extends Process
                 $index = $data['headers']['x-consul-index'];
                 $this->updateFromConsul($index);
             });
-
     }
 
     /**
@@ -569,7 +598,9 @@ class ClusterProcess extends Process
      */
     protected function searchUid($uid)
     {
-        if (empty($uid)) return false;
+        if (empty($uid)) {
+            return false;
+        }
         foreach ($this->map as $node_name => $set) {
             if ($set->contains($uid)) {
                 return $node_name;
@@ -703,7 +734,9 @@ class ClusterProcess extends Process
      */
     public function isOnline($uid)
     {
-        if (empty($uid)) return false;
+        if (empty($uid)) {
+            return false;
+        }
         foreach ($this->map as $node_name => $set) {
             if ($set->contains($uid)) {
                 return true;
@@ -720,7 +753,6 @@ class ClusterProcess extends Process
     {
         $sum = 0;
         foreach ($this->map as $node_name => $set) {
-
             $sum += $set->count();
         }
         return $sum;
@@ -819,7 +851,9 @@ class ClusterProcess extends Process
     {
         $node_name = $this->searchUid($uid);
         if ($node_name) {
-            if (!isset($this->client[$node_name])) return null;
+            if (!isset($this->client[$node_name])) {
+                return null;
+            }
             $token = $this->client[$node_name]->getUidInfo($uid);
             $fdInfo = $this->client[$node_name]->getTokenResult($token);
             return $fdInfo;
@@ -836,7 +870,9 @@ class ClusterProcess extends Process
      */
     public function my_getStatistics($node_name, $index, $num)
     {
-        if (!isset($this->client[$node_name])) return null;
+        if (!isset($this->client[$node_name])) {
+            return null;
+        }
         $token = $this->client[$node_name]->getStatistics($index, $num);
         $map = $this->client[$node_name]->getTokenResult($token);
         return $map;

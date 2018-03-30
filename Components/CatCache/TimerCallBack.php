@@ -8,7 +8,6 @@
 
 namespace Kernel\Components\CatCache;
 
-
 use Kernel\Components\Event\Event;
 use Kernel\Components\Event\EventDispatcher;
 use Kernel\CoreBase\Child;

@@ -24,7 +24,7 @@ class EventCoroutine extends CoroutineBase
     {
         $this->eventType = $eventType;
         $this->request = "[Event] $eventType";
-        if(Start::getDebug()) {
+        if (Start::getDebug()) {
             secho("EVENT", $eventType . "\n");
         }
         $this->set($set);

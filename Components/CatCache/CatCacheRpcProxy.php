@@ -37,7 +37,9 @@ class CatCacheRpcProxy implements \ArrayAccess
             ksort($timer_back);
             $time = time() * 1000;
             foreach ($timer_back as $key => $value) {
-                if ($key > $time) break;
+                if ($key > $time) {
+                    break;
+                }
                 $value['param_arr'][] = "timer_back.$key";
                 EventDispatcher::getInstance()->randomDispatch(TimerCallBack::KEY, $value);
             }

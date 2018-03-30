@@ -34,5 +34,4 @@ class AccessToken implements AccessTokenInterface, \ArrayAccess, \JsonSerializab
     {
         return $this->getToken();
     }
-
 }

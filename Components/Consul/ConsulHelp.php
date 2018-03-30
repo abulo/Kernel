@@ -42,7 +42,9 @@ class ConsulHelp
      */
     public static function getMessgae($message)
     {
-        if (empty($message)) return;
+        if (empty($message)) {
+            return;
+        }
         foreach ($message as $key => $value) {
             ConsulServices::getInstance()->updateServies($key, $value);
         }

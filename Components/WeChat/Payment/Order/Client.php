@@ -22,13 +22,13 @@ class Client extends BaseClient
         $params['appid'] = $this->app->getConfig('appid');
         $params['notify_url'] = $params['notify_url'] ?? $this->app->getConfig('notify_url');
 
-        $response = yield $this->request($this->wrap('pay/unifiedorder'), $params);
+        $response =  $this->request($this->wrap('pay/unifiedorder'), $params);
         return $response;
     }
 
     public function queryByOutTradeNumber(string $tradeNo)
     {
-        $response = yield $this->query([
+        $response =  $this->query([
             'out_trade_no' => $tradeNo,
         ]);
         return $response;
@@ -36,7 +36,7 @@ class Client extends BaseClient
 
     public function queryByTransactionId(string $transactionId)
     {
-        $response = yield $this->query([
+        $response =  $this->query([
             'transaction_id' => $transactionId,
         ]);
         return $response;
@@ -46,7 +46,7 @@ class Client extends BaseClient
     {
         $params['appid'] = $this->app->getConfig('appid');
 
-        $response = yield $this->request($this->wrap('pay/orderquery'), $params);
+        $response =  $this->request($this->wrap('pay/orderquery'), $params);
         return $response;
     }
 

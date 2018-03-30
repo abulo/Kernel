@@ -8,7 +8,6 @@
 
 namespace Kernel\Components\TimerTask;
 
-
 use Kernel\Asyn\HttpClient\HttpClient;
 use Kernel\Asyn\HttpClient\HttpClientPool;
 use Kernel\Components\Event\Event;
@@ -46,8 +45,6 @@ class TimerTask extends CoreBase
         $this->id = swoole_timer_tick(1000, function () {
             $this->timerTask();
         });
-
-
     }
 
 
@@ -77,13 +74,13 @@ class TimerTask extends CoreBase
                 $start_time = strtotime(date($timer_task['start_time']));
                 if (strpos($timer_task['start_time'], "i")) {
                     $span = " +1 minute";
-                } else if (strpos($timer_task['start_time'], "H")) {
+                } elseif (strpos($timer_task['start_time'], "H")) {
                     $span = " +1 hour";
-                } else if (strpos($timer_task['start_time'], "d")) {
+                } elseif (strpos($timer_task['start_time'], "d")) {
                     $span = " +1 day";
-                } else if (strpos($timer_task['start_time'], "m")) {
+                } elseif (strpos($timer_task['start_time'], "m")) {
                     $span = " +1 month";
-                } else if (strpos($timer_task['start_time'], "Y")) {
+                } elseif (strpos($timer_task['start_time'], "Y")) {
                     $span = " +1 year";
                 } else {
                     $span = '';
@@ -191,7 +188,7 @@ class TimerTask extends CoreBase
                 $task = getInstance()->loader->task($timer_task['task_name'], $child);
                 $startTime = getMillisecond();
                 $path = "[TimerTask] " . $timer_task['task_name'] . "::" . $timer_task['method_name'];
-                $task->startTask($timer_task['method_name'],[],-1, function () use (&$child, $startTime, $path) {
+                $task->startTask($timer_task['method_name'], [], -1, function () use (&$child, $startTime, $path) {
                     $child->destroy();
                     Pool::getInstance()->push($child);
                     ProcessManager::getInstance()->getRpcCall(SDHelpProcess::class, true)->addStatistics($path, getMillisecond() - $startTime);

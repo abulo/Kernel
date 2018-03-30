@@ -11,7 +11,7 @@ class Paid extends Handler
 {
     public function handle(\Closure $closure)
     {
-        $result = yield $closure($this->getMessage(), [$this, 'fail']);
+        $result =  $closure($this->getMessage(), [$this, 'fail']);
 
         $this->strict($result);
 

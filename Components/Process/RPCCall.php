@@ -8,7 +8,6 @@
 
 namespace Kernel\Components\Process;
 
-
 use Kernel\Components\Event\Event;
 use Kernel\Components\Event\EventDispatcher;
 use Kernel\Memory\Pool;
@@ -49,7 +48,9 @@ class RPCCall
      */
     public function __call($name, $arguments)
     {
-        if ($arguments == null) $arguments = [];
+        if ($arguments == null) {
+            $arguments = [];
+        }
         $token = 0;
         switch ($this->case) {
             case self::INIT_PROCESS:

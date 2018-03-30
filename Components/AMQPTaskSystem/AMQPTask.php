@@ -81,5 +81,4 @@ abstract class AMQPTask extends CoreBase
         Pool::getInstance()->push($this);
         $this->message = null;
     }
-
 }

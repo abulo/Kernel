@@ -131,7 +131,7 @@ class Application extends Model
 
     public function handlePaidNotify(\Closure $closure)
     {
-        $result = yield (new Notify\Paid($this))->handle($closure);
+        $result =  (new Notify\Paid($this))->handle($closure);
 
         return $result;
     }

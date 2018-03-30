@@ -8,7 +8,6 @@
 
 namespace Kernel\Components\Process;
 
-
 use Kernel\Components\Event\EventDispatcher;
 use Kernel\SwooleMarco;
 
@@ -61,7 +60,7 @@ abstract class Process extends ProcessRPC
     /**
      * @param $process
      */
-    public abstract function start($process);
+    abstract public function start($process);
 
     /**
      * 关服处理

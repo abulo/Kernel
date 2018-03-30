@@ -119,7 +119,8 @@ Zepto(function ($) {
         e.currentTarget.removeAttribute('aria-label');
     });
 
-    function fallbackMessage(action) {
+    function fallbackMessage(action)
+    {
         var actionMsg = '';
         var actionKey = (action === 'cut' ? 'X' : 'C');
 
@@ -132,7 +133,8 @@ Zepto(function ($) {
         return actionMsg;
     }
 
-    function scrollIntoView($node, $parent) {
+    function scrollIntoView($node, $parent)
+    {
         var nodeOffset = $node.offset();
         var nodeTop = nodeOffset.top;
         var nodeBottom = nodeTop + nodeOffset.height;
@@ -189,7 +191,8 @@ Zepto(function ($) {
     $('.sf-dump-toggle span').html('&#9654;');
 
     // Make the given frames-tab active
-    function setActiveFramesTab($tab) {
+    function setActiveFramesTab($tab)
+    {
         $tab.addClass('frames-tab-active');
 
         if ($tab.attr('id') == 'application-frames-tab') {

@@ -62,7 +62,7 @@ class BaseClient extends Model
             'body' => XML::build($params),
         ], $options);
 
-        $response = yield $this->performRequest($endpoint, $method, $options);
+        $response =  $this->performRequest($endpoint, $method, $options);
 
         return $returnResponse ? $response : $this->castResponseToType($response);
     }
@@ -86,7 +86,7 @@ class BaseClient extends Model
 
         $url = '/' . ltrim($url, '/');
 
-        $responseData = yield $client->coroutineExecute($url);
+        $responseData =  $client->coroutineExecute($url);
 
         return new Response($responseData);
     }

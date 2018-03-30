@@ -8,7 +8,6 @@
 
 namespace Kernel\Components\log;
 
-
 use Monolog\Formatter\JsonFormatter;
 
 class SDJsonFormatter extends JsonFormatter
@@ -21,8 +20,8 @@ class SDJsonFormatter extends JsonFormatter
         $context = $record['context'];
         $RunStack = $context['RunStack']??[];
         $count = count($RunStack);
-        if($count>20){
-            for($i = 0;$i<20;$i++){
+        if ($count>20) {
+            for ($i = 0; $i<20; $i++) {
                 $newRunStack[] = $RunStack[$i];
             }
             $newRunStack[20] = "已截取20条显示，一共$count 条...";

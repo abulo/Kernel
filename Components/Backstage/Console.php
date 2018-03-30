@@ -35,7 +35,6 @@ class Console extends Controller
      */
     public function back_onClose()
     {
-
     }
 
     /**

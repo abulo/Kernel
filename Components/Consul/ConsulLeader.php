@@ -8,7 +8,6 @@
 
 namespace Kernel\Components\Consul;
 
-
 use Kernel\Asyn\HttpClient\HttpClient;
 use Kernel\Components\Event\EventDispatcher;
 use Kernel\Components\SDHelp\SDHelpProcess;
@@ -129,8 +128,7 @@ class ConsulLeader
                 }
                 $body = json_decode($data['body'], true)[0];
                 $index = $data['headers']['x-consul-index'];
-                if (!isset($body['Session']))//代表没有Leader
-                {
+                if (!isset($body['Session'])) {//代表没有Leader
                     $this->leader($index);
                 } else {
                     $this->checkLeader($index);
