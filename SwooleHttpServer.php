@@ -351,6 +351,8 @@ abstract class SwooleHttpServer extends SwooleServer
             $server_port = $this->getServerPort($request->fd);
         }
 
+        $request = $this->beforeSwooleHttpRequest($request);
+
         $middleware_names = $this->portManager->getMiddlewares($server_port);
         $context = [];
         $path = $request->server['request_uri'];
@@ -367,8 +369,8 @@ abstract class SwooleHttpServer extends SwooleServer
                 $cHandler = $route->getHandler();
                 $path = $route->getPath();
                 $middleware_route = $route->getMiddleware();
-
                 $request->route = $cHandler;
+                var_dump($middleware_route);
                 //路由上的中间件
                 if ($middleware_route) {
                     $middleware_controller_name = $route->getMiddlewareControllerName();
@@ -390,12 +392,11 @@ abstract class SwooleHttpServer extends SwooleServer
                 $controller_name = $route->getControllerName();
                 $method_name = $this->portManager->getMethodPrefix($server_port) . $route->getMethodName();
                 $controller_instance = ControllerFactory::getInstance()->getController($controller_name);
-
                 if ($controller_instance != null) {
                     $controller_instance->setContext($context);
                     if ($route->getMethodName() == ConsulHelp::HEALTH) {//健康检查
                         $response->end('ok');
-                        $controller_instance->destroy();
+                        // $controller_instance->destroy();
                     } else {
                         $request->route = $cHandler;
                         $controller_instance->setRequestResponse($request, $response, $controller_name, $method_name, $route->getParams());

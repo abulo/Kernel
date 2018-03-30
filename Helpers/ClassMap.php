@@ -25,7 +25,7 @@ return [
         'Ds'=>dirname(__DIR__).DS.'Library'.DS.'php-ds'.DS.'polyfill'.DS.'src',//'.DS.'//need ext-ds
 		'GuzzleHttp\Psr7'=>dirname(__DIR__).DS.'Library'.DS.'guzzle'.DS.'psr7'.DS.'src',
 		'Intervention\Image'=>dirname(__DIR__).DS.'Library'.DS.'Intervention'.DS.'image'.DS.'src'.DS.'Intervention'.DS.'Image',
-		// 'League\Plates'=>dirname(__DIR__).DS.'Library'.DS.'thephpleague'.DS.'plates'.DS.'src',
+		'Whoops'=>dirname(__DIR__).DS.'Library'.DS.'filp'.DS.'whoops'.DS.'src'.DS.'Whoops',
 
 		// 二维码相关库
 		'BaconQrCode' => dirname(__DIR__).DS.'Library'.DS.'Bacon'.DS.'BaconQrCode'.DS.'src'.DS.'BaconQrCode',

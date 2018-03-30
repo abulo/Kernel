@@ -2,22 +2,29 @@
 
 namespace Kernel;
 
+use Gelf\Publisher;
+use Monolog\Formatter\JsonFormatter;
+use Monolog\Handler\GelfHandler;
 use Monolog\ErrorHandler;
 use Monolog\Handler\MongoDBHandler;
 use DateTimeZone;
 use MongoDB\Client;
 use Monolog\Handler\RotatingFileHandler;
+use Monolog\Handler\SyslogHandler;
 use Monolog\Logger;
 use Noodlehaus\Config;
 use Kernel\Components\Backstage\BackstageHelp;
 use Kernel\Components\Event\EventDispatcher;
+use Kernel\Components\GrayLog\UdpTransport;
+use Kernel\Components\log\SDJsonFormatter;
 use Kernel\Components\Middleware\MiddlewareManager;
 use Kernel\Components\Process\ProcessRPC;
 use Kernel\CoreBase\ControllerFactory;
 use Kernel\CoreBase\ILoader;
 use Kernel\CoreBase\Loader;
+use Kernel\CoreBase\PackException;
 use Kernel\CoreBase\PortManager;
-use Kernel\Coroutine\Coroutine;
+use Whoops\Exception\ErrorException;
 use Kernel\Container\Container;
 
 /**
@@ -88,12 +95,6 @@ abstract class SwooleServer extends ProcessRPC
     public $portManager;
 
     /**
-     * 是否需要协程支持(默认开启)
-     * @var bool
-     */
-    protected $needCoroutine = true;
-
-    /**
      * @var MiddlewareManager
      */
     protected $middlewareManager;
@@ -158,11 +159,14 @@ abstract class SwooleServer extends ProcessRPC
         $logHandle->setTimezone(new DateTimeZone($this->config->get('common.timezone', 'PRC')));
         switch ($this->config->get('log.active', 'file')) {
             case 'file':
-                $logHandle->pushHandler(new RotatingFileHandler(
+
+                $handel = new RotatingFileHandler(
                     STORAGE_LOG_PATH . DS . $this->name .getNodeName(). '.log',
                     $this->config->get('log.file.log_max_files', 15),
                     $this->config->get('log.log_level', \Monolog\Logger::DEBUG)
-                ));
+                );
+                $handel->setFormatter(new JsonFormatter());
+                $logHandle->pushHandler($handel);
                 break;
             case 'mongodb':
                 $uri = 'mongodb://'.implode($this->config->get('log.mongodb.host'), ',').'/';
@@ -171,12 +175,13 @@ abstract class SwooleServer extends ProcessRPC
                     $this->config->get('log.mongodb.uriOptions'),
                     $this->config->get('log.mongodb.driverOptions')
                 );
-                $mongodb = new MongoDBHandler(
+                $handel = new MongoDBHandler(
                     $client,
                     $this->config->get('log.mongodb.database'),
                     $this->config->get('log.mongodb.collection', 'logger')
                 );
-                $logHandle->pushHandler($mongodb);
+                $handel->setFormatter(new JsonFormatter());
+                $logHandle->pushHandler($handel);
                 break;
         }
         ErrorHandler::register($logHandle);
@@ -194,8 +199,8 @@ abstract class SwooleServer extends ProcessRPC
         $this->middlewareManager = new MiddlewareManager();
         $this->user = $this->config->get('server.set.user', '');
         $this->setLogHandler();
-        register_shutdown_function(array($this, 'checkErrors'));
-        set_error_handler(array($this, 'displayErrorHandler'));
+        set_error_handler(array($this, 'displayErrorHandler'), E_ALL | E_STRICT);
+        set_exception_handler(array($this, 'displayExceptionHandler'));
         $this->portManager = new PortManager($this->config['ports']);
 
 
@@ -358,11 +363,7 @@ abstract class SwooleServer extends ProcessRPC
         // 重新加载配置
         $this->config = $this->config->load(getConfigDir());
         $this->container = new Container;
-        // $this->container = new Container;
         if (!$serv->taskworker) {//worker进程
-            if ($this->needCoroutine) {//启动协程调度器
-                Coroutine::init();
-            }
             $workerProcessName = ":work-num-:{$serv->worker_id}";
             $processName = Start::setProcessTitle(getServerName() . $workerProcessName);
             $pidList = ServerPid::makePidList('work', $serv->worker_pid, $processName);
@@ -405,44 +406,46 @@ abstract class SwooleServer extends ProcessRPC
         //反序列化，出现异常断开连接
         try {
             $client_data = $pack->unPack($data);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $pack->errorHandle($e, $fd);
             return;
         }
-        Coroutine::startCoroutine(function () use ($client_data, $server_port, $fd, $uid) {
-            $middleware_names = $this->portManager->getMiddlewares($server_port);
-            $context = [];
-            $path = '';
-            $middlewares = $this->middlewareManager->create($middleware_names, $context, [$fd, &$client_data]);
-            //client_data进行处理
-            try {
-                yield $this->middlewareManager->before($middlewares);
-                $route = $this->portManager->getRoute($server_port);
-                try {
-                    $client_data = $route->handleClientData($client_data);
-                    $controller_name = $route->getControllerName();
-                    $method_name = $this->portManager->getMethodPrefix($server_port) . $route->getMethodName();
-                    $path = $route->getPath();
-                    $controller_instance = ControllerFactory::getInstance()->getController($controller_name);
-                    if ($controller_instance != null) {
-                        $controller_instance->setContext($context);
-                        yield $controller_instance->setClientData($uid, $fd, $client_data, $controller_name, $method_name, $route->getParams());
-                    } else {
-                        throw new \Exception('no controller');
-                    }
-                } catch (\Exception $e) {
-                    $route->errorHandle($e, $fd);
-                }
-            } catch (\Exception $e) {
-            }
-            try {
-                yield $this->middlewareManager->after($middlewares, $path);
-            } catch (\Exception $e) {
-            }
-            $this->middlewareManager->destory($middlewares);
 
-            unset($context);
-        });
+        $middleware_names = $this->portManager->getMiddlewares($server_port);
+        $context = [];
+        $path = '';
+        $middlewares = $this->middlewareManager->create($middleware_names, $context, [$fd, &$client_data]);
+        //client_data进行处理
+        try {
+            $this->middlewareManager->before($middlewares);
+            $route = $this->portManager->getRoute($server_port);
+            try {
+                $client_data = $route->handleClientData($client_data);
+                $controller_name = $route->getControllerName();
+                $method_name = $this->portManager->getMethodPrefix($server_port) . $route->getMethodName();
+                $path = $route->getPath();
+                $controller_instance = ControllerFactory::getInstance()->getController($controller_name);
+                if ($controller_instance != null) {
+                    $controller_instance->setContext($context);
+                    $controller_instance->setClientData($uid, $fd, $client_data, $controller_name, $method_name, $route->getParams());
+                } else {
+                    throw new \Exception('no controller');
+                }
+            } catch (\Throwable $e) {
+                $route->errorHandle($e, $fd);
+            }
+        } catch (\Throwable $e) {
+        }
+        try {
+            $this->middlewareManager->after($middlewares, $path);
+        } catch (\Throwable $e) {
+
+        }
+        $this->middlewareManager->destory($middlewares);
+        if (Start::getDebug()) {
+            secho("DEBUG", $context);
+        }
+        unset($context);
     }
 
     /**
@@ -525,7 +528,7 @@ abstract class SwooleServer extends ProcessRPC
                 break;
             default:
                 if (!empty($message['func'])) {
-                    call_user_func($message['func'], $message['message']);
+                    $message['func']($message['message']);
                 }
         }
     }
@@ -546,7 +549,7 @@ abstract class SwooleServer extends ProcessRPC
         $log .= json_encode($data);
         $this->log->alert($log);
         if ($this->onErrorHandel != null) {
-            call_user_func($this->onErrorHandel, '【！！！】服务器进程异常退出', $log);
+            \co::call_user_func($this->onErrorHandel, '【！！！】服务器进程异常退出', $log);
         }
     }
 
@@ -603,75 +606,29 @@ abstract class SwooleServer extends ProcessRPC
      */
     public function __call($name, $arguments)
     {
-        return call_user_func_array(array($this->server, $name), $arguments);
+        return \co::call_user_func_array(array($this->server, $name), $arguments);
     }
 
     /**
-     * 全局错误监听
+     * @param \Exception $exception
+     * @throws ErrorException
+     */
+    public function displayExceptionHandler(\Exception $exception)
+    {
+        throw new ErrorException($exception->getMessage(), $exception->getCode(), 1, $exception->getFile(), $exception->getLine());
+    }
+
+    /**
      * @param $error
      * @param $error_string
      * @param $filename
      * @param $line
      * @param $symbols
+     * @throws ErrorException
      */
     public function displayErrorHandler($error, $error_string, $filename, $line, $symbols)
     {
-        $log = "WORKER Error ";
-        $log .= "$error_string ($filename:$line)";
-        $this->log->error($log);
-        if ($this->onErrorHandel != null) {
-            call_user_func($this->onErrorHandel, '服务器发生严重错误', $log);
-        }
-    }
-
-    /**
-     * Check errors when current process exited.
-     *
-     * @return void
-     */
-    public function checkErrors()
-    {
-        $log = "WORKER EXIT UNEXPECTED ";
-        $error = error_get_last();
-        if (isset($error['type'])) {
-            switch ($error['type']) {
-                case E_ERROR:
-                case E_PARSE:
-                case E_CORE_ERROR:
-                case E_COMPILE_ERROR:
-                    $message = $error['message'];
-                    $file = $error['file'];
-                    $line = $error['line'];
-                    $log .= "$message ($file:$line)\nStack trace:\n";
-                    $trace = debug_backtrace();
-                    foreach ($trace as $i => $t) {
-                        if (!isset($t['file'])) {
-                            $t['file'] = 'unknown';
-                        }
-                        if (!isset($t['line'])) {
-                            $t['line'] = 0;
-                        }
-                        if (!isset($t['function'])) {
-                            $t['function'] = 'unknown';
-                        }
-                        $log .= "#$i {$t['file']}({$t['line']}): ";
-                        if (isset($t['object']) and is_object($t['object'])) {
-                            $log .= get_class($t['object']) . '->';
-                        }
-                        $log .= "{$t['function']}()\n";
-                    }
-                    if (isset($_SERVER['REQUEST_URI'])) {
-                        $log .= '[QUERY] ' . $_SERVER['REQUEST_URI'];
-                    }
-                    $this->log->error($log);
-                    if ($this->onErrorHandel != null) {
-                        call_user_func($this->onErrorHandel, '服务器发生崩溃事件', $log);
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
+        throw new ErrorException($error_string, $error, 1, $filename, $line);
     }
 
     /**

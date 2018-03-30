@@ -157,6 +157,7 @@ class Controller extends CoreBase
      */
     public function setRequestResponse($request, $response, $controller_name, $method_name, $params)
     {
+
         $this->request = $request;
         $this->response = $response;
         $this->http_input->set($request);
@@ -165,6 +166,7 @@ class Controller extends CoreBase
         $this->isRPC = empty($this->rpc_request_id) ? false : true;
         $this->request_type = SwooleMarco::HTTP_REQUEST;
         $this->fd = $request->fd;
+
         return $this->execute($controller_name, $method_name, $params);
     }
 
@@ -180,12 +182,17 @@ class Controller extends CoreBase
             $this->context['raw_method_name'] = "$controller_name:$method_name";
             $method_name = 'defaultMethod';
         }
+        $result = false;
         try {
             $this->initialization($controller_name, $method_name);
             if ($params == null) {
-                return $this->getProxy()->$method_name();
+                $result = $this->getProxy()->$method_name();
+                $this->destroy();
+                return $result;
             } else {
-                return $this->getProxy()->$method_name($params);
+                $result = $this->getProxy()->$method_name($params);
+                $this->destroy();
+                return $result;
             }
         } catch (Throwable $e) {
             $this->getProxy()->onExceptionHandle($e);

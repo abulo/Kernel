@@ -8,7 +8,6 @@
  */
 namespace Kernel\Components\Session;
 
-
 /**
  * Class Session
  *
@@ -31,40 +30,40 @@ class Session
      */
     public function get($key)
     {
-        $value = yield  $this->sessionHandler->get($this->sessionId);
-		$value = json_decode($value,true);
+        $value =   $this->sessionHandler->get($this->sessionId);
+        $value = json_decode($value, true);
         return $value[$key] ?? null;
     }
 
     public function getAll()
     {
-        $value = yield  $this->sessionHandler->get($this->sessionId);
-		$value = json_decode($value,true);
+        $value =   $this->sessionHandler->get($this->sessionId);
+        $value = json_decode($value, true);
         return $value;
     }
 
     public function del($key)
     {
-        $value = yield  $this->sessionHandler->get($this->sessionId);
-		$value = json_decode($value,true);
+        $value =   $this->sessionHandler->get($this->sessionId);
+        $value = json_decode($value, true);
 
         unset($value[$key]);
-		$value = json_encode($value);
-        $result = yield  $this->sessionHandler->set($this->sessionId, $value, 1800);
+        $value = json_encode($value);
+        $result =   $this->sessionHandler->set($this->sessionId, $value, 1800);
         return $result;
     }
 
 
     public function set($key, $val = null)
     {
-        $session = yield  $this->sessionHandler->get($this->sessionId);
-		$session = json_decode($session,true);
+        $session =   $this->sessionHandler->get($this->sessionId);
+        $session = json_decode($session, true);
         if (!$session) {
             $session = [];
         }
         $session[$key] = $val;
-		$session = json_encode($session);
-        $result = yield  $this->sessionHandler->set($this->sessionId, $session, 1800);
+        $session = json_encode($session);
+        $result =   $this->sessionHandler->set($this->sessionId, $session, 1800);
         return $result;
     }
 }

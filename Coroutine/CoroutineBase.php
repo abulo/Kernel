@@ -129,6 +129,8 @@ abstract class CoroutineBase implements ICoroutineBase
         $readArr = [$this->chan];
         $writeArr = null;
         $type = \chan::select($readArr, $writeArr, $this->MAX_TIMERS / 1000);
+
+        // secho('$type',$type);
         if ($type) {
             $result = $this->chan->pop();
             $result = $this->getResult($result);
