@@ -10,6 +10,7 @@ namespace Kernel\Asyn\Redis;
 
 use Kernel\Coroutine\CoroutineBase;
 use Kernel\Memory\Pool;
+use Kernel\Start;
 
 class RedisCoroutine extends CoroutineBase
 {
@@ -19,36 +20,35 @@ class RedisCoroutine extends CoroutineBase
     public $redisAsynPool;
     public $name;
     public $arguments;
-
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     /**
      * 对象池模式用来代替__construct
      * @param $redisAsynPool
      * @param $name
      * @param $arguments
+     * @param $set
      * @return $this
      */
-    public function init($redisAsynPool, $name, $arguments)
+    public function init($redisAsynPool, $name, $arguments, $set)
     {
         $this->redisAsynPool = $redisAsynPool;
         $this->name = $name;
         $this->arguments = $arguments;
-        $this->request = "#redis: $name";
-        $this->getCount = getTickTime();
-        $this->send(function ($result) {
-            $this->result = $result;
-            $this->immediateExecution();
+        $this->set($set);
+        $data = $this->send(function ($result) {
+            $this->coPush($result);
         });
-        return $this;
+        $this->token = $data['token'];
+        $d = "[$name ".implode(" ",$data['arguments'])."]";
+        $this->request = "[redis]$d";
+        if (Start::getDebug()){
+            secho("REDIS",$d);
+        }
+        return $this->returnInit();
     }
 
     public function send($callback)
     {
-        $this->token = $this->redisAsynPool->call($this->name, $this->arguments, $callback);
+        return $this->redisAsynPool->call($this->name, $this->arguments, $callback);
     }
 
     public function destroy()

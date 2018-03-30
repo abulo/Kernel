@@ -9,6 +9,7 @@
 
 namespace Kernel\Asyn;
 
+
 use Noodlehaus\Config;
 use Kernel\Coroutine\CoroutineChangeToken;
 
@@ -61,7 +62,7 @@ abstract class AsynPool implements IAsynPool
     public function migrates($migrate)
     {
         $token = $this->addTokenCallback($migrate['callback']);
-        call_user_func($migrate['callback'], new CoroutineChangeToken($token));
+        \co::call_user_func($migrate['callback'], new CoroutineChangeToken($token));
         unset($migrate['callback']);
         $migrate['token'] = $token;
         $this->execute($migrate);
@@ -108,7 +109,7 @@ abstract class AsynPool implements IAsynPool
         unset($this->callBacks[$token]);
         unset($this->clients[$token]);
         if ($callback != null) {
-            call_user_func($callback, $data['result']);
+            \co::call_user_func($callback, $data['result']);
         }
     }
 
@@ -146,7 +147,7 @@ abstract class AsynPool implements IAsynPool
      */
     public function pushToPool($client)
     {
-        if ($this->isDestroy) {
+        if($this->isDestroy){
             $this->destoryClient($client);
             return;
         }
@@ -168,13 +169,12 @@ abstract class AsynPool implements IAsynPool
      * @param array $migrate
      * @return array
      */
-    public function destroy(&$migrate = [])
-    {
+    public function destroy(&$migrate = []){
         $this->isDestroy = true;
-        foreach ($this->pool as $client) {
+        foreach ($this->pool as $client){
             $this->destoryClient($client);
         }
-        foreach ($this->commands as $command) {
+        foreach ($this->commands as $command){
             $command['callback'] = $this->callBacks[$command['token']];
             $migrate[] = $command;
         }

@@ -8,6 +8,7 @@
 
 namespace Kernel\Controllers;
 
+
 use Kernel\Asyn\MQTT\Message\CONNACK;
 use Kernel\Asyn\MQTT\Message\CONNECT;
 use Kernel\Asyn\MQTT\Message\DISCONNECT;
@@ -45,7 +46,7 @@ class MqttController extends Controller
     {
         $connack = new CONNACK($this->pack);
         if ($connect->getUserNameFlag()) {
-            list($auth, $uid) = yield $this->auth($connect->username, $connect->password);
+            list($auth, $uid) = $this->auth($connect->username, $connect->password);
             if ($auth) {
                 $this->bindUid($uid);
                 $connack->setReturnCode(0);
@@ -85,7 +86,6 @@ class MqttController extends Controller
                 $this->send($pubrec, false);
                 break;
         }
-        $this->destroy();
     }
 
     /**

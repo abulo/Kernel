@@ -20,6 +20,16 @@ class Start
      */
     protected static $daemonize = false;
 
+    /**
+     * @var array
+     */
+    protected static $debug_filter;
+
+    /**
+     * @var
+     */
+    protected static $debug;
+
 
     /**
      * @var string
@@ -29,7 +39,25 @@ class Start
     /**
      * @var
      */
+    protected static $startMillisecond;
+
+    /**
+     * @var
+     */
     protected static $leader;
+
+
+
+    /**
+     * 单元测试
+     * @var bool
+     */
+    public static $testUnity = false;
+    /**
+     * 单元测试文件目录
+     * @var string
+     */
+    public static $testUnityDir = '';
 
 
     /**
@@ -52,14 +80,19 @@ class Start
      */
     public static function run($daemonize = false)
     {
+        self::$debug = new \swoole_atomic(0);
         self::$leader = new \swoole_atomic(0);
         self::$startTime = date('Y-m-d H:i:s');
+        self::$startMillisecond = getMillisecond();
         self::$daemonize = $daemonize;
+        if(!$daemonize)
+        {
+            self::setDebug(1);
+        }
         self::checkSapiEnv();
         self::init();
         self::parseCommand();
         self::initWorkers();
-        // self::displayUI();
         self::startSwoole();
     }
 
@@ -106,6 +139,32 @@ class Start
             @swoole_set_process_name($title);
         }
         return $title;
+    }
+
+
+    public static function setDaemonize()
+    {
+        self::$daemonize = true;
+    }
+
+    public static function getDaemonize()
+    {
+        return self::$daemonize ? 1 : 0;
+    }
+
+    public static function getDebug()
+    {
+        return self::$debug->get() == 1 ? true : false;
+    }
+
+    public static function setDebug($debug)
+    {
+        self::$debug->set($debug ? 1 : 0);
+        if ($debug) {
+            secho("SYS", "DEBUG开启");
+        } else {
+            secho("SYS", "DEBUG关闭");
+        }
     }
 
     /**
@@ -372,10 +431,6 @@ class Start
         self::$_worker = $swooleServer;
     }
 
-    public static function getDaemonize()
-    {
-        return self::$daemonize ? 1 : 0;
-    }
 
 
     public static function isLeader()
@@ -395,8 +450,18 @@ class Start
         }
     }
 
+    public static function getDebugFilter()
+    {
+        return self::$debug_filter ?? [];
+    }
+
     public static function getStartTime()
     {
         return self::$startTime;
+    }
+
+    public static function getStartMillisecond()
+    {
+        return self::$startMillisecond;
     }
 }

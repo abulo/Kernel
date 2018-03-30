@@ -9,6 +9,7 @@
 
 namespace Kernel\Asyn\Redis;
 
+
 use Kernel\Asyn\AsynPool;
 use Kernel\CoreBase\SwooleException;
 use Kernel\Memory\Pool;
@@ -55,7 +56,7 @@ class RedisAsynPool extends AsynPool
      * @param $name
      * @param $arguments
      * @param $callback
-     * @return int
+     * @return array
      */
     public function call($name, $arguments, $callback)
     {
@@ -63,11 +64,243 @@ class RedisAsynPool extends AsynPool
             'name' => $name,
             'arguments' => $arguments
         ];
+        $arguments = $this->help_arguments($data);
+        $data['arguments'] = $arguments;
         $data['token'] = $this->addTokenCallback($callback);
         $this->execute($data);
-        return $data['token'];
+        return $data;
     }
 
+    protected function help_arguments($data)
+    {
+        $arguments = $data['arguments'];
+        $dataName = strtolower($data['name']);
+        //异步的时候有些命令不存在进行替换
+        switch ($dataName) {
+            case 'delete':
+                $dataName = $data['name'] = 'del';
+                break;
+            case 'lsize':
+                $dataName = $data['name'] = 'llen';
+                break;
+            case 'getmultiple':
+                $dataName = $data['name'] = 'mget';
+                break;
+            case 'lget':
+                $dataName = $data['name'] = 'lindex';
+                break;
+            case 'lgetrange':
+                $dataName = $data['name'] = 'lrange';
+                break;
+            case 'lremove':
+                $dataName = $data['name'] = 'lrem';
+                break;
+            case 'scontains':
+                $dataName = $data['name'] = 'sismember';
+                break;
+            case 'ssize':
+                $dataName = $data['name'] = 'scard';
+                break;
+            case 'sgetmembers':
+                $dataName = $data['name'] = 'smembers';
+                break;
+            case 'zdelete':
+                $dataName = $data['name'] = 'zrem';
+                break;
+            case 'zsize':
+                $dataName = $data['name'] = 'zcard';
+                break;
+            case 'zdeleterangebyscore':
+                $dataName = $data['name'] = 'zremrangebyscore';
+                break;
+            case 'zunion':
+                $dataName = $data['name'] = 'zunionstore';
+                break;
+            case 'zinter':
+                $dataName = $data['name'] = 'zinterstore';
+                break;
+        }
+        //特别处理下M命令(批量)
+        switch ($dataName) {
+            case 'set':
+                if (count($arguments) == 3) {
+                    $harray = array_pop($arguments);
+                    if (is_array($harray)) {
+                        if (isset($harray['EX'])) {
+                            $arguments[] = 'EX';
+                            $arguments[] = $harray['EX'];
+                        } elseif (isset($harray['PX'])) {
+                            $arguments[] = 'PX';
+                            $arguments[] = $harray['PX'];
+                        }
+                        if (in_array("NX", $harray)) {
+                            $arguments[] = "NX";
+                        } elseif (in_array("XX", $harray)) {
+                            $arguments[] = "XX";
+                        }
+                    } elseif (is_numeric($harray)) {
+                        $arguments[] = "EX";
+                        $arguments[] = $harray;
+                    }
+                }
+                break;
+            case 'lpush':
+            case 'srem':
+            case 'zrem':
+            case 'sadd':
+                $key = $arguments[0];
+                if (is_array($arguments[1])) {
+                    $arguments = $arguments[1];
+                    array_unshift($arguments, $key);
+                }
+                break;
+            case 'del':
+            case 'delete':
+                if (is_array($arguments[0])) {
+                    $arguments = $arguments[0];
+                }
+                break;
+            case 'mset':
+                $harray = $arguments[0];
+                unset($arguments[0]);
+                foreach ($harray as $key => $value) {
+                    $arguments[] = $key;
+                    $arguments[] = $value;
+                }
+                $data['arguments'] = $arguments;
+                $data['M'] = $harray;
+                break;
+            case 'hmset':
+                $harray = $arguments[1];
+                unset($arguments[1]);
+                foreach ($harray as $key => $value) {
+                    $arguments[] = $key;
+                    $arguments[] = $value;
+                }
+                $data['arguments'] = $arguments;
+                $data['M'] = $harray;
+                break;
+            case 'mget':
+                $harray = $arguments[0];
+                unset($arguments[0]);
+                $arguments = array_merge($arguments, $harray);
+                $data['arguments'] = $arguments;
+                $data['M'] = $harray;
+                break;
+            case 'hmget':
+                $harray = $arguments[1];
+                unset($arguments[1]);
+                $arguments = array_merge($arguments, $harray);
+                $data['arguments'] = $arguments;
+                $data['M'] = $harray;
+                break;
+            case 'lrem'://这里和redis扩展的参数位置有区别
+                $value = $arguments[1];
+                $arguments[1] = $arguments[2];
+                $arguments[2] = $value;
+                break;
+            case 'zrevrange':
+            case 'zrange':
+                if (count($arguments) == 4) {//存在withscores
+                    if ($arguments[3]) {
+                        $arguments[3] = 'withscores';
+                        $data['withscores'] = true;
+                    } else {
+                        unset($arguments[3]);
+                    }
+                }
+                break;
+            case 'zrevrangebyscore'://需要解析参数
+            case 'zrangebyscore'://需要解析参数
+                if (count($arguments) == 4) {//存在额外参数
+                    $arg = $arguments[3];
+                    unset($arguments[3]);
+                    $data['withscores'] = $arg['withscores'] ?? false;
+                    if ($data['withscores']) {
+                        $arguments[] = 'withscores';
+                    }
+                    if (array_key_exists('limit', $arg)) {//存在limit
+                        $arguments[] = 'limit';
+                        $arguments[] = $arg['limit'][0];
+                        $arguments[] = $arg['limit'][1];
+                    }
+                }
+                break;
+            case 'zinterstore':
+            case 'zunionstore':
+                $arg = $arguments;
+                $argCount = count($arg);
+                unset($arguments);
+                $arguments[] = $arg[0];
+                $arguments[] = count($arg[1]);
+                foreach ($arg[1] as $value) {
+                    $arguments[] = $value;
+                }
+                if ($argCount >= 3) {//有WEIGHT
+                    $arguments[] = 'WEIGHTS';
+                    foreach ($arg[2] as $value) {
+                        $arguments[] = $value;
+                    }
+                }
+                if ($argCount == 4) {//有AGGREGATE
+                    $arguments[] = 'AGGREGATE';
+                    $arguments[] = $arg[3];
+                }
+                break;
+            case 'sort':
+                $arg = $arguments;
+                $argCount = count($arg);
+                unset($arguments);
+                $arguments[] = $arg[0];
+                if ($argCount == 2) {
+                    if (array_key_exists('by', $arg[1])) {
+                        $arguments[] = 'by';
+                        $arguments[] = $arg[1]['by'];
+                    }
+                    if (array_key_exists('limit', $arg[1])) {
+                        $arguments[] = 'limit';
+                        $arguments[] = $arg[1]['limit'][0];
+                        $arguments[] = $arg[1]['limit'][1];
+                    }
+                    if (array_key_exists('get', $arg[1])) {
+                        if (is_array($arg[1]['get'])) {
+                            foreach ($arg[1]['get'] as $value) {
+                                $arguments[] = 'get';
+                                $arguments[] = $value;
+                            }
+                        } else {
+                            $arguments[] = 'get';
+                            $arguments[] = $arg[1];
+                        }
+                    }
+                    if (array_key_exists('sort', $arg[1])) {
+                        $arguments[] = $arg[1]['sort'];
+                    }
+                    if (array_key_exists('alpha', $arg[1])) {
+                        $arguments[] = $arg[1]['alpha'];
+                    }
+                    if (array_key_exists('store', $arg[1])) {
+                        $arguments[] = 'store';
+                        $arguments[] = $arg[1]['store'];
+                    }
+                }
+                break;
+            case 'eval':
+            case 'evalsha':
+                $sha1 = $arguments[0];
+                $keys = $arguments[1];
+                $keynum = $arguments[2] ?? 0;
+                $args = $arguments[3] ?? [];
+                $arguments = $keys;
+                array_unshift($arguments, $keynum);
+                array_unshift($arguments, $sha1);
+                foreach ($args as $value) {
+                    $arguments[] = $value;
+                }
+                break;
+        }
+        return array_values($arguments);
+    }
     /**
      * 执行redis命令
      * @param $data
@@ -82,231 +315,6 @@ class RedisAsynPool extends AsynPool
                 return;
             }
             $arguments = $data['arguments'];
-            $dataName = strtolower($data['name']);
-            //异步的时候有些命令不存在进行替换
-            switch ($dataName) {
-                case 'delete':
-                    $dataName = $data['name'] = 'del';
-                    break;
-                case 'lsize':
-                    $dataName = $data['name'] = 'llen';
-                    break;
-                case 'getmultiple':
-                    $dataName = $data['name'] = 'mget';
-                    break;
-                case 'lget':
-                    $dataName = $data['name'] = 'lindex';
-                    break;
-                case 'lgetrange':
-                    $dataName = $data['name'] = 'lrange';
-                    break;
-                case 'lremove':
-                    $dataName = $data['name'] = 'lrem';
-                    break;
-                case 'scontains':
-                    $dataName = $data['name'] = 'sismember';
-                    break;
-                case 'ssize':
-                    $dataName = $data['name'] = 'scard';
-                    break;
-                case 'sgetmembers':
-                    $dataName = $data['name'] = 'smembers';
-                    break;
-                case 'zdelete':
-                    $dataName = $data['name'] = 'zrem';
-                    break;
-                case 'zsize':
-                    $dataName = $data['name'] = 'zcard';
-                    break;
-                case 'zdeleterangebyscore':
-                    $dataName = $data['name'] = 'zremrangebyscore';
-                    break;
-                case 'zunion':
-                    $dataName = $data['name'] = 'zunionstore';
-                    break;
-                case 'zinter':
-                    $dataName = $data['name'] = 'zinterstore';
-                    break;
-            }
-            //特别处理下M命令(批量)
-            switch ($dataName) {
-                case 'set':
-                    if (count($arguments) == 3) {
-                        $harray = array_pop($arguments);
-                        if (is_array($harray)) {
-                            if (isset($harray['EX'])) {
-                                $arguments[] = 'EX';
-                                $arguments[] = $harray['EX'];
-                            } elseif (isset($harray['PX'])) {
-                                $arguments[] = 'PX';
-                                $arguments[] = $harray['PX'];
-                            }
-                            if (in_array("NX", $harray)) {
-                                $arguments[] = "NX";
-                            } elseif (in_array("XX", $harray)) {
-                                $arguments[] = "XX";
-                            }
-                        } elseif (is_numeric($harray)) {
-                            $arguments[] = "EX";
-                            $arguments[] = $harray;
-                        }
-                    }
-                    break;
-                case 'lpush':
-                case 'srem':
-                case 'zrem':
-                case 'sadd':
-                    $key = $arguments[0];
-                    if (is_array($arguments[1])) {
-                        $arguments = $arguments[1];
-                        array_unshift($arguments, $key);
-                    }
-                    break;
-                case 'del':
-                case 'delete':
-                    if (is_array($arguments[0])) {
-                        $arguments = $arguments[0];
-                    }
-                    break;
-                case 'mset':
-                    $harray = $arguments[0];
-                    unset($arguments[0]);
-                    foreach ($harray as $key => $value) {
-                        $arguments[] = $key;
-                        $arguments[] = $value;
-                    }
-                    $data['arguments'] = $arguments;
-                    $data['M'] = $harray;
-                    break;
-                case 'hmset':
-                    $harray = $arguments[1];
-                    unset($arguments[1]);
-                    foreach ($harray as $key => $value) {
-                        $arguments[] = $key;
-                        $arguments[] = $value;
-                    }
-                    $data['arguments'] = $arguments;
-                    $data['M'] = $harray;
-                    break;
-                case 'mget':
-                    $harray = $arguments[0];
-                    unset($arguments[0]);
-                    $arguments = array_merge($arguments, $harray);
-                    $data['arguments'] = $arguments;
-                    $data['M'] = $harray;
-                    break;
-                case 'hmget':
-                    $harray = $arguments[1];
-                    unset($arguments[1]);
-                    $arguments = array_merge($arguments, $harray);
-                    $data['arguments'] = $arguments;
-                    $data['M'] = $harray;
-                    break;
-                case 'lrem'://这里和redis扩展的参数位置有区别
-                    $value = $arguments[1];
-                    $arguments[1] = $arguments[2];
-                    $arguments[2] = $value;
-                    break;
-                case 'zrevrange':
-                case 'zrange':
-                    if (count($arguments) == 4) {//存在withscores
-                        if ($arguments[3]) {
-                            $arguments[3] = 'withscores';
-                            $data['withscores'] = true;
-                        } else {
-                            unset($arguments[3]);
-                        }
-                    }
-                    break;
-                case 'zrevrangebyscore'://需要解析参数
-                case 'zrangebyscore'://需要解析参数
-                    if (count($arguments) == 4) {//存在额外参数
-                        $arg = $arguments[3];
-                        unset($arguments[3]);
-                        $data['withscores'] = $arg['withscores']??false;
-                        if ($data['withscores']) {
-                            $arguments[] = 'withscores';
-                        }
-                        if (array_key_exists('limit', $arg)) {//存在limit
-                            $arguments[] = 'limit';
-                            $arguments[] = $arg['limit'][0];
-                            $arguments[] = $arg['limit'][1];
-                        }
-                    }
-                    break;
-                case 'zinterstore':
-                case 'zunionstore':
-                    $arg = $arguments;
-                    $argCount = count($arg);
-                    unset($arguments);
-                    $arguments[] = $arg[0];
-                    $arguments[] = count($arg[1]);
-                    foreach ($arg[1] as $value) {
-                        $arguments[] = $value;
-                    }
-                    if ($argCount >= 3) {//有WEIGHT
-                        $arguments[] = 'WEIGHTS';
-                        foreach ($arg[2] as $value) {
-                            $arguments[] = $value;
-                        }
-                    }
-                    if ($argCount == 4) {//有AGGREGATE
-                        $arguments[] = 'AGGREGATE';
-                        $arguments[] = $arg[3];
-                    }
-                    break;
-                case 'sort':
-                    $arg = $arguments;
-                    $argCount = count($arg);
-                    unset($arguments);
-                    $arguments[] = $arg[0];
-                    if ($argCount == 2) {
-                        if (array_key_exists('by', $arg[1])) {
-                            $arguments[] = 'by';
-                            $arguments[] = $arg[1]['by'];
-                        }
-                        if (array_key_exists('limit', $arg[1])) {
-                            $arguments[] = 'limit';
-                            $arguments[] = $arg[1]['limit'][0];
-                            $arguments[] = $arg[1]['limit'][1];
-                        }
-                        if (array_key_exists('get', $arg[1])) {
-                            if (is_array($arg[1]['get'])) {
-                                foreach ($arg[1]['get'] as $value) {
-                                    $arguments[] = 'get';
-                                    $arguments[] = $value;
-                                }
-                            } else {
-                                $arguments[] = 'get';
-                                $arguments[] = $arg[1];
-                            }
-                        }
-                        if (array_key_exists('sort', $arg[1])) {
-                            $arguments[] = $arg[1]['sort'];
-                        }
-                        if (array_key_exists('alpha', $arg[1])) {
-                            $arguments[] = $arg[1]['alpha'];
-                        }
-                        if (array_key_exists('store', $arg[1])) {
-                            $arguments[] = 'store';
-                            $arguments[] = $arg[1]['store'];
-                        }
-                    }
-                    break;
-                case 'eval':
-                case 'evalsha':
-                    $sha1 = $arguments[0];
-                    $keys = $arguments[1];
-                    $keynum =  $arguments[2]??0;
-                    $args = $arguments[3] ?? [];
-                    $arguments = $keys;
-                    array_unshift($arguments, $keynum);
-                    array_unshift($arguments, $sha1);
-                    foreach ($args as $value) {
-                        $arguments[] = $value;
-                    }
-                    break;
-            }
             $arguments[] = function ($client, $result) use ($data) {
                 switch (strtolower($data['name'])) {
                     case 'hmget':
@@ -327,7 +335,7 @@ class RedisAsynPool extends AsynPool
                     case 'zrangebyscore':
                     case 'zrevrange':
                     case 'zrange':
-                        if ($data['withscores']??false) {
+                        if ($data['withscores'] ?? false) {
                             $data['result'] = [];
                             $count = count($result);
                             for ($i = 0; $i < $count; $i = $i + 2) {
@@ -348,7 +356,7 @@ class RedisAsynPool extends AsynPool
                 //回归连接
                 $this->pushToPool($client);
             };
-            $client->__call($data['name'], array_values($arguments));
+            $client->__call($data['name'], $arguments);
         }
     }
 
@@ -365,7 +373,7 @@ class RedisAsynPool extends AsynPool
             if (!$result) {
                 throw new SwooleException($client->errMsg);
             }
-            if (!empty($this->config->get('redis.' . $this->active . '.password',""))) {//存在验证
+            if (!empty($this->config->get('redis.' . $this->active . '.password', ""))) {//存在验证
                 $client->auth($this->config['redis'][$this->active]['password'], function ($client, $result) {
                     if (!$result) {
                         $errMsg = $client->errMsg;
@@ -419,10 +427,11 @@ class RedisAsynPool extends AsynPool
     /**
      * 协程模式
      * @param $name
-     * @param $arg
+     * @param array ...$arg
+     * @param callable $set
      * @return RedisCoroutine
      */
-    public function coroutineSend($name, ...$arg)
+    public function coroutineSend($name, $arg, callable $set = null)
     {
         if (getInstance()->isTaskWorker()) {//如果是task进程自动转换为同步模式
             try {
@@ -433,7 +442,7 @@ class RedisAsynPool extends AsynPool
             }
             return $value;
         } else {
-            return Pool::getInstance()->get(RedisCoroutine::class)->init($this, $name, $arg);
+            return Pool::getInstance()->get(RedisCoroutine::class)->init($this, $name, $arg, $set);
         }
     }
 
@@ -444,9 +453,7 @@ class RedisAsynPool extends AsynPool
      */
     public function getSync()
     {
-        if ($this->redis_client!=null) {
-            return $this->redis_client;
-        }
+        if ($this->redis_client != null) return $this->redis_client;
         //同步redis连接，给task使用
         $this->redis_client = new \Redis();
         if ($this->redis_client->connect($this->config['redis'][$this->active]['ip'], $this->config['redis'][$this->active]['port']) == false) {
@@ -459,7 +466,7 @@ class RedisAsynPool extends AsynPool
                 $this->redis_client = null;
             }
         }
-        if($this->config->has('redis.' . $this->active . '.select')) {//存在select
+        if ($this->config->has('redis.' . $this->active . '.select')) {//存在select
             $this->redis_client->select($this->config['redis'][$this->active]['select']);
         }
         return $this->redis_client;

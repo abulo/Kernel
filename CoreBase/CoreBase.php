@@ -72,7 +72,7 @@ class CoreBase extends Child
      */
     protected function installMysqlPool(MysqlAsynPool $mysqlPool)
     {
-        $this->dbQueryBuilders[] = $mysqlPool->installDbBuilder();
+        $this->dbQueryBuilders[$mysqlPool->getActveName()] = $mysqlPool->installDbBuilder();
     }
 
 
@@ -148,6 +148,7 @@ class CoreBase extends Child
         try {
             $this->logger->addRecord($level, $message, $this->getContext());
         } catch (\Exception $e) {
+
         }
     }
 }

@@ -8,6 +8,7 @@
 
 namespace Kernel\Asyn\TcpClient;
 
+
 use Kernel\Asyn\AsynPool;
 use Kernel\CoreBase\PortManager;
 use Kernel\CoreBase\SwooleException;
@@ -105,7 +106,7 @@ class TcpClientPool extends AsynPool
     }
 
     /**
-     * 准备一个httpClient
+     * 准备一个Client
      */
     public function prepareOne()
     {
@@ -133,6 +134,7 @@ class TcpClientPool extends AsynPool
                 $cli->close();
             });
             $client->on("close", function ($cli) {
+
             });
             $client->connect($this->host, $this->port);
         }
@@ -144,9 +146,9 @@ class TcpClientPool extends AsynPool
      * @param bool $oneway
      * @return TcpClientRequestCoroutine
      */
-    public function coroutineSend($send, $oneway = false)
+    public function coroutineSend($send, $oneway = false, callable $set = null)
     {
-        return Pool::getInstance()->get(TcpClientRequestCoroutine::class)->init($this, $send, $oneway);
+        return Pool::getInstance()->get(TcpClientRequestCoroutine::class)->init($this, $send, $oneway, $set);
     }
 
     /**
@@ -169,4 +171,5 @@ class TcpClientPool extends AsynPool
     {
         $client->close();
     }
+
 }

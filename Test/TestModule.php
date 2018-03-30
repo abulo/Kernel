@@ -8,10 +8,6 @@
 
 namespace Kernel\Test;
 
-use Kernel\Coroutine\Coroutine;
-use Kernel\Coroutine\CoroutineTask;
-use Kernel\Memory\Pool;
-
 /**
  * 单元测试组件
  * Class TestModule
@@ -31,11 +27,10 @@ class TestModule
     public function __construct($dir)
     {
         $this->dir = $dir;
-        $coroutine = Coroutine::getInstance();
         if (empty($dir)) {
             $dir = TEST_DIR;
         }
-        if ($coroutine != null) {
+        if (!getInstance()->isTaskWorker()) {
             $this->asyn = true;
             print_r("->开始异步的单元测试\n");
         } else {
@@ -55,7 +50,7 @@ class TestModule
             $value = str_replace('.php', '', $value);
             $class_name = "\\test\\" . $value;
             if (class_exists($class_name)) {
-                $reflection = new \ReflectionClass($class_name);
+                $reflection = new \ReflectionClass ($class_name);
                 $doc = $reflection->getDocComment();
                 $info = $this->docParser->parse($doc);
                 $this->tests[$class_name]['@info'] = $info;
@@ -73,18 +68,9 @@ class TestModule
                 }
             }
         }
-        if ($coroutine != null) {
-            $coroutine->start($this->runTests());
-        } else {
-            $coroutineTask = Pool::getInstance()->get(CoroutineTask::class)->init($this->runTests());
-            while (true) {
-                $coroutineTask->run();
-                if ($coroutineTask->isFinished()) {
-                    break;
-                }
-            }
+        $this->runTests();
+        if (!$this->asyn) {
             getInstance()->server->shutdown();
-            exit();
         }
     }
 
@@ -100,13 +86,14 @@ class TestModule
             }
             $count = count($classData) - 1;
             $this->totalCount += $count;
-            $description = $classData['@info']['description']??'';
+            $description = $classData['@info']['description'] ?? '';
             if ($this->asyn) {
                 print_r("├──\e[30;43m[异步]\e[0m测试类[$className]:$description");
             } else {
                 print_r("├──\e[30;42m[同步]\e[0m测试类[$className]:$description");
             }
-            if (array_key_exists('codeCoverageIgnore', $classData['@info'])) {//跳过代码块
+            if (array_key_exists('codeCoverageIgnore', $classData['@info']))//跳过代码块
+            {
                 print_r('->');
                 $this->printIgnore();
                 $this->ignoreCount += $count - 1;
@@ -123,28 +110,28 @@ class TestModule
             unset($classData['@info']);
 
             try {
-                yield $classInstance->setUpBeforeClass();
+                $classInstance->setUpBeforeClass();
             } catch (SwooleTestException $e) {
                 if ($e->getCode() == SwooleTestException::ERROR) {
                     $this->printFail($e->getMessage());
                     $this->failCount += $count - 1;
-                    yield $classInstance->tearDownAfterClass();
+                    $classInstance->tearDownAfterClass();
                     continue;
                 } elseif ($e->getCode() == SwooleTestException::SKIP) {
                     $this->printIgnore($e->getMessage());
                     $this->ignoreCount += $count - 1;
-                    yield $classInstance->tearDownAfterClass();
+                    $classInstance->tearDownAfterClass();
                     continue;
                 }
             } catch (\Exception $e) {
                 $this->printFail($e->getMessage());
                 $this->failCount += $count - 1;
-                yield $classInstance->tearDownAfterClass();
+                $classInstance->tearDownAfterClass();
                 continue;
             }
 
             foreach ($classData as $method => $methodInfo) {
-                $description = $methodInfo['description']??'';
+                $description = $methodInfo['description'] ?? '';
                 if ($this->asyn) {
                     print_r("│   ├──\e[30;43m[异步]\e[0m测试方法[$method]:$description->");
                 } else {
@@ -166,20 +153,20 @@ class TestModule
                 }
                 do {
                     try {
-                        yield $classInstance->setUp();
+                        $classInstance->setUp();
                     } catch (SwooleTestException $e) {
                         if ($e->getCode() == SwooleTestException::ERROR) {
                             $this->printFail($e->getMessage());
-                            yield $classInstance->tearDown();
+                            $classInstance->tearDown();
                             continue;
                         } elseif ($e->getCode() == SwooleTestException::SKIP) {
                             $this->printIgnore($e->getMessage());
-                            yield $classInstance->tearDown();
+                            $classInstance->tearDown();
                             continue;
                         }
                     } catch (\Exception $e) {
                         $this->printFail($e->getMessage());
-                        yield $classInstance->tearDown();
+                        $classInstance->tearDown();
                         continue;
                     }
                     //合并参数
@@ -195,7 +182,7 @@ class TestModule
                         if (is_array($methodInfo['depends'])) {//多个依赖
                             $error = false;
                             foreach ($methodInfo['depends'] as $methodName) {
-                                $result = $classData[$methodName]['result']??null;
+                                $result = $classData[$methodName]['result'] ?? null;
                                 if ($result == null) {//依赖获取失败
                                     $error = true;
                                     break;
@@ -208,7 +195,7 @@ class TestModule
                             }
                         } else {
                             $methodName = $methodInfo['depends'];
-                            $result = $classData[$methodName]['result']??null;
+                            $result = $classData[$methodName]['result'] ?? null;
                             if ($result == null) {// 依赖获取失败
                                 $this->printFail('依赖获取失败');
                                 continue;
@@ -220,7 +207,7 @@ class TestModule
                     $parmasArray = array_merge($dataProviderValue, $parmasArray);
 
                     try {
-                        $result = yield call_user_func_array([$classInstance, $method], $parmasArray);
+                        $result = \co::call_user_func_array([$classInstance, $method], $parmasArray);
                         $classData[$method]['result'] = $result;
                         $this->printSuccess();
                     } catch (SwooleTestException $e) {
@@ -232,17 +219,16 @@ class TestModule
                     } catch (\Exception $e) {
                         $this->printFail($e->getMessage());
                     }
-                    yield $classInstance->tearDown();
+                    $classInstance->tearDown();
                 } while (count($dataProviderValues) != 0);
             }
-            yield $classInstance->tearDownAfterClass();
+            $classInstance->tearDownAfterClass();
             unset($this->tests[$className]);
         }
         print_r("└───总共$this->totalCount,忽略$this->ignoreCount,成功$this->successCount,失败$this->failCount\n");
         if ($this->asyn) {//异步完了再执行同步的测试
             $unitTestTask = getInstance()->loader->task('UnitTestTask');
             $unitTestTask->startTest($this->dir);
-            $unitTestTask->startTask(null);
         }
     }
 
@@ -266,9 +252,12 @@ class TestModule
 
     public function once()
     {
+
     }
 
     public function onExceptionHandle($e)
     {
+
     }
 }
+

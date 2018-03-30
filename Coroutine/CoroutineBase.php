@@ -8,6 +8,8 @@
 
 namespace Kernel\Coroutine;
 
+
+use Kernel\CoreBase\RPCThrowable;
 use Kernel\CoreBase\SwooleException;
 
 /**
@@ -27,11 +29,7 @@ abstract class CoroutineBase implements ICoroutineBase
      * @var CoroutineNull
      */
     public $result;
-    /**
-     * 获取的次数，用于判断超时
-     * @var int
-     */
-    public $getCount;
+
     protected $MAX_TIMERS = 0;
     /**
      * 是否启用断路器
@@ -43,10 +41,6 @@ abstract class CoroutineBase implements ICoroutineBase
      * @var callable
      */
     protected $downgrade;
-    /**
-     * @var CoroutineTask
-     */
-    private $coroutineTask;
     /**
      * @var bool
      */
@@ -60,46 +54,126 @@ abstract class CoroutineBase implements ICoroutineBase
 
     protected $noExceptionReturn;
 
+    protected $chan;
+
+    protected $delayRecv;
+
+    protected $startRecv;
+
     public function __construct()
     {
         $this->MAX_TIMERS = getInstance()->config->get('coroution.timerOut', 1000);
         $this->result = CoroutineNull::getInstance();
-        $this->getCount = getTickTime();
         $this->noException = false;
     }
 
-    abstract public function send($callback);
-
-    public function getResult()
+    protected function set($call)
     {
-        if ($this->isFaile && $this->useFuse) {
+        if ($call != null) {
+            $call($this);
+        }
+    }
+
+    //设置延时Recv，这是需要手动调用recv才能获取结果
+    public function setDelayRecv()
+    {
+        $this->delayRecv = true;
+    }
+
+    public function getDelayRecv()
+    {
+        return $this->delayRecv;
+    }
+
+    protected function coPush($data)
+    {
+        $this->result = $data;
+        if ($this->chan == null) return;
+        if (!$this->delayRecv || $this->startRecv) {
+            go(function () use ($data) {
+                $this->chan->push($data);
+            });
+        }
+    }
+
+    public function returnInit()
+    {
+        if ($this->delayRecv) {
+            return $this;
+        } else {
+            return $this->recv();
+        }
+    }
+
+    public function recv(callable $fuc = null)
+    {
+        if ($this->isFaile && $this->useFuse) {//启动了断路器并且还失败了
             if (empty($this->downgrade)) {
                 //没有降级操作就直接快速失败
-                $this->fastFail();
+                $this->result = $this->fastFail();
             } else {
-                $this->result = call_user_func($this->downgrade);
-                return $this->result;
+                $this->result = \co::call_user_func($this->downgrade);
             }
         }
-        //迁移操作
-        if ($this->result instanceof CoroutineChangeToken) {
-            $this->token = $this->result->token;
-            $this->getCount = getTickTime();
-            $this->result = CoroutineNull::getInstance();
+        $this->startRecv = true;
+        if ($this->result !== CoroutineNull::getInstance()) {//有值了
+            $result = $this->getResult($this->result);
+            if ($fuc != null) {
+                $fuc($result);
+            }
+            $this->destroy();
+            return $result;
+        } else {
+            $this->chan = new \chan();
         }
-        if ((getTickTime() - $this->getCount) > $this->MAX_TIMERS && $this->result instanceof CoroutineNull) {
-            $this->onTimerOutHandle();
-            if (!$this->noException) {
+        $readArr = [$this->chan];
+        $writeArr = null;
+        $type = \chan::select($readArr, $writeArr, $this->MAX_TIMERS / 1000);
+        if ($type) {
+            $result = $this->chan->pop();
+            $result = $this->getResult($result);
+        } else {//超时
+            //有降级函数则访问降级函数
+            if (empty($this->downgrade)) {
+                $result = new SwooleException("[CoroutineTask]: Time Out!, [Request]: $this->request");
+            } else {
+                $result = \co::call_user_func($this->downgrade);
                 $this->isFaile = true;
-                $ex = new SwooleException("[CoroutineTask]: Time Out!, [Request]: $this->request");
-                $this->destroy();
-                throw $ex;
+            }
+            $this->onTimerOutHandle();
+            $result = $this->getResult($result);
+        }
+        if ($fuc != null) {
+            $fuc($result);
+        }
+        $this->destroy();
+        return $result;
+    }
+
+    public function getResult($result)
+    {
+        if ($result instanceof RPCThrowable) {
+            $result = $result->build();
+        }
+        if ($result instanceof \Throwable) {
+            //迁移操作
+            if ($result instanceof CoroutineChangeToken) {
+                $this->token = $result->token;
+                $result = $this->getResult($this->chan->pop());
             } else {
-                $this->result = $this->noExceptionReturn;
+                $this->isFaile = true;
+                if (!$this->noException) {
+                    $this->destroy();
+                    throw $result;
+                } else {
+                    $result = $this->noExceptionReturn;
+                }
             }
         }
-        return $this->result;
+        return $result;
     }
+
+    public abstract function send($callback);
 
     /**
      * dump
@@ -115,7 +189,7 @@ abstract class CoroutineBase implements ICoroutineBase
      */
     protected function fastFail()
     {
-        throw new \Exception('Circuit breaker');
+        return new \Exception('Circuit breaker');
     }
 
     /**
@@ -123,25 +197,7 @@ abstract class CoroutineBase implements ICoroutineBase
      */
     protected function onTimerOutHandle()
     {
-    }
 
-    /**
-     * 设置协程任务
-     * @param $coroutineTask
-     */
-    public function setCoroutineTask($coroutineTask)
-    {
-        $this->coroutineTask = $coroutineTask;
-    }
-
-    /**
-     * 立即执行任务的下一个步骤
-     */
-    public function immediateExecution()
-    {
-        if (isset($this->coroutineTask)) {
-            $this->coroutineTask->run();
-        }
     }
 
     /**
@@ -149,6 +205,10 @@ abstract class CoroutineBase implements ICoroutineBase
      */
     public function destroy()
     {
+        if ($this->chan != null) {
+            $this->chan->close();
+        }
+        $this->chan = null;
         if ($this->useFuse) {
             if ($this->isFaile) {
                 Fuse::getInstance()->commitTimeOutOrFaile($this->request);
@@ -157,9 +217,9 @@ abstract class CoroutineBase implements ICoroutineBase
             }
         }
         $this->result = CoroutineNull::getInstance();
+        $this->delayRecv = false;
+        $this->startRecv = false;
         $this->MAX_TIMERS = getInstance()->config->get('coroution.timerOut', 1000);
-        $this->getCount = 0;
-        $this->coroutineTask = null;
         $this->request = null;
         $this->downgrade = null;
         $this->isFaile = false;
@@ -179,6 +239,14 @@ abstract class CoroutineBase implements ICoroutineBase
     }
 
     /**
+     * @return int|mixed|null
+     */
+    public function getTimeout()
+    {
+        return $this->MAX_TIMERS;
+    }
+
+    /**
      * 设置降级操作，如果没有设置断路器工作时将会进行快速失败
      * @param callable $func
      * @return $this
@@ -186,9 +254,6 @@ abstract class CoroutineBase implements ICoroutineBase
      */
     public function setDowngrade(callable $func)
     {
-        if (!$this->useFuse) {
-            throw new SwooleException('not supper fuse');
-        }
         $this->downgrade = $func;
         return $this;
     }

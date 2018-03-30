@@ -64,6 +64,9 @@ class HttpOutput
      */
     public function setStatusHeader($code = 200)
     {
+        if (!$this->controller->canEnd()) {
+            return;
+        }
         $this->response->status($code);
         return $this;
     }
@@ -76,6 +79,9 @@ class HttpOutput
      */
     public function setContentType($mime_type)
     {
+        if (!$this->controller->canEnd()) {
+            return;
+        }
         $this->setHeader('Content-Type', $mime_type);
         return $this;
     }
@@ -88,6 +94,9 @@ class HttpOutput
      */
     public function setHeader($key, $value)
     {
+        if (!$this->controller->canEnd()) {
+            return;
+        }
         $this->response->header($key, $value);
         return $this;
     }
@@ -95,6 +104,9 @@ class HttpOutput
 
     public function setHeaders(array $headers)
     {
+        if (!$this->controller->canEnd()) {
+            return;
+        }
         foreach ($headers as $key => $value) {
             $this->setHeader($key, $value);
         }
@@ -102,71 +114,80 @@ class HttpOutput
     }
 
 
-    public function html($output = '', $gzip = true, $destroy = true)
+    public function html($output = '', $gzip = true)
     {
+        if (!$this->controller->canEnd()) {
+            return;
+        }
         $this->setHeader('Content-Type', 'text/html; charset=UTF-8');
-		$this->clientId();
-        $this->end($output, $gzip, $destroy);
+        $this->clientId();
+        $this->end($output, $gzip);
         return;
     }
 
 
 
-	public function json($output = '', $gzip = true, $destroy = true)
+    public function json($output = '', $gzip = truee)
     {
         $this->setHeader('Content-Type', 'application/json; charset=UTF-8');
-		$this->clientId();
-        $this->end(json_encode($output), $gzip, $destroy);
+        $this->clientId();
+        $this->end(json_encode($output), $gzip);
         return;
     }
-	/**
-	 * 中间件
-	 * @param  string $output
-	 * @return
-	 */
-	public function middleware_end_json($output = null,$code=200)
+    /**
+     * 中间件
+     * @param  string $output
+     * @return
+     */
+    public function middleware_end_json($output = null, $code = 200)
     {
-		// $this->clientId();
-		if(null == $output)
-		{
-			return $output;
-		}
-		$response = [
-			'status' => $code,
-			'header' => ['Content-Type','application/json; charset=UTF-8'],
-			'content'=> json_encode($output),
-		];
-		return $response;
-	}
+        if (!$this->controller->canEnd()) {
+            return;
+        }
+        // $this->clientId();
+        if (null == $output) {
+            return $output;
+        }
+        $response = [
+            'status' => $code,
+            'header' => ['Content-Type','application/json; charset=UTF-8'],
+            'content'=> json_encode($output),
+        ];
+        return $response;
+    }
 
-	/**
-	 * 中间件
-	 * @param  string $output
-	 * @return
-	 */
-	public function middleware_end_html($output = null,$code=200)
-	{
-		// $this->clientId();
-		if(null == $output)
-		{
-			return $output;
-		}
-		$response = [
-			'status' => $code,
-			'header' => ['Content-Type','text/html; charset=UTF-8'],
-			'content'=> $output,
-		];
-		return $response;
-	}
+    /**
+     * 中间件
+     * @param  string $output
+     * @return
+     */
+    public function middleware_end_html($output = null, $code = 200)
+    {
+        if (!$this->controller->canEnd()) {
+            return;
+        }
+        // $this->clientId();
+        if (null == $output) {
+            return $output;
+        }
+        $response = [
+            'status' => $code,
+            'header' => ['Content-Type','text/html; charset=UTF-8'],
+            'content'=> $output,
+        ];
+        return $response;
+    }
 
     /**
      * 发送
      * @param string $output
      * @param bool $gzip
-     * @param bool $destroy
      */
-    public function end($output = '', $gzip = true, $destroy = true)
+    public function end($output = '', $gzip = true)
     {
+        if (!$this->controller->canEnd()) {
+            return;
+        }
         if (!getInstance()->config->get('http.gzip_off', false)) {
             //低版本swoole的gzip方法存在效率问题
             if ($gzip) {
@@ -184,12 +205,9 @@ class HttpOutput
             $output = json_encode($output, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
             $output = "<pre>$output</pre>";
         }
-		$this->clientId();
+        $this->clientId();
         $this->response->end($output);
-        if ($destroy) {
-            $this->controller->getProxy()->destroy();
-        }
-        return;
+        $this->controller->endOver();
     }
 
 
@@ -205,6 +223,9 @@ class HttpOutput
      */
     public function setCookie(string $key, string $value = '', int $expire = 0, string $path = '/', string $domain = '', bool $secure = false, bool $httponly = false)
     {
+        if (!$this->controller->canEnd()) {
+            return;
+        }
         $this->response->cookie($key, $value, $expire, $path, $domain, $secure, $httponly);
     }
 
@@ -212,6 +233,9 @@ class HttpOutput
 
     public function setCookies(array $cookie)
     {
+        if (!$this->controller->canEnd()) {
+            return;
+        }
         foreach ($cookie as $k => $v) {
             list($key, $value, $expire, $path , $domain , $secure, $httponly) = $v;
             $this->setCookie($key, $value, $expire, $path, $domain, $secure, $httponly);
@@ -222,28 +246,27 @@ class HttpOutput
     /**
      * 输出文件
      * @param $file_path
-     * @param bool $destroy
      * @return mixed
      */
-    public function endFile($file_path, $destroy = true)
+    public function endFile($file_path)
     {
-        $result = httpEndFile($file_path, $this->request, $this->response);
-        if ($destroy) {
-            $this->controller->getProxy()->destroy();
+        if (!$this->controller->canEnd()) {
+            return null;
         }
+        $result = httpEndFile($file_path, $this->request, $this->response);
+        $this->controller->endOver();
         return $result;
     }
 
-	/**
-	 * 给客户端返回 client_id
-	 * @var [type]
-	 */
-	public function clientId()
-	{
-		$client = $this->request->cookie['client_id'] ?? 0;
-		if($client)
-		{
-			$this->setCookie('client_id', $client, time()+86400,  '/',  '',  false, true);
-		}
-	}
+    /**
+     * 给客户端返回 client_id
+     * @var [type]
+     */
+    public function clientId()
+    {
+        $client = $this->request->cookie['client_id'] ?? 0;
+        if ($client) {
+            $this->setCookie('client_id', $client, time()+86400, '/', '', false, true);
+        }
+    }
 }

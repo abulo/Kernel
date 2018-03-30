@@ -8,6 +8,7 @@
 
 namespace Kernel\Coroutine;
 
+
 class CoroutineChangeToken
 {
     public $token;

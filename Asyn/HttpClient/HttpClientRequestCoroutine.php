@@ -10,6 +10,7 @@ namespace Kernel\Asyn\HttpClient;
 
 use Kernel\Coroutine\CoroutineBase;
 use Kernel\Memory\Pool;
+use Kernel\Start;
 
 class HttpClientRequestCoroutine extends CoroutineBase
 {
@@ -26,23 +27,29 @@ class HttpClientRequestCoroutine extends CoroutineBase
 
     /**
      * 对象池模式代替__construct
-     * @param $pool
+     * @param HttpClientPool $pool
      * @param $data
+     * @param $set
      * @return $this
      */
-    public function init(HttpClientPool $pool, $data)
+    public function init(HttpClientPool $pool, $data, $set)
     {
         $this->pool = $pool;
         $this->data = $data;
-        $this->request = '[httpClient]' . $pool->baseUrl.$data['path'];
-        $this->getCount = getTickTime();
+        $d = "[".$pool->baseUrl . $data['path']."]";
+        $this->request = "[httpClient]$d";
+        $this->set($set);
+        if (Start::getDebug()){
+            secho("HTTP",$d);
+        }
         if ($this->fuse()) {//启动断路器
             $this->send(function ($result) {
-                $this->result = $result;
+                $this->coPush($result);
             });
         }
-        return $this;
+        return $this->returnInit();
     }
+
     public function send($callback)
     {
         $this->token = $this->pool->call($this->data, $callback);

@@ -8,7 +8,9 @@
 
 namespace Kernel\Components\Middleware;
 
+
 use Kernel\CoreBase\CoreBase;
+use Kernel\CoreBase\SwooleInterruptException;
 
 abstract class Middleware extends CoreBase implements IMiddleware
 {
@@ -18,6 +20,6 @@ abstract class Middleware extends CoreBase implements IMiddleware
 
     public function interrupt()
     {
-        throw new \Exception('interrupt');
+        throw new SwooleInterruptException('interrupt');
     }
 }

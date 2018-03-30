@@ -85,7 +85,19 @@ class ConsulRest extends HttpClientPool
      */
     public function __call($name, $arguments)
     {
-        $this->httpClient->addHeader('rpc_request_id', $this->context['request_id']);
+        $this->httpClient->addHeader('rpc_request_id',$this->context['request_id']);
         return $this->httpClient->coroutineExecute("/$this->service/$name");
+    }
+
+    /**
+     * @param $name
+     * @param $arguments
+     * @param callable|null $set
+     * @return mixed
+     */
+    public function call($name, $arguments, callable $set = null)
+    {
+        $this->httpClient->addHeader('rpc_request_id', $this->context['request_id']);
+        return $this->httpClient->coroutineExecute("/$this->service/$name", $set);
     }
 }

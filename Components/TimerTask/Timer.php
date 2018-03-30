@@ -11,7 +11,6 @@ namespace Kernel\Components\TimerTask;
 use Kernel\Components\Event\Event;
 use Kernel\Components\Event\EventDispatcher;
 use Kernel\CoreBase\Child;
-use Kernel\Coroutine\Coroutine;
 use Kernel\Memory\Pool;
 
 /**
@@ -70,11 +69,9 @@ class Timer
         }
         $tid = \swoole_timer_tick($ms, function () use ($callback) {
             $child = Pool::getInstance()->get(Child::class);
-            Coroutine::startCoroutine(function () use ($child, $callback) {
-                yield call_user_func($callback, $child);
-                $child->destroy();
-                Pool::getInstance()->push($child);
-            });
+            \co::call_user_func($callback, $child);
+            $child->destroy();
+            Pool::getInstance()->push($child);
         });
         self::$table->set($name, ["wid" => getInstance()->getWorkerId(), "tid" => $tid]);
     }

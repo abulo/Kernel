@@ -8,6 +8,7 @@
 
 namespace Kernel\Components\TimerTask;
 
+
 use Kernel\Asyn\HttpClient\HttpClient;
 use Kernel\Asyn\HttpClient\HttpClientPool;
 use Kernel\Components\Event\Event;
@@ -17,7 +18,6 @@ use Kernel\Components\SDHelp\SDHelpProcess;
 use Kernel\CoreBase\Child;
 use Kernel\CoreBase\CoreBase;
 use Kernel\CoreBase\SwooleException;
-use Kernel\Coroutine\Coroutine;
 use Kernel\Memory\Pool;
 
 class TimerTask extends CoreBase
@@ -46,6 +46,8 @@ class TimerTask extends CoreBase
         $this->id = swoole_timer_tick(1000, function () {
             $this->timerTask();
         });
+
+
     }
 
 
@@ -75,13 +77,13 @@ class TimerTask extends CoreBase
                 $start_time = strtotime(date($timer_task['start_time']));
                 if (strpos($timer_task['start_time'], "i")) {
                     $span = " +1 minute";
-                } elseif (strpos($timer_task['start_time'], "H")) {
+                } else if (strpos($timer_task['start_time'], "H")) {
                     $span = " +1 hour";
-                } elseif (strpos($timer_task['start_time'], "d")) {
+                } else if (strpos($timer_task['start_time'], "d")) {
                     $span = " +1 day";
-                } elseif (strpos($timer_task['start_time'], "m")) {
+                } else if (strpos($timer_task['start_time'], "m")) {
                     $span = " +1 month";
-                } elseif (strpos($timer_task['start_time'], "Y")) {
+                } else if (strpos($timer_task['start_time'], "Y")) {
                     $span = " +1 year";
                 } else {
                     $span = '';
@@ -187,10 +189,9 @@ class TimerTask extends CoreBase
             $child->setContext($context);
             if (!empty($timer_task['task_name'])) {
                 $task = getInstance()->loader->task($timer_task['task_name'], $child);
-                call_user_func([$task, $timer_task['method_name']]);
                 $startTime = getMillisecond();
                 $path = "[TimerTask] " . $timer_task['task_name'] . "::" . $timer_task['method_name'];
-                $task->startTask(-1, function () use (&$child, $startTime, $path) {
+                $task->startTask($timer_task['method_name'],[],-1, function () use (&$child, $startTime, $path) {
                     $child->destroy();
                     Pool::getInstance()->push($child);
                     ProcessManager::getInstance()->getRpcCall(SDHelpProcess::class, true)->addStatistics($path, getMillisecond() - $startTime);
@@ -199,12 +200,10 @@ class TimerTask extends CoreBase
                 $model = getInstance()->loader->model($timer_task['model_name'], $child);
                 $startTime = getMillisecond();
                 $path = "[TimerTask] " . $timer_task['model_name'] . "::" . $timer_task['method_name'];
-                Coroutine::startCoroutine(function () use (&$child, &$model, &$timer_task, $path, $startTime) {
-                    yield call_user_func([$model, $timer_task['method_name']]);
-                    $child->destroy();
-                    Pool::getInstance()->push($child);
-                    ProcessManager::getInstance()->getRpcCall(SDHelpProcess::class, true)->addStatistics($path, getMillisecond() - $startTime);
-                });
+                \co::call_user_func([$model, $timer_task['method_name']]);
+                $child->destroy();
+                Pool::getInstance()->push($child);
+                ProcessManager::getInstance()->getRpcCall(SDHelpProcess::class, true)->addStatistics($path, getMillisecond() - $startTime);
             }
         });
     }

@@ -5,9 +5,9 @@
  */
 
 namespace Kernel\Asyn\MQTT\Message\Header;
-
 use Kernel\Asyn\MQTT\Exception;
 use Kernel\Asyn\MQTT\Message;
+
 
 /**
  * Fixed Header definition for PINGRESP

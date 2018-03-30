@@ -48,7 +48,6 @@ class ModelFactory
         $model = str_replace('/', '\\', $old_model);
         if (!array_key_exists($old_model, $this->pool)) {
             $this->pool[$old_model] = new \SplStack();
-            ;
         }
         if (!$this->pool[$old_model]->isEmpty()) {
             $model_instance = $this->pool[$old_model]->shift();
@@ -57,9 +56,11 @@ class ModelFactory
         }
         if (class_exists($model)) {
             $model_instance = new $model;
-            $model_instance->core_name = $old_model;
-            $this->addNewCount($old_model);
-            return $model_instance;
+            if ($model_instance instanceof Model) {
+                $model_instance->core_name = $old_model;
+                $this->addNewCount($old_model);
+                return $model_instance;
+            }
         }
     }
 

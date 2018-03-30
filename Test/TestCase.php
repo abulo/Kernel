@@ -9,6 +9,7 @@
 namespace Kernel\Test;
 
 use Kernel\CoreBase\CoreBase;
+use Kernel\Memory\Pool;
 
 /**
  * 用 @depends 标注来表达依赖关系
@@ -21,11 +22,11 @@ use Kernel\CoreBase\CoreBase;
 abstract class TestCase extends CoreBase
 {
     /**
-     * @var \Kernel\DataBase\RedisAsynPool
+     * @var \Kernel\Asyn\Redis\RedisAsynPool
      */
     public $redis_pool;
     /**
-     * @var \Kernel\DataBase\MysqlAsynPool
+     * @var \Kernel\Asyn\Mysql\MysqlAsynPool
      */
     public $mysql_pool;
 
@@ -39,22 +40,22 @@ abstract class TestCase extends CoreBase
     /**
      * setUpBeforeClass() 与 tearDownAfterClass() 模板方法将分别在测试用例类的第一个测试运行之前和测试用例类的最后一个测试运行之后调用。
      */
-    abstract public function setUpBeforeClass();
+    public abstract function setUpBeforeClass();
 
     /**
      * setUpBeforeClass() 与 tearDownAfterClass() 模板方法将分别在测试用例类的第一个测试运行之前和测试用例类的最后一个测试运行之后调用。
      */
-    abstract public function tearDownAfterClass();
+    public abstract function tearDownAfterClass();
 
     /**
      * 测试类的每个测试方法都会运行一次 setUp() 和 tearDown() 模板方法
      */
-    abstract public function setUp();
+    public abstract function setUp();
 
     /**
      * 测试类的每个测试方法都会运行一次 setUp() 和 tearDown() 模板方法
      */
-    abstract public function tearDown();
+    public abstract function tearDown();
 
     /**
      * 跳过测试
@@ -73,7 +74,7 @@ abstract class TestCase extends CoreBase
      */
     public function coroutineRequestHttpController(TestRequest $testRequest)
     {
-        return new TestHttpCoroutine($testRequest);
+        return Pool::getInstance()->get(TestHttpCoroutine::class)->init($testRequest);
     }
 
     /**
@@ -83,10 +84,10 @@ abstract class TestCase extends CoreBase
      * @return TestTcpCoroutine
      * @internal param $port
      */
-    public function coroutineRequestTcpController($port, $data)
-    {
-        return new TestTcpCoroutine($port, $data);
-    }
+    /* public function coroutineRequestTcpController($port, $data)
+     {
+         return new TestTcpCoroutine($port, $data);
+     }*/
 
     public function assertEquals($expected, $actual, string $message = '')
     {

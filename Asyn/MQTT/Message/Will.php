@@ -4,7 +4,6 @@
  * MQTT Client
  */
 namespace Kernel\Asyn\MQTT\Message;
-
 use Kernel\Asyn\MQTT\Exception;
 use Kernel\Asyn\MQTT\Utility;
 
@@ -48,7 +47,7 @@ class Will
      * @param int    $retain    Will Retain
      * @throws Exception
      */
-    public function __construct($topic, $message, $qos = 1, $retain = 0)
+    public function __construct($topic, $message, $qos=1, $retain=0)
     {
         /*
          If the Will Flag is set to 0 the Will QoS and Will Retain fields in the Connect Flags

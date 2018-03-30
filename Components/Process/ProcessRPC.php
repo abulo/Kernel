@@ -8,8 +8,11 @@
 
 namespace Kernel\Components\Process;
 
+
+use Kernel\Components\Event\Event;
 use Kernel\CoreBase\Child;
-use Kernel\Coroutine\Coroutine;
+use Kernel\CoreBase\RPCThrowable;
+use Kernel\Memory\Pool;
 use Kernel\SwooleMarco;
 use Kernel\Test\DocParser;
 
@@ -38,7 +41,7 @@ abstract class ProcessRPC extends Child
      */
     public function phaseProxy($object)
     {
-        $reflection = new \ReflectionClass(get_class($object));
+        $reflection = new \ReflectionClass (get_class($object));
         $methods = $reflection->getMethods(\ReflectionMethod::IS_PUBLIC);
         //遍历所有的方法
         foreach ($methods as $method) {
@@ -48,7 +51,7 @@ abstract class ProcessRPC extends Child
             $info = DocParser::getInstance()->parse($doc);
             $method_name = $method->getName();
             if (isset($info['oneWay'])) {
-                getInstance()->processManager->oneWayFucName[$method_name] = $method_name;
+                ProcessManager::getInstance()->oneWayFucName[$method_name] = $method_name;
             }
         }
     }
@@ -62,6 +65,7 @@ abstract class ProcessRPC extends Child
     {
         return array_key_exists($func, ProcessManager::getInstance()->oneWayFucName);
     }
+
     /**
      * @param $name
      * @param $arguments
@@ -76,16 +80,42 @@ abstract class ProcessRPC extends Child
         $message['worker_id'] = $my_worker_id;
         $message['arg'] = $arguments;
         $message['func'] = $name;
-        $message['token'] = "[PR]$my_worker_id->$worker_id:" . $this->token;
+        $class = get_class($this);
+        $message['token'] = "[RPC][$class::$name][$my_worker_id->$worker_id]" ."[$this->token]";
         $message['oneWay'] = $oneWay;
         if ($my_worker_id == $worker_id) {
-            \swoole_event_defer(function () use (&$message) {
-                $this->processPpcRun($message);
-            });
-            return $message['token'];
+            $result = $this->processPpcRunHelp($message);
+            //本进程直接封装个Event返回
+            $event = Pool::getInstance()->get(Event::class)->reset('MineProcessRPC', $result);
+            return $event;
         }
         $this->sendMessage(getInstance()->packServerMessageBody(SwooleMarco::PROCESS_RPC, $message), $worker_id);
         return $message['token'];
+    }
+
+    /**
+     * 跨进程调用public方法
+     * @param $message
+     * @return mixed
+     */
+    protected function processPpcRunHelp($message)
+    {
+        $func = $message['func'];
+        $context = $this;
+        if ($this->rpcProxy != null && is_callable([$this->rpcProxy, $func])) {
+            $context = $this->rpcProxy;
+        }
+        if (!is_callable([$context, $func])) {
+            $class = get_class($context);
+            $result = new \Exception("$func 方法名 在 $class 中不存在");
+        } else {
+            try {
+                $result = \co::call_user_func_array([$context, $func], $message['arg']);
+            } catch (\Throwable $e) {
+                $result = new RPCThrowable($e);
+            }
+        }
+        return $result;
     }
 
     /**
@@ -95,28 +125,12 @@ abstract class ProcessRPC extends Child
      */
     protected function processPpcRun($message)
     {
-        $func = $message['func'];
-        $result = call_user_func_array([$this->rpcProxy ?? $this, $func], $message['arg']);
-        if ($result instanceof \Generator) {//需要协程调度
-            if (!$this->coroutine_need) {
-                throw new \Exception("该进程不支持协程调度器");
-            }
-            Coroutine::startCoroutine(function () use ($result, $message) {
-                $result = yield $result;
-                if (!$message['oneWay']) {
-                    $newMessage['result'] = $result;
-                    $newMessage['token'] = $message['token'];
-                    $data = getInstance()->packServerMessageBody(SwooleMarco::PROCESS_RPC_RESULT, $newMessage);
-                    $this->sendMessage($data, $message['worker_id']);
-                }
-            });
-        } else {
-            if (!$message['oneWay']) {
-                $newMessage['result'] = $result;
-                $newMessage['token'] = $message['token'];
-                $data = getInstance()->packServerMessageBody(SwooleMarco::PROCESS_RPC_RESULT, $newMessage);
-                $this->sendMessage($data, $message['worker_id']);
-            }
+        $result = $this->processPpcRunHelp($message);
+        if (!$message['oneWay']) {
+            $newMessage['result'] = $result;
+            $newMessage['token'] = $message['token'];
+            $data = getInstance()->packServerMessageBody(SwooleMarco::PROCESS_RPC_RESULT, $newMessage);
+            $this->sendMessage($data, $message['worker_id']);
         }
     }
 
@@ -128,9 +142,7 @@ abstract class ProcessRPC extends Child
     {
         if (getInstance()->isUserProcess($worker_id)) {
             $process = ProcessManager::getInstance()->getProcessFromID($worker_id);
-            if ($process == null) {
-                return;
-            }
+            if ($process == null) return;
             if ($worker_id == getInstance()->workerId) {
                 $process->readData($data);
             } else {

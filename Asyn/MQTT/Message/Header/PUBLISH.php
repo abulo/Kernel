@@ -5,11 +5,11 @@
  */
 
 namespace Kernel\Asyn\MQTT\Message\Header;
-
 use Kernel\Asyn\MQTT\Debug;
 use Kernel\Asyn\MQTT\Message;
 use Kernel\Asyn\MQTT\Utility;
 use Kernel\Asyn\MQTT\Exception;
+
 
 /**
  * Fixed Header definition for PUBLISH
@@ -140,7 +140,7 @@ class PUBLISH extends Base
          */
         if ($this->qos) {
             parent::setMsgID($msgid);
-        } elseif ($msgid) {
+        } else if ($msgid) {
             throw new Exception('MsgID MUST NOT be set if QoS is set to 0.');
         }
     }

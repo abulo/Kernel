@@ -306,11 +306,9 @@ class SDPageHandler extends Handler
      * @param  string $label
      * @param  callable $callback Callable returning an associative array
      */
-    public function addDataTableCallback(
-        $label,
-        /* callable */
-        $callback
-    ) {
+    public function addDataTableCallback($label, /* callable */
+                                         $callback)
+    {
         if (!is_callable($callback)) {
             throw new InvalidArgumentException('Expecting callback argument to be callable');
         }

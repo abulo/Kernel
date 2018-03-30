@@ -8,6 +8,7 @@
 
 namespace Kernel\Asyn\Redis;
 
+
 use Kernel\Memory\Pool;
 
 class CoroutineRedisHelp
@@ -27,7 +28,7 @@ class CoroutineRedisHelp
         if (getInstance()->isTaskWorker()) {//如果是task进程自动转换为同步模式
             return call_user_func_array([$this->redisAsynPool->getSync(), $name], $arguments);
         } else {
-            return Pool::getInstance()->get(RedisCoroutine::class)->init($this->redisAsynPool, $name, $arguments);
+            return Pool::getInstance()->get(RedisCoroutine::class)->init($this->redisAsynPool, $name, $arguments, null);
         }
     }
 }

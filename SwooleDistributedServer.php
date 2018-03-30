@@ -2,6 +2,7 @@
 
 namespace Kernel;
 
+use Kernel\Asyn\HttpClient\HttpClientPool;
 use Kernel\Asyn\MQTT\Utility;
 use Kernel\Asyn\Mysql\Miner;
 use Kernel\Asyn\Mysql\MysqlAsynPool;
@@ -17,17 +18,18 @@ use Kernel\Components\Cluster\ClusterProcess;
 use Kernel\Components\Consul\ConsulHelp;
 use Kernel\Components\Consul\ConsulProcess;
 use Kernel\Components\Event\EventDispatcher;
+use Kernel\Components\GrayLog\GrayLogHelp;
 use Kernel\Components\Process\ProcessManager;
 use Kernel\Components\SDHelp\SDHelpProcess;
 use Kernel\Components\TimerTask\Timer;
 use Kernel\Components\TimerTask\TimerTask;
+use Kernel\CoreBase\Actor;
 use Kernel\CoreBase\ControllerFactory;
 use Kernel\CoreBase\ModelFactory;
 use Kernel\CoreBase\SwooleException;
 use Kernel\Coroutine\Coroutine;
 use Kernel\Memory\Pool;
 use Kernel\Test\TestModule;
-use Kernel\Asyn\HttpClient\HttpClientPool;
 
 /**
  * Created by PhpStorm.
@@ -165,7 +167,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
         if (!$this->isCluster()) {
             Start::setLeader(true);
         }
-        return parent::start();
+        parent::start();
     }
 
     /**
@@ -216,19 +218,19 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     public function startProcess()
     {
         //timerTask,reload进程
-        ProcessManager::getInstance()->addProcess(SDHelpProcess::class, false);
+        ProcessManager::getInstance()->addProcess(SDHelpProcess::class);
         //consul进程
         if ($this->config->get('consul.enable', false)) {
-            ProcessManager::getInstance()->addProcess(ConsulProcess::class, false);
+            ProcessManager::getInstance()->addProcess(ConsulProcess::class);
         }
-        // if ($this->config->get('backstage.enable', false)) {
-        //     ProcessManager::getInstance()->addProcess(BackstageProcess::class, false);
-        // }
+        if ($this->config->get('backstage.enable', false)) {
+            ProcessManager::getInstance()->addProcess(BackstageProcess::class);
+        }
         //Cluster进程
         ProcessManager::getInstance()->addProcess(ClusterProcess::class);
         //CatCache进程
         if ($this->config->get('catCache.enable', false)) {
-            ProcessManager::getInstance()->addProcess(CatCacheProcess::class, false);
+            ProcessManager::getInstance()->addProcess(CatCacheProcess::class);
         }
     }
 
@@ -242,13 +244,11 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     {
         $send_data = $this->packServerMessageBody($type, $uns_data, $callStaticFuc);
         for ($i = 0; $i < $this->worker_num + $this->task_num; $i++) {
-            if ($this->server->worker_id == $i) {
-                continue;
-            }
+            if ($this->server->worker_id == $i) continue;
             $this->server->sendMessage($send_data, $i);
         }
         //自己的进程是收不到消息的所以这里执行下
-        call_user_func($callStaticFuc, $uns_data);
+        \co::call_user_func($callStaticFuc, $uns_data);
     }
 
     /**
@@ -261,13 +261,11 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     {
         $send_data = $this->packServerMessageBody($type, $uns_data, $callStaticFuc);
         for ($i = 0; $i < $this->worker_num; $i++) {
-            if ($this->server->worker_id == $i) {
-                continue;
-            }
+            if ($this->server->worker_id == $i) continue;
             $this->server->sendMessage($send_data, $i);
         }
         //自己的进程是收不到消息的所以这里执行下
-        call_user_func($callStaticFuc, $uns_data);
+        \co::call_user_func($callStaticFuc, $uns_data);
     }
 
     /**
@@ -282,7 +280,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
         $id = rand(0, getInstance()->worker_num - 1);
         if ($this->server->worker_id == $id) {
             //自己的进程是收不到消息的所以这里执行下
-            call_user_func($callStaticFuc, $uns_data);
+            \co::call_user_func($callStaticFuc, $uns_data);
         } else {
             getInstance()->server->sendMessage($send_data, $id);
         }
@@ -300,7 +298,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
         $send_data = getInstance()->packServerMessageBody($type, $uns_data, $callStaticFuc);
         if ($this->server->worker_id == $workerId) {
             //自己的进程是收不到消息的所以这里执行下
-            call_user_func($callStaticFuc, $uns_data);
+            \co::call_user_func($callStaticFuc, $uns_data);
         } else {
             getInstance()->server->sendMessage($send_data, $workerId);
         }
@@ -330,6 +328,11 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                     $this->send($row['fd'], $message['data'], true);
                 }
                 return null;
+            case SwooleMarco::MSG_TYPE_SEND_ALL_FD;//发送广播
+                foreach ($serv->connections as $fd) {
+                    $serv->send($fd, $message['data'], true);
+                }
+                return null;
             case SwooleMarco::SERVER_TYPE_TASK://task任务
                 $task_name = $message['task_name'];
                 $task = $this->loader->task($task_name, $this);
@@ -340,7 +343,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                 if (is_callable($call)) {
                     //给task做初始化操作
                     $task->initialization($task_id, $from_id, $this->server->worker_pid, $task_name, $task_fuc_name, $task_context);
-                    $result = Coroutine::startCoroutine($call, $task_data);
+                    $result = call_user_func_array($call, $task_data);
                 } else {
                     throw new SwooleException("method $task_fuc_name not exist in $task_name");
                 }
@@ -371,6 +374,30 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
         // return $this->redis_pool->getSync();
         return $this->asynPools[RedisAsynPool::AsynName . $poolKey]->getSync();
     }
+    /**
+     * 广播(全部FD)
+     * @param $data
+     * @param bool $fromDispatch
+     */
+    public function sendToAllFd($data, $fromDispatch = false)
+    {
+        $send_data = $this->packServerMessageBody(SwooleMarco::MSG_TYPE_SEND_ALL_FD, ['data' => $data]);
+        if ($this->isTaskWorker()) {
+            $this->onSwooleTask($this->server, 0, 0, $send_data);
+        } else {
+            if ($this->task_num > 0) {
+                $this->server->task($send_data);
+            } else {
+                foreach ($this->server->connections as $fd) {
+                    $this->server->send($fd, $data, true);
+                }
+            }
+        }
+        if ($fromDispatch) return;
+        if ($this->isCluster()) {
+            ProcessManager::getInstance()->getRpcCall(ClusterProcess::class, true)->my_sendToAllFd($data);
+        }
+    }
 
     /**
      * 广播
@@ -383,11 +410,15 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
         if ($this->isTaskWorker()) {
             $this->onSwooleTask($this->server, 0, 0, $send_data);
         } else {
-            $this->server->task($send_data);
+            if ($this->task_num > 0) {
+                $this->server->task($send_data);
+            } else {
+                foreach ($this->uid_fd_table as $row) {
+                    $this->send($row['fd'], $data, true);
+                }
+            }
         }
-        if ($fromDispatch) {
-            return;
-        }
+        if ($fromDispatch) return;
         if ($this->isCluster()) {
             ProcessManager::getInstance()->getRpcCall(ClusterProcess::class, true)->my_sendToAll($data);
         }
@@ -405,9 +436,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
             $fd = $this->uid_fd_table->get($uid)['fd'];
             $this->send($fd, $data, true);
         } else {
-            if ($fromDispatch) {
-                return;
-            }
+            if ($fromDispatch) return;
             if ($this->isCluster()) {
                 ProcessManager::getInstance()->getRpcCall(ClusterProcess::class, true)->my_sendToUid($uid, $data);
             }
@@ -442,7 +471,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                 unset($uids[$key]);
             }
         }
-        if (count($current_fds) > $this->send_use_task_num) {//过多人就通过task
+        if (count($current_fds) > $this->send_use_task_num && $this->task_num > 0) {//过多人就通过task
             $task_data = $this->packServerMessageBody(SwooleMarco::MSG_TYPE_SEND_BATCH, ['data' => $data, 'fd' => $current_fds]);
             if ($this->isTaskWorker()) {
                 $this->onSwooleTask($this->server, 0, 0, $task_data);
@@ -458,9 +487,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                 $this->send($fd, $data, true);
             }
         }
-        if ($fromDispatch) {
-            return;
-        }
+        if ($fromDispatch) return;
         //本机处理不了的发给dispatch
         if ($this->isCluster()) {
             if (count($uids) > 0) {
@@ -522,11 +549,12 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * 发布订阅
      * @param $topic
      * @param $data
+     * @param array $excludeUids
      */
-    public function pub($topic, $data)
+    public function pub($topic, $data, $excludeUids = [])
     {
         Utility::CheckTopicName($topic);
-        ProcessManager::getInstance()->getRpcCall(ClusterProcess::class, true)->my_pub($topic, $data);
+        ProcessManager::getInstance()->getRpcCall(ClusterProcess::class, true)->my_pub($topic, $data, $excludeUids);
     }
 
     /**
@@ -563,15 +591,18 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     public function onSwooleWorkerStart($serv, $workerId)
     {
         parent::onSwooleWorkerStart($serv, $workerId);
-        $this->initAsynPools();
-        $this->initRedisProxy();
-        $this->initMysqlProxy();
+        $this->initAsynPools($workerId);
+        $this->initRedisProxy($workerId);
+        $this->initMysqlProxy($workerId);
         // $this->redis_pool = $this->asynPools['redisPool'] ?? null;
         // $this->mysql_pool = $this->asynPools['mysqlPool'] ?? null;
         //进程锁保证只有一个进程会执行以下的代码,reload也不会执行
         if (!$this->isTaskWorker() && $this->initLock->trylock()) {
             //进程启动后进行开服的初始化
-            Coroutine::startCoroutine([$this, 'onOpenServiceInitialization']);
+            $this->onOpenServiceInitialization();
+            if (Start::$testUnity) {
+                new TestModule(Start::$testUnityDir);
+            }
             $this->initLock->lock_read();
         }
         //向SDHelp進程取數據
@@ -581,17 +612,22 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
             TimerTask::start();
             if ($this->config->get('catCache.enable', false)) {
                 TimerCallBack::init();
-                Coroutine::startCoroutine(function () use ($workerId, $isReload) {
-                    if (!$isReload) {
-                        yield EventDispatcher::getInstance()->addOnceCoroutine(CatCacheProcess::READY);
+                if (!$isReload) {
+                    $ready = ProcessManager::getInstance()->getRpcCall(CatCacheProcess::class)->isReady();
+                    if (!$ready) {
+                        EventDispatcher::getInstance()->addOnceCoroutine(CatCacheProcess::READY);
                     }
-                    yield Actor::recovery($workerId);
-                });
+                }
+                Actor::recovery($workerId);
             }
         }
     }
 
-    public function initRedisProxy()
+    /**
+     * redis 代理
+     * @return
+     */
+    public function initRedisProxy($workerId)
     {
         if ($this->config->get('redis_proxy.active')) {
             $activeProxies = $this->config->get('redis_proxy.active');
@@ -604,18 +640,31 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
         }
     }
 
+    /**
+     * 获取 redis 代理
+     * @param    $name
+     * @return boolean
+     */
     public function getRedisProxy($name)
     {
         return $this->redisProxyManager[$name]??null;
     }
 
-
+    /**
+     * mysql 代理
+     * @param   $name
+     * @return
+     */
     public function getMysqlProxy($name)
     {
         return $this->mysqlProxyManager[$name]??null;
     }
 
-    public function initMysqlProxy()
+    /**
+     * 代理 mysql
+     * @return
+     */
+    public function initMysqlProxy($workerId)
     {
         if ($this->config->get('mysql_proxy.active')) {
             $activeProxies = $this->config->get('mysql_proxy.active');
@@ -635,7 +684,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * 初始化各种连接池
      * @param $workerId
      */
-    public function initAsynPools()
+    public function initAsynPools($workerId)
     {
         // $this->asynPools = [];
         // if ($this->config->get('redis.enable', true)) {
@@ -673,6 +722,12 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                 $asynPools[$poolKey] = new HttpClientPool($this->config, $url);
             }
 		}
+
+
+
+        if ($this->config->get('error.dingding_enable', false)) {
+            $this->asynPools['dingdingRest'] = new HttpClientPool($this->config, $this->config->get('error.dingding_url'));
+        }
 
 
         $this->asynPools = $asynPools;
@@ -774,9 +829,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
             $fd = $this->uid_fd_table->get($uid)['fd'];
             $this->close($fd);
         } else {
-            if ($fromDispatch) {
-                return;
-            }
+            if ($fromDispatch) return;
             if ($this->isCluster()) {
                 ProcessManager::getInstance()->getRpcCall(ClusterProcess::class, true)->my_kickUid($uid);
             }
@@ -828,7 +881,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     public function coroutineUidIsOnline($uid)
     {
         if ($this->isCluster()) {
-            return yield ProcessManager::getInstance()->getRpcCall(ClusterProcess::class)->isOnline($uid);
+            return ProcessManager::getInstance()->getRpcCall(ClusterProcess::class)->isOnline($uid);
         } else {
             return $this->uid_fd_table->exist($uid);
         }
@@ -843,7 +896,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     public function coroutineCountOnline()
     {
         if ($this->isCluster()) {
-            return yield ProcessManager::getInstance()->getRpcCall(ClusterProcess::class)->countOnline();
+            return ProcessManager::getInstance()->getRpcCall(ClusterProcess::class)->countOnline();
         } else {
             return count($this->uid_fd_table);
         }
@@ -857,7 +910,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     public function coroutineGetAllUids()
     {
         if ($this->isCluster()) {
-            return yield ProcessManager::getInstance()->getRpcCall(ClusterProcess::class)->getAllUids();
+            return ProcessManager::getInstance()->getRpcCall(ClusterProcess::class)->getAllUids();
         } else {
             $uids = [];
             foreach ($this->uid_fd_table as $key => $value) {
@@ -936,6 +989,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
         }
         $this->lastTime = $now_time;
         $this->lastReqTimes = $status['request_count'];
+        $status['isDebug'] = Start::getDebug();
         $status['isLeader'] = Start::isLeader();
         $status['qps'] = $qps;
         $status['system'] = PHP_OS;
@@ -947,13 +1001,13 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
         $status['max_connection'] = $this->max_connection;
         $status['start_time'] = Start::getStartTime();
         $status['run_time'] = format_date(strtotime(date('Y-m-d H:i:s')) - strtotime(Start::getStartTime()));
-        $poolStatus = yield $this->helpGetAllStatus();
+        $poolStatus = $this->helpGetAllStatus();
         $status['coroutine_num'] = $poolStatus['coroutine_num'];
         $status['pool'] = $poolStatus['pool'];
         $status['model_pool'] = $poolStatus['model_pool'];
         $status['controller_pool'] = $poolStatus['controller_pool'];
         $status['ports'] = $this->portManager->getPortStatus();
-        $data = yield ProcessManager::getInstance()->getRpcCall(SDHelpProcess::class)->getData(ConsulHelp::DISPATCH_KEY);
+        $data = ProcessManager::getInstance()->getRpcCall(SDHelpProcess::class)->getData(ConsulHelp::DISPATCH_KEY);
         if (!empty($data)) {
             foreach ($data as $key => $value) {
                 $data[$key] = json_decode($value, true);
@@ -974,7 +1028,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
         $status['pool'] = Pool::getInstance()->getStatus();
         $status['model_pool'] = ModelFactory::getInstance()->getStatus();
         $status['controller_pool'] = ControllerFactory::getInstance()->getStatus();
-        $status['coroutine_num'] = Coroutine::getInstance()->getStatus();
+        $status['coroutine_num'] = 0;
         return $status;
     }
 
@@ -985,10 +1039,8 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     {
         $status = ['pool' => [], 'model_pool' => [], 'controller_pool' => [], 'coroutine_num' => 0];
         for ($i = 0; $i < $this->worker_num; $i++) {
-            $result = yield ProcessManager::getInstance()->getRpcCallWorker($i)->getPoolStatus();
-            if (empty($result)) {
-                return;
-            }
+            $result = ProcessManager::getInstance()->getRpcCallWorker(self::getInstance()->workerId)->getPoolStatus();
+            if (empty($result)) return;
             $this->helpMerge($status['pool'], $result['pool']);
             $this->helpMerge($status['model_pool'], $result['model_pool']);
             $this->helpMerge($status['controller_pool'], $result['controller_pool']);
@@ -1026,7 +1078,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
             if (!$this->isCluster()) {
                 return [];
             } else {
-                $fdInfo = yield ProcessManager::getInstance()->getRpcCall(ClusterProcess::class)->my_getUidInfo($uid);
+                $fdInfo = ProcessManager::getInstance()->getRpcCall(ClusterProcess::class)->my_getUidInfo($uid);
                 return $fdInfo;
             }
         } else {

@@ -5,7 +5,6 @@
  */
 
 namespace Kernel\Asyn\MQTT\Message;
-
 use Kernel\Asyn\MQTT\Debug;
 use Kernel\Asyn\MQTT\Utility;
 use Kernel\Asyn\MQTT\Message;

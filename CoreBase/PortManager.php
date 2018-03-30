@@ -8,7 +8,6 @@
 
 namespace Kernel\CoreBase;
 
-use Kernel\Coroutine\Coroutine;
 use Kernel\Pack\IPack;
 use Kernel\Route\IRoute;
 use Kernel\SwooleServer;
@@ -93,9 +92,7 @@ class PortManager
     public function buildPort(SwooleServer $swoole_server, $first_port)
     {
         foreach ($this->portConfig as $key => $value) {
-            if ($value['socket_port'] == $first_port) {
-                continue;
-            }
+            if ($value['socket_port'] == $first_port) continue;
             //获得set
             $set = $this->getProbufSet($value['socket_port']);
             if (array_key_exists('ssl_cert_file', $value)) {
@@ -343,21 +340,11 @@ class PortManager
         $config = $this->portConfig[$server_port];
         $controller_name = $config['event_controller_name'] ?? getInstance()->getEventControllerName();
         $method_name = ($config['method_prefix'] ?? '') . ($config['close_method_name'] ?? getInstance()->getCloseMethodName());
-        $controller_instance = ControllerFactory::getInstance()
-            ->getController($controller_name);
-        Coroutine::startCoroutine(function () use ($controller_instance, $uid, $fd, $controller_name, $method_name) {
-            $context = [];
-            $controller_instance->setContext($context);
-            yield $controller_instance->setClientData(
-                $uid,
-                $fd,
-                null,
-                $controller_name,
-                $method_name,
-                null
-            );
-            unset($context);
-        });
+        $controller_instance = ControllerFactory::getInstance()->getController($controller_name);
+        $context = [];
+        $controller_instance->setContext($context);
+        $controller_instance->setClientData($uid, $fd, null, $controller_name, $method_name, null);
+        unset($context);
     }
 
     /**
@@ -370,13 +357,11 @@ class PortManager
         $config = $this->portConfig[$server_port];
         $controller_name = $config['event_controller_name'] ?? getInstance()->getEventControllerName();
         $method_name = ($config['method_prefix'] ?? '') . ($config['connect_method_name'] ?? getInstance()->getConnectMethodName());
-        $controller_instance = ControllerFactory::getInstance()
-            ->getController($controller_name);
+        $controller_instance = ControllerFactory::getInstance()->getController($controller_name);
         if ($request != null) {
             $controller_instance->setRequest($request);
         }
-        Coroutine::startCoroutine([$controller_instance, 'setClientData'], [null, $fd, null,
-            $controller_name, $method_name, null]);
+        $controller_instance->setClientData(null, $fd, null, $controller_name, $method_name, null);
     }
 
     /**

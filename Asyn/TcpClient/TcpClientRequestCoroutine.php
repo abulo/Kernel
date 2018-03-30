@@ -11,6 +11,7 @@ namespace Kernel\Asyn\TcpClient;
 use Kernel\CoreBase\SwooleException;
 use Kernel\Coroutine\CoroutineBase;
 use Kernel\Memory\Pool;
+use Kernel\Start;
 
 class TcpClientRequestCoroutine extends CoroutineBase
 {
@@ -21,36 +22,36 @@ class TcpClientRequestCoroutine extends CoroutineBase
     public $data;
     public $oneway;
 
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     /**
      * 对象池模式代替__construct
      * @param $pool
      * @param $data
-     * @param $oneway
+     * @param bool $oneway
+     * @param $set
      * @return $this
      * @throws SwooleException
      */
-    public function init($pool, $data, $oneway = false)
+    public function init($pool, $data, $oneway = false, $set)
     {
         $this->pool = $pool;
         $this->data = $data;
         $this->oneway = $oneway;
-        $this->getCount = getTickTime();
         if (!array_key_exists('path', $data)) {
             throw new SwooleException('tcp data must has path');
         }
-        $this->request = '[tcpClient]' .$pool->connect. $data['path'];
+        $d = "[".$pool->connect."]"."[". $data['path'] ."]";
+        $this->request = "[tcpClient]$d";
+        if (Start::getDebug()){
+            secho("TCP",$d);
+        }
         unset($this->data['path']);
+        $this->set($set);
         if ($this->fuse()) {//启动断路器
             $this->send(function ($result) {
-                $this->result = $result;
+                $this->coPush($result);
             });
         }
-        return $this;
+        return $this->returnInit();
     }
 
     public function send($callback)

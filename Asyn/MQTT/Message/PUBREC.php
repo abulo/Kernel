@@ -5,8 +5,8 @@
  */
 
 namespace Kernel\Asyn\MQTT\Message;
-
 use Kernel\Asyn\MQTT\Message;
+
 
 /**
  * Message PUBREC
@@ -19,6 +19,7 @@ class PUBREC extends Base
     protected $message_type = Message::PUBREC;
     protected $protocol_type = self::WITH_VARIABLE;
     protected $read_bytes = 4;
+
 }
 
 # EOF

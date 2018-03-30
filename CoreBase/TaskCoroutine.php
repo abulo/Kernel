@@ -10,8 +10,8 @@ namespace Kernel\CoreBase;
 
 use Kernel\Coroutine\CoroutineBase;
 use Kernel\Coroutine\CoroutineNull;
-use Kernel\Coroutine\CoroutineTaskException;
 use Kernel\Memory\Pool;
+use Kernel\Start;
 
 class TaskCoroutine extends CoroutineBase
 {
@@ -19,18 +19,23 @@ class TaskCoroutine extends CoroutineBase
     public $task_proxy_data;
     public $task_id;
 
-    public function init($task_proxy_data, $id)
+    public function init($task_proxy_data, $id, $set)
     {
         $this->task_proxy_data = $task_proxy_data;
         $this->id = $id;
-        $this->getCount = getTickTime();
+        $this->set($set);
         $this->send(function ($serv, $task_id, $data) {
             if ($data instanceof CoroutineNull) {
                 $data = null;
             }
-            $this->result = $data;
+            $this->coPush($data);
         });
-        return $this;
+        $d = "[".$task_proxy_data['message']['task_name'] ."::". $task_proxy_data['message']['task_fuc_name']."]";
+        $this->request = "[Task]$d";
+        if (Start::getDebug()){
+            secho("TASK",$d);
+        }
+        return $this->returnInit();
     }
 
     public function send($callback)
@@ -49,17 +54,5 @@ class TaskCoroutine extends CoroutineBase
     {
         parent::onTimerOutHandle();
         getInstance()->stopTask($this->task_id);
-    }
-
-    public function getResult()
-    {
-        if ($this->result instanceof CoroutineTaskException) {
-            if (!$this->noException) {
-                $ex = new SwooleException($this->result->getMessage(), $this->result->getCode());
-                $this->destroy();
-                throw $ex;
-            }
-        }
-        return parent::getResult();
     }
 }

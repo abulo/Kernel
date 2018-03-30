@@ -5,10 +5,10 @@
  */
 
 namespace Kernel\Asyn\MQTT\Message;
-
 use Kernel\Asyn\MQTT\Exception;
 use Kernel\Asyn\MQTT\Message;
 use Kernel\Asyn\MQTT\Utility;
+
 
 /**
  * Message UNSUBSCRIBE

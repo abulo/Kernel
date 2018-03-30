@@ -531,14 +531,9 @@ class Miner
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Miner
      */
-    private function criteria(
-        array &$criteria,
-        $column,
-        $value,
-        $operator = self::EQUALS,
-        $connector = self::LOGICAL_AND,
-        $quote = null
-    ) {
+    private function criteria(array &$criteria, $column, $value, $operator = self::EQUALS,
+                              $connector = self::LOGICAL_AND, $quote = null)
+    {
         $criteria[] = array('column' => $column,
             'value' => $value,
             'operator' => $operator,
@@ -601,13 +596,9 @@ class Miner
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Miner
      */
-    private function criteriaIn(
-        array &$criteria,
-        $column,
-        array $values,
-        $connector = self::LOGICAL_AND,
-        $quote = null
-    ) {
+    private function criteriaIn(array &$criteria, $column, array $values, $connector = self::LOGICAL_AND,
+                                $quote = null)
+    {
         return $this->criteria($criteria, $column, $values, self::IN, $connector, $quote);
     }
 
@@ -635,13 +626,9 @@ class Miner
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Miner
      */
-    private function criteriaNotIn(
-        array &$criteria,
-        $column,
-        array $values,
-        $connector = self::LOGICAL_AND,
-        $quote = null
-    ) {
+    private function criteriaNotIn(array &$criteria, $column, array $values, $connector = self::LOGICAL_AND,
+                                   $quote = null)
+    {
         return $this->criteria($criteria, $column, $values, self::NOT_IN, $connector, $quote);
     }
 
@@ -671,14 +658,9 @@ class Miner
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Miner
      */
-    private function criteriaBetween(
-        array &$criteria,
-        $column,
-        $min,
-        $max,
-        $connector = self::LOGICAL_AND,
-        $quote = null
-    ) {
+    private function criteriaBetween(array &$criteria, $column, $min, $max, $connector = self::LOGICAL_AND,
+                                     $quote = null)
+    {
         return $this->criteria($criteria, $column, array($min, $max), self::BETWEEN, $connector, $quote);
     }
 
@@ -708,14 +690,9 @@ class Miner
      * @param  bool|null $quote optional auto-escape value, default to global
      * @return Miner
      */
-    private function criteriaNotBetween(
-        array &$criteria,
-        $column,
-        $min,
-        $max,
-        $connector = self::LOGICAL_AND,
-        $quote = null
-    ) {
+    private function criteriaNotBetween(array &$criteria, $column, $min, $max, $connector = self::LOGICAL_AND,
+                                        $quote = null)
+    {
         return $this->criteria($criteria, $column, array($min, $max), self::NOT_BETWEEN, $connector, $quote);
     }
 
@@ -1197,11 +1174,9 @@ class Miner
      * @param  array $placeholderValues optional placeholder values array
      * @return string WHERE or HAVING portion of the statement
      */
-    private function getCriteriaString(
-        array &$criteria,
-        $usePlaceholders = true,
-        array &$placeholderValues = array()
-    ) {
+    private function getCriteriaString(array &$criteria, $usePlaceholders = true,
+                                       array &$placeholderValues = array())
+    {
         $statement = "";
         $placeholderValues = array();
 
@@ -1861,53 +1836,6 @@ class Miner
         return $this->delete === true;
     }
 
-    /**
-     * @param $sql
-     * @return MySqlCoroutine|MysqlSyncHelp
-     */
-    public function coroutineQuery($sql)
-    {
-        return $this->coroutineSend(null, $sql = null);
-    }
-
-    /**
-     * 协程的方式
-     * @param null $bind_id
-     * @param null $sql
-     * @return MySqlCoroutine|MysqlSyncHelp
-     */
-    public function coroutineSend($bind_id = null, $sql = null)
-    {
-        if ($sql == null) {
-            $sql = $this->getStatement(false);
-        }
-        if (getInstance()->isTaskWorker()) {//如果是task进程自动转换为同步模式
-            $this->mergeInto($this->mysql_pool->getSync());
-            $this->clear();
-            $data = [];
-            switch ($sql) {
-                case 'commit':
-                    $this->mysql_pool->getSync()->pdoCommitTrans();
-                    break;
-                case 'begin':
-                    $this->mysql_pool->getSync()->pdoBeginTrans();
-                    break;
-                case 'rollback':
-                    $this->mysql_pool->getSync()->pdoRollBackTrans();
-                    break;
-                default:
-                    $data = $this->mysql_pool->getSync()->pdoQuery($sql);
-            }
-            return new MysqlSyncHelp($sql, $data);
-        } else {
-            $return = Pool::getInstance()->get(MySqlCoroutine::class)->init($this->mysql_pool, $bind_id, $sql);
-            if ($this->isUpdate()) {
-                $return->setTimeout(15000);
-            }
-            $this->clear();
-            return $return;
-        }
-    }
 
     /**
      * Merge this Miner into the given Miner.
@@ -2199,13 +2127,8 @@ class Miner
                     $Miner->closeHaving();
                 }
             } else {
-                $Miner->having(
-                    $having['column'],
-                    $having['value'],
-                    $having['operator'],
-                    $having['connector'],
-                    $having['quote']
-                );
+                $Miner->having($having['column'], $having['value'], $having['operator'],
+                    $having['connector'], $having['quote']);
             }
         }
 
@@ -2438,6 +2361,67 @@ class Miner
         return $this;
     }
 
+    /**
+     * @var
+     */
+    protected $client;
+
+    /**
+     * 事务用的client
+     * @param $client
+     */
+    public function setClient($client)
+    {
+        $this->client = $client;
+    }
+
+    /**
+     * 开始事务
+     * @param callable $fuc
+     * @param callable|null $errorFuc
+     */
+    public function begin(callable $fuc, callable $errorFuc = null)
+    {
+        $this->mysql_pool->begin($fuc, $errorFuc);
+    }
+
+    /**
+     * @param null $sql
+     * @param callable|null $set
+     * @return MysqlSyncHelp
+     */
+    public function query($sql = null, callable $set = null)
+    {
+        $mySqlCoroutine = Pool::getInstance()->get(MySqlCoroutine::class);
+        if (getInstance()->isTaskWorker()) {//如果是task进程自动转换为同步模式
+            $this->mergeInto($this->mysql_pool->getSync());
+            $this->clear();
+            $data = $this->mysql_pool->getSync()->pdoQuery($sql);
+            return new MysqlSyncHelp($sql, $data);
+        } else {
+            if ($sql != null) {
+                $mySqlCoroutine->setRequest($sql);
+                if ($set) {
+                    $set($mySqlCoroutine);
+                }
+                $result = $this->mysql_pool->query($sql, $this->client, $mySqlCoroutine);
+                $this->clear();
+                return $result;
+            } else {
+                $statement = $this->getStatement();
+                $holder = $this->getPlaceholderValues();
+                $sql = $this->getStatement(false);
+                $mySqlCoroutine->setRequest($sql);
+                if ($set) {
+                    $set($mySqlCoroutine);
+                }
+                $result = $this->mysql_pool->prepare($sql, $statement, $holder, $this->client, $mySqlCoroutine);
+                $this->clear();
+                return $result;
+            }
+        }
+    }
+
     public function clear()
     {
         $this->option = array();
@@ -2508,7 +2492,7 @@ class Miner
         $isSelect = false;
         if ($sql != null) {//代表手动执行的sql
             $str = strtolower(substr(trim($sql), 0, 6));
-            if ($str == 'select' || strripos($sql, 'show') !== false) {
+            if ($str == 'select' || strripos($str, 'show') !== false) {
                 $isSelect = true;
             }
         }
@@ -2587,8 +2571,7 @@ class Miner
             $activeConfig["host"] . ';port=' . $activeConfig['port'] ?? 3306;
         $pdo = new \PDO(
             $dsn,
-            $activeConfig["user"],
-            $activeConfig["password"],
+            $activeConfig["user"], $activeConfig["password"],
             [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES ' . $activeConfig['charset'] ?? 'utf8']
         );
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
@@ -2603,11 +2586,9 @@ class Miner
      */
     public function getPlaceholderValues()
     {
-        return array_merge(
-            $this->getSetPlaceholderValues(),
+        return array_merge($this->getSetPlaceholderValues(),
             $this->getWherePlaceholderValues(),
-            $this->getHavingPlaceholderValues()
-        );
+            $this->getHavingPlaceholderValues());
     }
 
     /**

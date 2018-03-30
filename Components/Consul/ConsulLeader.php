@@ -8,9 +8,9 @@
 
 namespace Kernel\Components\Consul;
 
+
 use Kernel\Asyn\HttpClient\HttpClient;
 use Kernel\Components\Event\EventDispatcher;
-use Kernel\Components\Process\ProcessManager;
 use Kernel\Components\SDHelp\SDHelpProcess;
 use Kernel\Start;
 
@@ -21,13 +21,18 @@ class ConsulLeader
     protected $leader_name;
     protected $config;
     protected $sessionID;
+    /**
+     * @var SDHelpProcess
+     */
+    protected $sdHelpProcess;
 
-    public function __construct()
+    public function __construct($sdHelpProcess)
     {
+        $this->sdHelpProcess = $sdHelpProcess;
         $this->config = getInstance()->config;
         $this->leader_name = $this->config['consul']['leader_service_name'];
         $this->consul_leader = new HttpClient(null, 'http://127.0.0.1:8500');
-        swoole_timer_after(1000, function () {
+        swoole_timer_after(2000, function () {
             $this->leader();
             $this->serviceHealthCheck();
         });
@@ -59,8 +64,7 @@ class ConsulLeader
             }
             $result[$watch] = $data['body'];
             //存儲在SDHelpProcess中
-            ProcessManager::getInstance()->getProcess(SDHelpProcess::class)
-                ->data[ConsulHelp::DISPATCH_KEY][$watch] = $data['body'];
+            $this->sdHelpProcess->data[ConsulHelp::DISPATCH_KEY][$watch] = $data['body'];
             //分发到进程中去
             EventDispatcher::getInstance()->dispatch(ConsulHelp::DISPATCH_KEY, $result);
             //继续监听
@@ -78,10 +82,10 @@ class ConsulLeader
         if (empty($this->sessionID)) {
             $this->consul_leader->setData(json_encode(['LockDelay' => 0, 'Behavior' => 'release', 'Name' => $this->leader_name]))->setMethod('PUT')->execute('/v1/session/create', function ($data) use ($call) {
                 $this->sessionID = json_decode($data['body'], true)["ID"];
-                call_user_func($call, $this->sessionID);
+                $call($this->sessionID);
             });
         } else {
-            call_user_func($call, $this->sessionID);
+            $call($this->sessionID);
         }
     }
 
@@ -125,7 +129,8 @@ class ConsulLeader
                 }
                 $body = json_decode($data['body'], true)[0];
                 $index = $data['headers']['x-consul-index'];
-                if (!isset($body['Session'])) {//代表没有Leader
+                if (!isset($body['Session']))//代表没有Leader
+                {
                     $this->leader($index);
                 } else {
                     $this->checkLeader($index);

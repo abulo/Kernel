@@ -23,9 +23,9 @@ class SDHelpProcess extends Process
     {
         new TimerTask();
         if (getInstance()->config->get('consul.enable', false)) {
-            new ConsulLeader();
+            new ConsulLeader($this);
         }
-        if (getInstance()->config->get('auto_reload_enable', false)) {//代表启动单独进程进行reload管理,代码更新时候自动重启
+        if (getInstance()->config->get('auto_reload_enable', false)) {//代表启动单独进程进行reload管理
             new InotifyReload();
         }
         if (getInstance()->config->get('auto_restart_enable', false)) {//定时重启服务

@@ -8,7 +8,6 @@
 
 namespace Kernel\Components\Cluster;
 
-use Kernel\Coroutine\Coroutine;
 use Kernel\Memory\Pool;
 use Kernel\Pack\ClusterPack;
 
@@ -45,9 +44,7 @@ class ClusterHelp
 
     public function buildPort()
     {
-        if (!getInstance()->isCluster()) {
-            return;
-        }
+        if (!getInstance()->isCluster()) return;
         //创建dispatch端口用于连接dispatch
         $this->port = getInstance()->server->listen('0.0.0.0', $this->config['cluster']['port'], SWOOLE_SOCK_TCP);
         if ($this->port == false) {
@@ -60,6 +57,7 @@ class ClusterHelp
             $serv->protect($fd, true);
         });
         $this->port->on('close', function ($serv, $fd) {
+
         });
 
         $this->port->on('receive', function ($serv, $fd, $from_id, $data) {
@@ -72,28 +70,14 @@ class ClusterHelp
             $params = $unserialize_data['p'];
             $token = $unserialize_data['t'];
             $controller = Pool::getInstance()->get(ClusterController::class);
-            $result = call_user_func_array([$controller, $method], $params);
-            if ($result instanceof \Generator) {
-                Coroutine::startCoroutine(function () use ($result, $token, $fd, $controller) {
-                    $real = yield $result;
-                    $data = [];
-                    $data['t'] = $token;
-                    $data['r'] = $real;
-                    $serialize_data = $this->pack->pack($data);
-                    getInstance()->send($fd, $serialize_data);
-                    $controller->destroy();
-                    Pool::getInstance()->push($controller);
-                });
-            } else {
-                $data = [];
-                $data['t'] = $token;
-                $data['r'] = $result;
-                $serialize_data = $this->pack->pack($data);
-                getInstance()->send($fd, $serialize_data);
-
-                $controller->destroy();
-                Pool::getInstance()->push($controller);
-            }
+            $result = \co::call_user_func_array([$controller, $method], $params);
+            $data = [];
+            $data['t'] = $token;
+            $data['r'] = $result;
+            $serialize_data = $this->pack->pack($data);
+            getInstance()->send($fd, $serialize_data);
+            $controller->destroy();
+            Pool::getInstance()->push($controller);
         });
     }
 }

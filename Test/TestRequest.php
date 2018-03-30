@@ -8,6 +8,7 @@
 
 namespace Kernel\Test;
 
+
 use Exception;
 use Kernel\CoreBase\PortManager;
 
@@ -21,6 +22,7 @@ class TestRequest
     public $files = [];
     public $_rawContent = '';
     public $server_port;
+    public $fd;
 
     public function __construct($path_info, $header = [], $get = [], $post = [], $cookie = [])
     {

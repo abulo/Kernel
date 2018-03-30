@@ -48,7 +48,7 @@ class RedisRoute
      */
     protected function getRedisPoolFromKey($key)
     {
-        $redis_pool_name = $this->route_map[$key]??'redisPool';
+        $redis_pool_name = $this->route_map[$key] ?? 'redisPool';
         return getInstance()->getAsynPool($redis_pool_name);
     }
 
@@ -88,15 +88,15 @@ class RedisRoute
         return $this;
     }
 
-    public function coroutineSend($name, ...$arg)
+    public function coroutineSend($name, $arg, callable $set = null)
     {
         $redis_pool = $this->getRedisPoolFromKey($this->getKey($name, $arg));
-        return $redis_pool->coroutineSend($name, ...$arg);
+        return $redis_pool->coroutineSend($name, $arg, $set);
     }
 
     public function __call($name, $arguments)
     {
         $redis_pool = $this->getRedisPoolFromKey($this->getKey($name, $arguments));
-        return $redis_pool->coroutineSend($name, ...$arguments);
+        return $redis_pool->coroutineSend($name, $arguments);
     }
 }

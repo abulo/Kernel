@@ -99,7 +99,13 @@ class CatCacheProcess extends Process
         $this->rpcProxy->start();
     }
 
-    
+    /**
+     * 清理Actor
+     */
+    public function clearActor()
+    {
+        unset($this->map["@Actor"]);
+    }
 
     /**
      * 清理定时器
@@ -234,7 +240,7 @@ class CatCacheProcess extends Process
                 }
                 $this->read_buffer .= $content;
                 $this->HELP_pack(function ($one) {
-                    call_user_func_array([$this->map, $one[0]], $one[1]);
+                    \co::call_user_func_array([$this->map, $one[0]], $one[1]);
                 });
                 return true;
             });
@@ -260,7 +266,8 @@ class CatCacheProcess extends Process
                 break;
             }
             $head_len = unpack("N", $this->read_buffer)[1];
-            if (strlen($this->read_buffer) >= $head_len) {//有完整结果
+            if (strlen($this->read_buffer) >= $head_len)//有完整结果
+            {
                 $data = substr($this->read_buffer, 4, $head_len - 4);
                 $this->read_buffer = substr($this->read_buffer, $head_len);
                 $one = \swoole_serialize::unpack($data);

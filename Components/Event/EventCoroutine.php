@@ -10,30 +10,32 @@ namespace Kernel\Components\Event;
 
 use Kernel\Coroutine\CoroutineBase;
 use Kernel\Memory\Pool;
+use Kernel\Start;
 
 class EventCoroutine extends CoroutineBase
 {
-
     public $eventType;
-
     public function __construct()
     {
         parent::__construct();
     }
 
-    public function init($eventType)
+    public function init($eventType, $set)
     {
         $this->eventType = $eventType;
-        $this->request = '[Event]' . $eventType;
-        $this->getCount = getTickTime();
+        $this->request = "[Event] $eventType";
+        if(Start::getDebug()) {
+            secho("EVENT", $eventType . "\n");
+        }
+        $this->set($set);
         EventDispatcher::getInstance()->add($this->eventType, [$this, 'send']);
-        return $this;
+        return $this->returnInit();
     }
 
     public function send($event)
     {
-        $this->result = $event->data;
         EventDispatcher::getInstance()->remove($this->eventType, [$this, 'send']);
+        $this->coPush($event->data);
     }
 
     public function destroy()

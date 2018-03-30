@@ -8,8 +8,8 @@
 
 namespace Kernel\Components\Process;
 
+
 use Kernel\Components\Event\EventDispatcher;
-use Kernel\Coroutine\Coroutine;
 use Kernel\SwooleMarco;
 
 abstract class Process extends ProcessRPC
@@ -19,26 +19,23 @@ abstract class Process extends ProcessRPC
     protected $config;
     protected $log;
     protected $token = 0;
-    /**
-     * 协程支持
-     * @var bool
-     */
-    protected $coroutine_need = true;
+    protected $params;
 
     /**
      * Process constructor.
-     * @param $name
+     * @param string $name
      * @param $worker_id
-     * @param bool $coroutine_need
+     * @param $params
      */
-    public function __construct($name, $worker_id, $coroutine_need = true)
+    public function __construct($name, $worker_id, $params)
     {
         parent::__construct();
         $this->name = $name;
         $this->worker_id = $worker_id;
-        $this->coroutine_need = $coroutine_need;
+        getInstance()->workerId = $worker_id;
         $this->config = getInstance()->config;
         $this->log = getInstance()->log;
+        $this->params = $params;
         if (getInstance()->server != null) {
             $this->process = new \swoole_process([$this, '__start'], false, 2);
             getInstance()->server->addProcess($this->process);
@@ -48,7 +45,6 @@ abstract class Process extends ProcessRPC
     public function __start($process)
     {
         \swoole_process::signal(SIGTERM, [$this, "__shutDown"]);
-
         getInstance()->workerId = $this->worker_id;
         if (!isDarwin()) {
             $process->name($this->name);
@@ -56,20 +52,16 @@ abstract class Process extends ProcessRPC
         swoole_event_add($process->pipe, [$this, 'onRead']);
         getInstance()->server->worker_id = $this->worker_id;
         getInstance()->server->taskworker = false;
-        if ($this->coroutine_need) {
-            //协成支持
-            Coroutine::init();
-            Coroutine::startCoroutine([$this, 'start'], [$process]);
-        } else {
+        go(function () use ($process) {
             $this->start($process);
-        }
+        });
     }
 
 
     /**
      * @param $process
      */
-    abstract public function start($process);
+    public abstract function start($process);
 
     /**
      * 关服处理
@@ -82,6 +74,7 @@ abstract class Process extends ProcessRPC
     }
 
     abstract protected function onShutDown();
+
     /**
      * onRead
      */
@@ -96,15 +89,17 @@ abstract class Process extends ProcessRPC
      */
     public function readData($data)
     {
-        $message = $data['message'];
-        switch ($data['type']) {
-            case SwooleMarco::PROCESS_RPC:
-                $this->processPpcRun($message);
-                break;
-            case SwooleMarco::PROCESS_RPC_RESULT:
-                EventDispatcher::getInstance()->dispatch($message['token'], $message['result'], true);
-                break;
-        }
+        go(function () use ($data) {
+            $message = $data['message'];
+            switch ($data['type']) {
+                case SwooleMarco::PROCESS_RPC:
+                    $this->processPpcRun($message);
+                    break;
+                case SwooleMarco::PROCESS_RPC_RESULT:
+                    EventDispatcher::getInstance()->dispatch($message['token'], $message['result'], true);
+                    break;
+            }
+        });
     }
 
     /**

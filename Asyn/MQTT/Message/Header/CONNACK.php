@@ -5,9 +5,9 @@
  */
 
 namespace Kernel\Asyn\MQTT\Message\Header;
-
 use Kernel\Asyn\MQTT\Debug;
 use Kernel\Asyn\MQTT\Exception;
+
 
 /**
  * Fixed Header definition for CONNACK

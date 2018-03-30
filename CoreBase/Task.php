@@ -3,7 +3,6 @@
 namespace Kernel\CoreBase;
 
 use Kernel\Components\AOP\Proxy;
-use Kernel\Coroutine\Coroutine;
 use Kernel\Coroutine\CoroutineNull;
 use Kernel\Memory\Pool;
 
@@ -90,6 +89,11 @@ class Task extends TaskProxy
     {
         getInstance()->sendToAll($data);
     }
+
+    protected function sendToAllFd($data)
+    {
+        getInstance()->sendToAllFd($data);
+    }
 }
 
 class TheTaskProxy extends Proxy
@@ -105,7 +109,7 @@ class TheTaskProxy extends Proxy
 
     public function __call($name, $arguments)
     {
-        $result = Coroutine::startCoroutine([$this->own, $name], $arguments);
+        $result = call_user_func_array([$this->own, $name], $arguments);
         if ($result == null) {
             $result = CoroutineNull::getInstance();
         }

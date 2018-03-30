@@ -2,11 +2,11 @@
 
 namespace Kernel\CoreBase;
 
-use ArgumentCountError;
-use Monolog\Logger;
 use Kernel\Asyn\Mysql\Miner;
+use Kernel\Models\Error;
 use Kernel\Start;
 use Kernel\SwooleMarco;
+use Throwable;
 
 /**
  * Controller 控制器
@@ -31,6 +31,12 @@ class Controller extends CoreBase
      * @var string
      */
     public $request_type;
+
+    /**
+     * Http是否已经end
+     * @var bool
+     */
+    protected $isEnd;
     /**
      * fd
      * @var int
@@ -57,6 +63,11 @@ class Controller extends CoreBase
      */
     protected $response;
 
+    /**
+     * 用于单元测试模拟捕获服务器发出的消息
+     * @var array
+     */
+    protected $testUnitSendStack = [];
 
     /**
      * 判断是不是RPC
@@ -78,7 +89,22 @@ class Controller extends CoreBase
     /**
      * @var Miner
      */
-    public $db;
+    protected $db;
+
+    /**
+     * @var \Redis
+     */
+    protected $redis;
+
+    /**
+     * @var bool
+     */
+    private $isEnableError;
+    /**
+     * @var Error
+     */
+    private $Error;
+
     /**
      * Controller constructor.
      * @param string $proxy
@@ -88,6 +114,8 @@ class Controller extends CoreBase
         parent::__construct($proxy);
         $this->http_input = new HttpInput();
         $this->http_output = new HttpOutput($this);
+        $this->isEnableError = $this->config->get('error.enable');
+
     }
 
     /**
@@ -114,7 +142,7 @@ class Controller extends CoreBase
             $this->isRPC = false;
         }
         $this->request_type = SwooleMarco::TCP_REQUEST;
-        yield $this->execute($controller_name, $method_name, $params);
+        $this->execute($controller_name, $method_name, $params);
     }
 
     /**
@@ -137,7 +165,7 @@ class Controller extends CoreBase
         $this->isRPC = empty($this->rpc_request_id) ? false : true;
         $this->request_type = SwooleMarco::HTTP_REQUEST;
         $this->fd = $request->fd;
-        return yield $this->execute($controller_name, $method_name, $params);
+        return $this->execute($controller_name, $method_name, $params);
     }
 
     /**
@@ -153,17 +181,17 @@ class Controller extends CoreBase
             $method_name = 'defaultMethod';
         }
         try {
-            yield $this->initialization($controller_name, $method_name);
+            $this->initialization($controller_name, $method_name);
             if ($params == null) {
-                return yield call_user_func([$this->getProxy(), $method_name]);
+                return $this->getProxy()->$method_name();
             } else {
-                return yield call_user_func_array([$this->getProxy(), $method_name], $params);
+                return $this->getProxy()->$method_name($params);
             }
-        } catch (\Exception $e) {
-            yield $this->getProxy()->onExceptionHandle($e);
-        } catch (ArgumentCountError $e) {
-            yield $this->getProxy()->onExceptionHandle($e);
+        } catch (Throwable $e) {
+            $this->getProxy()->onExceptionHandle($e);
+            $this->getProxy()->afterCall($method_name);
         }
+        $this->destroy();
     }
 
     /**
@@ -186,10 +214,16 @@ class Controller extends CoreBase
         if (!empty($this->uid)) {
             $this->context['uid'] = $this->uid;
         }
-        // if ($this->mysql_pool != null) {
-        //     $this->installMysqlPool($this->mysql_pool);
-        //     $this->db = $this->mysql_pool->dbQueryBuilder;
-        // }
+        //if ($this->mysql_pool != null) {
+        //    $this->installMysqlPool($this->mysql_pool);
+        //    $this->db = $this->mysql_pool->dbQueryBuilder;
+        //}
+        //if ($this->redis_pool != null) {
+        //    $this->redis = $this->redis_pool->getCoroutine();
+        //}
+        if ($this->isEnableError) {
+            $this->Error = $this->loader->model(Error::class, $this);
+        }
     }
 
     /**
@@ -216,49 +250,63 @@ class Controller extends CoreBase
             $this->http_output->end('end');
             return;
         }
+        //中断信号
+        if ($e instanceof SwooleInterruptException) {
+            return;
+        }
         if ($e instanceof SwooleException) {
             secho("EX", "--------------------------[报错指南]----------------------------" . date("Y-m-d h:i:s"));
             secho("EX", "异常消息：" . $e->getMessage());
             print_context($this->getContext());
             secho("EX", "--------------------------------------------------------------");
-            $this->log($e->getMessage() . "\n" . $e->getTraceAsString(), Logger::ERROR);
         }
+        $this->context['error_message'] = $e->getMessage();
+        //如果是HTTP传递request过去
+        if ($this->request_type == SwooleMarco::HTTP_REQUEST) {
+            $e->request = $this->request;
+        }
+        //生成错误数据页面
+        $error_data = getInstance()->getWhoops()->handleException($e);
+        if ($this->isEnableError) {
+            try {
+                $this->Error->push($e->getMessage(),$error_data);
+            } catch (Throwable $e) {
+
+            }
+        }
+
         //可以重写的代码
         if ($handle == null) {
             switch ($this->request_type) {
                 case SwooleMarco::HTTP_REQUEST:
-                    $this->http_output->end($e->getMessage());
+                    $this->http_output->setStatusHeader(500);
+                    $this->http_output->end($error_data);
                     break;
                 case SwooleMarco::TCP_REQUEST:
                     $this->send($e->getMessage());
                     break;
             }
         } else {
-            call_user_func($handle, $e);
+            \co::call_user_func($handle, $e);
         }
     }
 
     /**
      * 向当前客户端发送消息
      * @param $data
-     * @param $destroy
      * @throws SwooleException
      */
-    protected function send($data, $destroy = true)
+    protected function send($data)
     {
-        if ($this->is_destroy) {
-            throw new SwooleException('controller is destroy can not send data');
-        }
         if ($this->isRPC && !empty($this->rpc_token)) {
             $rpc_data['rpc_token'] = $this->rpc_token;
             $rpc_data['rpc_result'] = $data;
             $data = $rpc_data;
         }
-
-        getInstance()->send($this->fd, $data, true);
-
-        if ($destroy) {
-            $this->getProxy()->destroy();
+        if (Start::$testUnity) {
+            $this->testUnitSendStack[] = ['action' => 'send', 'fd' => $this->fd, 'data' => $data];
+        } else {
+            getInstance()->send($this->fd, $data, true);
         }
     }
 
@@ -271,6 +319,10 @@ class Controller extends CoreBase
             return;
         }
         parent::destroy();
+        if ($this->request_type == SwooleMarco::HTTP_REQUEST) {
+            $this->http_output->end('');
+        }
+        $this->isEnd = false;
         $this->fd = null;
         $this->uid = null;
         $this->client_data = null;
@@ -281,7 +333,16 @@ class Controller extends CoreBase
         ControllerFactory::getInstance()->revertController($this);
     }
 
-
+    /**
+     * 获取单元测试捕获的数据
+     * @return array
+     */
+    public function getTestUnitResult()
+    {
+        $stack = $this->testUnitSendStack;
+        $this->testUnitSendStack = [];
+        return $stack;
+    }
 
     /**
      * 当控制器方法不存在的时候的默认方法
@@ -289,7 +350,8 @@ class Controller extends CoreBase
     public function defaultMethod()
     {
         if ($this->request_type == SwooleMarco::HTTP_REQUEST) {
-            $this->redirect404();
+            $this->http_output->setStatusHeader(302);
+            $this->http_output->end($this->loader->view("server::404"));
         } else {
             throw new SwooleException($this->context['raw_method_name'] . ' method not exist');
         }
@@ -299,19 +361,14 @@ class Controller extends CoreBase
      * sendToUid
      * @param $uid
      * @param $data
-     * @param bool $destroy
      * @throws SwooleException
      */
-    protected function sendToUid($uid, $data, $destroy = true)
+    protected function sendToUid($uid, $data)
     {
-        if ($this->is_destroy) {
-            throw new SwooleException('controller is destroy can not send data');
-        }
-
-        getInstance()->sendToUid($uid, $data);
-
-        if ($destroy) {
-            $this->getProxy()->destroy();
+        if (Start::$testUnity) {
+            $this->testUnitSendStack[] = ['action' => 'sendToUid', 'uid' => $this->uid, 'data' => $data];
+        } else {
+            getInstance()->sendToUid($uid, $data);
         }
     }
 
@@ -319,37 +376,42 @@ class Controller extends CoreBase
      * sendToUids
      * @param $uids
      * @param $data
-     * @param $destroy
      * @throws SwooleException
      */
-    protected function sendToUids($uids, $data, $destroy = true)
+    protected function sendToUids($uids, $data)
     {
-        if ($this->is_destroy) {
-            throw new SwooleException('controller is destroy can not send data');
-        }
-
-        getInstance()->sendToUids($uids, $data);
-
-        if ($destroy) {
-            $this->getProxy()->destroy();
+        if (Start::$testUnity) {
+            $this->testUnitSendStack[] = ['action' => 'sendToUids', 'uids' => $uids, 'data' => $data];
+        } else {
+            getInstance()->sendToUids($uids, $data);
         }
     }
 
     /**
      * sendToAll
      * @param $data
-     * @param $destroy
      * @throws SwooleException
      */
-    protected function sendToAll($data, $destroy = true)
+    protected function sendToAll($data)
     {
-        if ($this->is_destroy) {
-            throw new SwooleException('controller is destroy can not send data');
+        if (Start::$testUnity) {
+            $this->testUnitSendStack[] = ['action' => 'sendToAll', 'data' => $data];
+        } else {
+            getInstance()->sendToAll($data);
         }
-        getInstance()->sendToAll($data);
+    }
 
-        if ($destroy) {
-            $this->getProxy()->destroy();
+    /**
+     * sendToAllFd
+     * @param $data
+     * @throws SwooleException
+     */
+    protected function sendToAllFd($data)
+    {
+        if (Start::$testUnity) {
+            $this->testUnitSendStack[] = ['action' => 'sendToAllFd', 'data' => $data];
+        } else {
+            getInstance()->sendToAllFd($data);
         }
     }
 
@@ -359,8 +421,11 @@ class Controller extends CoreBase
      */
     protected function kickUid($uid)
     {
-
-        getInstance()->kickUid($uid);
+        if (Start::$testUnity) {
+            $this->testUnitSendStack[] = ['action' => 'kickUid', 'uid' => $uid];
+        } else {
+            getInstance()->kickUid($uid);
+        }
     }
 
     /**
@@ -374,8 +439,11 @@ class Controller extends CoreBase
         if (!empty($this->uid)) {
             throw new \Exception("已经绑定过uid");
         }
-        getInstance()->bindUid($this->fd, $uid, $isKick);
-
+        if (Start::$testUnity) {
+            $this->testUnitSendStack[] = ['action' => 'bindUid', 'fd' => $this->fd, 'uid' => $uid];
+        } else {
+            getInstance()->bindUid($this->fd, $uid, $isKick);
+        }
         $this->uid = $uid;
     }
 
@@ -384,24 +452,23 @@ class Controller extends CoreBase
      */
     protected function unBindUid()
     {
-        if (empty($this->uid)) {
-            return;
+        if (empty($this->uid)) return;
+        if (Start::$testUnity) {
+            $this->testUnitSendStack[] = ['action' => 'unBindUid', 'uid' => $this->uid];
+        } else {
+            getInstance()->unBindUid($this->uid, $this->fd);
         }
-
-        getInstance()->unBindUid($this->uid, $this->fd);
     }
 
     /**
      * 断开链接
-     * @param bool $autoDestroy
      */
-    protected function close($autoDestroy = true)
+    protected function close()
     {
-
-        getInstance()->close($this->fd);
-
-        if ($autoDestroy) {
-            $this->getProxy()->destroy();
+        if (Start::$testUnity) {
+            $this->testUnitSendStack[] = ['action' => 'close', 'fd' => $this->fd];
+        } else {
+            getInstance()->close($this->fd);
         }
     }
 
@@ -457,9 +524,7 @@ class Controller extends CoreBase
      */
     protected function addSub($topic)
     {
-        if (empty($this->uid)) {
-            return;
-        }
+        if (empty($this->uid)) return;
         getInstance()->addSub($topic, $this->uid);
     }
 
@@ -468,22 +533,46 @@ class Controller extends CoreBase
      */
     protected function removeSub($topic)
     {
-        if (empty($this->uid)) {
-            return;
-        }
+        if (empty($this->uid)) return;
         getInstance()->removeSub($topic, $this->uid);
     }
 
     /**
+     * 发布
      * @param $topic
      * @param $data
-     * @param $destroy
+     * @param array $excludeUids 需要排除的uids
      */
-    protected function sendPub($topic, $data, $destroy = true)
+    protected function sendPub($topic, $data, $excludeUids = [])
     {
-        getInstance()->pub($topic, $data);
-        if ($destroy) {
-            $this->getProxy()->destroy();
+        getInstance()->pub($topic, $data, $excludeUids);
+    }
+
+    /**
+     * 中断
+     * @throws SwooleInterruptException
+     */
+    public function interrupt()
+    {
+        if ($this->request_type == SwooleMarco::HTTP_REQUEST) {
+            $this->http_output->end("");
         }
+        throw new SwooleInterruptException('interrupt');
+    }
+
+    /**
+     * @return bool
+     */
+    public function canEnd()
+    {
+        return !$this->isEnd;
+    }
+
+    /**
+     * endOver
+     */
+    public function endOver()
+    {
+        $this->isEnd = true;
     }
 }

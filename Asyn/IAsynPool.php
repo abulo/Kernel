@@ -8,19 +8,12 @@
 
 namespace Kernel\Asyn;
 
+
 interface IAsynPool
 {
     function getAsynName();
 
-    function distribute($data);
-
-    function execute($data);
-
     function pushToPool($client);
-
-    function prepareOne();
-
-    function addTokenCallback($callback);
 
     function getSync();
 }

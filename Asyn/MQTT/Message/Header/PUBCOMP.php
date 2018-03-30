@@ -5,10 +5,10 @@
  */
 
 namespace Kernel\Asyn\MQTT\Message\Header;
-
 use Kernel\Asyn\MQTT\Debug;
 use Kernel\Asyn\MQTT\Message;
 use Kernel\Asyn\MQTT\Utility;
+
 
 /**
  * Fixed Header definition for PUBCOMP
@@ -42,6 +42,7 @@ class PUBCOMP extends Base
     {
         return $this->decodePacketIdentifier($packet_data, $pos);
     }
+
 }
 
 # EOF

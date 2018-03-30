@@ -8,10 +8,10 @@
 
 namespace Kernel\Components\CatCache;
 
+
 use Kernel\Components\Event\Event;
 use Kernel\Components\Event\EventDispatcher;
 use Kernel\CoreBase\Child;
-use Kernel\Coroutine\Coroutine;
 use Kernel\Memory\Pool;
 
 class TimerCallBack
@@ -49,13 +49,11 @@ class TimerCallBack
     public static function init()
     {
         EventDispatcher::getInstance()->add(TimerCallBack::KEY, function (Event $event) {
-            Coroutine::startCoroutine(function () use ($event) {
-                $child = Pool::getInstance()->get(Child::class);
-                $model = getInstance()->loader->model($event->data['model_name'], $child);
-                yield call_user_func_array([$model, $event->data['model_fuc']], $event->data['param_arr']);
-                $child->destroy();
-                Pool::getInstance()->push($child);
-            });
+            $child = Pool::getInstance()->get(Child::class);
+            $model = getInstance()->loader->model($event->data['model_name'], $child);
+            \co::call_user_func_array([$model, $event->data['model_fuc']], $event->data['param_arr']);
+            $child->destroy();
+            Pool::getInstance()->push($child);
         });
     }
 }

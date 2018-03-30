@@ -20,9 +20,13 @@ function &getInstance()
  */
 function getTickTime()
 {
-    return \Kernel\SwooleDistributedServer::getInstance()->tickTime;
+    return getMillisecond() - \Kernel\Start::getStartMillisecond();
 }
 
+/**
+ * 获取当前的时间(毫秒)
+ * @return float
+ */
 function getMillisecond()
 {
     list($t1, $t2) = explode(' ', microtime());
@@ -120,6 +124,14 @@ function checkExtension()
         secho("STA", "[扩展依赖]缺少swoole扩展");
         $check = false;
     }
+    if (extension_loaded('xhprof')) {
+        secho("STA", "[扩展错误]不允许加载xhprof扩展，请去除");
+        $check = false;
+    }
+    if (extension_loaded('xdebug')) {
+        secho("STA", "[扩展错误]不允许加载xdebug扩展，请去除");
+        $check = false;
+    }
     if (version_compare(PHP_VERSION, '7.0.0', '<')) {
         secho("STA", "[版本错误]PHP版本必须大于7.0.0\n");
         $check = false;
@@ -190,7 +202,7 @@ function isDarwin()
  */
 function sleepCoroutine($time)
 {
-    return \Kernel\Memory\Pool::getInstance()->get(\Kernel\CoreBase\SleepCoroutine::class)->init()->setTimeout($time);
+    \co::sleep($time / 1000);
 }
 
 /**
@@ -292,16 +304,19 @@ function secho($tile, $message)
     $send = "";
     foreach ($content as $value) {
         if (!empty($value)) {
-            $echo = "[$tile]\t$value\n";
-            $send = $send . $echo;
+            $echo = "[$tile] $value";
+            $send = $send . $echo . "\n";
             if ($could) {
-                echo $echo;
+                echo " > $echo\n";
             }
         }
     }
     try {
-        getInstance()->pub('$SYS/' . getNodeName() . "/echo", $send);
+        if (getInstance() != null) {
+            getInstance()->pub('$SYS/' . getNodeName() . "/echo", $send);
+        }
     } catch (Exception $e) {
+
     }
 }
 

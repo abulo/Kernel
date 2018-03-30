@@ -12,6 +12,7 @@ use Kernel\Components\CatCache\CatCacheRpcProxy;
 use Kernel\Components\Cluster\ClusterProcess;
 use Kernel\Components\Process\ProcessManager;
 use Kernel\Components\SDHelp\SDHelpProcess;
+use Kernel\CoreBase\Actor;
 use Kernel\CoreBase\Controller;
 use Kernel\Start;
 use Kernel\SwooleMarco;
@@ -27,7 +28,6 @@ class Console extends Controller
         $this->bindUid("#bs:" . getNodeName() . $this->fd);
         getInstance()->protect($this->fd);
         $this->addSub('$SYS/#');
-        $this->destroy();
     }
 
     /**
@@ -35,7 +35,7 @@ class Console extends Controller
      */
     public function back_onClose()
     {
-        $this->destroy();
+
     }
 
     /**
@@ -47,6 +47,8 @@ class Console extends Controller
     {
         if (getInstance()->isCluster()) {
             ProcessManager::getInstance()->getRpcCall(ClusterProcess::class, true)->my_setDebug($node_name, $bool);
+        } else {
+            Start::setDebug($bool);
         }
         $this->autoSend("ok");
     }
@@ -70,7 +72,7 @@ class Console extends Controller
      */
     public function back_getAllSub()
     {
-        $result = yield ProcessManager::getInstance()->getRpcCall(ClusterProcess::class)->my_getAllSub();
+        $result = ProcessManager::getInstance()->getRpcCall(ClusterProcess::class)->my_getAllSub();
         $this->autoSend($result);
     }
 
@@ -79,7 +81,7 @@ class Console extends Controller
      */
     public function back_getUidInfo($uid)
     {
-        $uidInfo = yield getInstance()->getUidInfo($uid);
+        $uidInfo = getInstance()->getUidInfo($uid);
         $this->autoSend($uidInfo);
     }
 
@@ -88,7 +90,7 @@ class Console extends Controller
      */
     public function back_getAllUids()
     {
-        $uids = yield getInstance()->coroutineGetAllUids();
+        $uids = getInstance()->coroutineGetAllUids();
         $this->autoSend($uids);
     }
 
@@ -98,7 +100,7 @@ class Console extends Controller
      */
     public function back_getSubUid($topic)
     {
-        $uids = yield getInstance()->getSubMembersCoroutine($topic);
+        $uids = getInstance()->getSubMembersCoroutine($topic);
         $this->autoSend($uids);
     }
 
@@ -108,7 +110,7 @@ class Console extends Controller
      */
     public function back_getUidTopics($uid)
     {
-        $topics = yield getInstance()->getUidTopicsCoroutine($uid);
+        $topics = getInstance()->getUidTopicsCoroutine($uid);
         $this->autoSend($topics);
     }
 
@@ -121,9 +123,9 @@ class Console extends Controller
     public function back_getStatistics($node_name, $index, $num)
     {
         if (!getInstance()->isCluster() || $node_name == getNodeName()) {
-            $map = yield ProcessManager::getInstance()->getRpcCall(SDHelpProcess::class)->getStatistics($index, $num);
+            $map = ProcessManager::getInstance()->getRpcCall(SDHelpProcess::class)->getStatistics($index, $num);
         } else {
-            $map = yield ProcessManager::getInstance()->getRpcCall(ClusterProcess::class)->my_getStatistics($node_name, $index, $num);
+            $map = ProcessManager::getInstance()->getRpcCall(ClusterProcess::class)->my_getStatistics($node_name, $index, $num);
         }
         $this->autoSend($map);
     }
@@ -134,7 +136,7 @@ class Console extends Controller
      */
     public function back_getCatCacheKeys($path)
     {
-        $result = yield CatCacheRpcProxy::getRpc()->getKeys($path);
+        $result = CatCacheRpcProxy::getRpc()->getKeys($path);
         $this->autoSend($result);
     }
 
@@ -144,7 +146,7 @@ class Console extends Controller
      */
     public function back_getCatCacheValue($path)
     {
-        $result = yield CatCacheRpcProxy::getRpc()[$path];
+        $result = CatCacheRpcProxy::getRpc()[$path];
         $this->autoSend($result);
     }
 
@@ -158,7 +160,34 @@ class Console extends Controller
         $this->autoSend("ok");
     }
 
+    /**
+     * 获取Actor信息
+     * @param $name
+     */
+    public function back_getActorInfo($name)
+    {
+        $result = CatCacheRpcProxy::getRpc()["@Actor.$name"];
+        $this->autoSend($result);
+    }
 
+    /**
+     * 销毁Actor
+     * @param $name
+     */
+    public function back_destroyActor($name)
+    {
+        Actor::destroyActor($name);
+        $this->autoSend("ok");
+    }
+
+    /**
+     * 销毁全部Actor
+     */
+    public function back_destroyAllActor()
+    {
+        Actor::destroyAllActor();
+        $this->autoSend("ok");
+    }
 
     /**
      * @param $data

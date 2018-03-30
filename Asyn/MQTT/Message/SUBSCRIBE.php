@@ -5,10 +5,10 @@
  */
 
 namespace Kernel\Asyn\MQTT\Message;
-
 use Kernel\Asyn\MQTT\Exception;
 use Kernel\Asyn\MQTT\Message;
 use Kernel\Asyn\MQTT\Utility;
+
 
 /**
  * Message SUBSCRIBE
@@ -47,7 +47,7 @@ class SUBSCRIBE extends Base
         $buffer = "";
 
         # Payload
-        foreach ($this->topics as $topic => $qos_max) {
+        foreach ($this->topics as $topic=>$qos_max) {
             $buffer .= Utility::PackStringWithLength($topic);
             $buffer .= chr($qos_max);
         }

@@ -14,7 +14,6 @@ use Kernel\Asyn\AMQP\AMQP;
 use Kernel\Asyn\Mysql\MysqlAsynPool;
 use Kernel\Asyn\Redis\RedisAsynPool;
 use Kernel\Components\Process\Process;
-use Kernel\Coroutine\Coroutine;
 use Kernel\Memory\Pool;
 
 abstract class AMQPTaskProcess extends Process
@@ -38,6 +37,7 @@ abstract class AMQPTaskProcess extends Process
         if (!$this->config->has('amqp')) {
             secho("AMQP", "未发现AMQP配置文件");
             while (true) {
+
             }
             return;
         }
@@ -95,11 +95,11 @@ abstract class AMQPTaskProcess extends Process
      */
     public function process_message(AMQPMessage $message)
     {
-        Coroutine::startCoroutine(function () use ($message) {
+        go(function () use ($message) {
             $task = Pool::getInstance()->get($this->route($message->getBody()));
             $task->reUse();
-            yield $task->initialization($message);
-            yield $task->handle($message->getBody());
+            $task->initialization($message);
+            $task->handle($message->getBody());
         });
     }
 
@@ -108,5 +108,6 @@ abstract class AMQPTaskProcess extends Process
      * @param $body
      * @return string
      */
-    abstract protected function route($body);
+    protected abstract function route($body);
+
 }

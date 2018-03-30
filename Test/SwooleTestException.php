@@ -8,6 +8,7 @@
 
 namespace Kernel\Test;
 
+
 class SwooleTestException extends \Exception
 {
     const ERROR = 0;

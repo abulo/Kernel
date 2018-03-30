@@ -37,7 +37,7 @@ class ClusterClient
                 swoole_timer_clear($this->reconnect_tick);
                 $this->reconnect_tick = null;
             }
-            call_user_func($this->onConnect, $this);
+            \co::call_user_func($this->onConnect, $this);
         });
         $this->client->on("receive", function ($cli, $recdata) {
             $data = $this->pack->unPack($recdata);
@@ -88,7 +88,7 @@ class ClusterClient
         }
         if ($this->client->isConnected()) {
             $this->client->send($this->pack->pack(['m' => $method_name, 'p' => $params, 't' => $this->token]));
-            return $this->token;
+            return "[$this->ip][$method_name][$this->token]";
         } else {
             return false;
         }
@@ -107,10 +107,12 @@ class ClusterClient
     /**
      * 添加回调
      * @param $token
+     * @param callable|null $set
+     * @return
      */
-    public function getTokenResult($token)
+    public function getTokenResult($token, callable $set = null)
     {
-        return Pool::getInstance()->get(ClusterCoroutine::class)->init($token, $this->receive_call);
+        return Pool::getInstance()->get(ClusterCoroutine::class)->init($token, $this->receive_call, $set);
     }
 
     /**
