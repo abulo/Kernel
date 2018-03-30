@@ -120,7 +120,7 @@ class HttpOutput
             return;
         }
         $this->setHeader('Content-Type', 'text/html; charset=UTF-8');
-        $this->clientId();
+        // $this->clientId();
         $this->end($output, $gzip);
         return;
     }
@@ -130,7 +130,7 @@ class HttpOutput
     public function json($output = '', $gzip = truee)
     {
         $this->setHeader('Content-Type', 'application/json; charset=UTF-8');
-        $this->clientId();
+        // $this->clientId();
         $this->end(json_encode($output), $gzip);
         return;
     }
@@ -193,12 +193,6 @@ class HttpOutput
             if ($gzip) {
                 $this->response->gzip(1);
             }
-            //压缩备用方案
-            /*if ($gzip) {
-                $this->response->header('Content-Encoding', 'gzip');
-                $this->response->header('Vary', 'Accept-Encoding');
-                $output = gzencode($output . " \n", 9);
-            }*/
         }
         if (is_array($output)||is_object($output)) {
             $this->setHeader('Content-Type', 'text/html; charset=UTF-8');

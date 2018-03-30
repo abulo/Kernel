@@ -2452,6 +2452,10 @@ class Miner
         }
     }
 
+
+
+
+
     public function clear()
     {
         $this->option = array();
