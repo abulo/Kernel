@@ -1038,7 +1038,7 @@ class MongoDB
         $this->collection = '';
         $this->updates = [];
         $this->result = [];
-        $this->tz = null;
+        $this->tz;
         $this->active = null;
     }
 }
