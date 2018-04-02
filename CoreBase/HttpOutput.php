@@ -127,7 +127,7 @@ class HttpOutput
 
 
 
-    public function json($output = '', $gzip = truee)
+    public function json($output = '', $gzip = true)
     {
         $this->setHeader('Content-Type', 'application/json; charset=UTF-8');
         // $this->clientId();
