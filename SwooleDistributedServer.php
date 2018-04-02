@@ -643,7 +643,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     {
         $asynPools = [];
         if ($this->config->get('mongodb.enable', false)) {
-            $activePools = $this->config->get('redis.active');
+            $activePools = $this->config->get('mongodb.active');
             if (is_string($activePools)) {
                 $activePools = explode(',', $activePools);
             }
