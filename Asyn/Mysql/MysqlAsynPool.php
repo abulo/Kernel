@@ -61,10 +61,53 @@ class MysqlAsynPool implements IAsynPool
         return $this->dbQueryBuilder;
     }
 
+    /**
+     * 事务开启
+     * @return  返回一个Miner对象
+     */
+    public function begin()
+    {
+        $client = $this->pool_chan->pop();
+        if (!$client->connected) {
+            $set = $this->config['mysql'][$this->active];
+            $result = $client->connect($set);
+            if (!$result) {
+                $this->pool_chan->push($client);
+                throw new SwooleException($client->connect_error);
+            }
+        }
+        $client->query("begin");
+        $this->dbQueryBuilder->setClient($client);
+        return $this->dbQueryBuilder;
+    }
 
-    
+    /**
+     * 提交事务
+     * @param   $client
+     * @return
+     */
+    public function commit($client)
+    {
+        $client->query("commit");
+        $this->dbQueryBuilder->setClient(null);
+        $this->pushToPool($client);
+    }
 
-    public function begin(callable $fuc, callable $errorFuc)
+    /**
+     * 回滚事务
+     * @param   $client
+     * @return          
+     */
+    public function rollback($client)
+    {
+        $client->query("rollback");
+        $this->dbQueryBuilder->setClient(null);
+        $this->pushToPool($client);
+
+    }
+
+
+    public function begin_bak(callable $fuc, callable $errorFuc = null)
     {
         $client = $this->pool_chan->pop();
         if (!$client->connected) {
@@ -78,10 +121,12 @@ class MysqlAsynPool implements IAsynPool
         $client->query("begin");
         try {
             $this->dbQueryBuilder->setClient($client);
+            $fuc($client);
             $client->query("commit");
         } catch (\Throwable $e) {
             $client->query("rollback");
-            if ($errorFuc != null) {
+            if ($errorFuc != null)
+            {
                 $errorFuc($client);
             }
         } finally {

@@ -217,6 +217,8 @@ class Controller extends CoreBase
         $this->context['controller_name'] = $controller_name;
         $this->context['method_name'] = "$controller_name::$method_name";
         $this->context['ip'] = $this->getFdInfo()['remote_ip'];
+        $this->context['x-real-ip'] = $this->http_input->getRequestHeader('x-real-ip',0);
+
         if (!empty($this->uid)) {
             $this->context['uid'] = $this->uid;
         }

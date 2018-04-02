@@ -2410,10 +2410,26 @@ class Miner
      * @param callable $fuc
      * @param callable|null $errorFuc
      */
-    public function begin(callable $fuc, callable $errorFuc = null)
+    // public function begin(callable $fuc, callable $errorFuc = null)
+    // {
+    //     return $this->mysql_pool->begin($fuc, $errorFuc);
+    // }
+    public function begin()
     {
-        $this->mysql_pool->begin($fuc, $errorFuc);
+        return $this->mysql_pool->begin();
     }
+
+    public function commit()
+    {
+        return $this->mysql_pool->commit($this->client);
+    }
+
+    public function rollback()
+    {
+        return $this->mysql_pool->rollback($this->client);
+    }
+
+
 
     /**
      * @param null $sql
