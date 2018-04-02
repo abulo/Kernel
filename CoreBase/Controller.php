@@ -165,7 +165,7 @@ class Controller extends CoreBase
         $this->isRPC = empty($this->rpc_request_id) ? false : true;
         $this->request_type = SwooleMarco::HTTP_REQUEST;
         $this->fd = $request->fd;
-
+        $params = array_values($params);
         return $this->execute($controller_name, $method_name, $params ,$destroy);
     }
 
@@ -188,9 +188,7 @@ class Controller extends CoreBase
                 $result = $this->getProxy()->$method_name();
 
             } else {
-                $result = $this->getProxy()->$method_name($params);
-                // $this->destroy();
-                // return $result;
+                $result = $this->getProxy()->$method_name(...$params);
             }
         } catch (Throwable $e) {
             $this->getProxy()->onExceptionHandle($e);
