@@ -5,9 +5,8 @@
  * @link @MySql.Pdo
  * @author abulo.hoo
  */
-namespace Kernel\Store\Datebase\MongoDB;
+namespace Kernel\Asyn\MongoDB;
 
-use Kernel\Config\Log;
 use MongoDB\Driver\Manager;
 use MongoDB\Driver\WriteConcern;
 use MongoDB\Driver\BulkWrite;
@@ -19,11 +18,12 @@ use MongoDB\Driver\Command;
 use MongoDB\BSON\UTCDatetime;
 use MongoDB\BSON\Timestamp;
 use MongoDB\Client;
-use Kernel\Config\Config;
 
 class MongoDB
 {
+    const SyncName = 'mongodb.';
     private $config = [];
+    private $active;
     private $manager;
     private $table;
     private $wheres = [];
@@ -41,16 +41,15 @@ class MongoDB
      *
      * @param $conf
      */
-    public function __construct($conf)
+    public function __construct($config,$active)
     {
         if (!class_exists('\MongoDB\Driver\Manager')) {
             throw new \Exception('require mongodb > 1.0');
         }
-        $this->config = $conf;
-
+        $this->config = $config;
+        $this->active = $active;
+        $this->tz = $this->config->get('common.timezone', 'Asia/Shanghai');
         $this->connect();
-        $timeZone = Config::get('php.timezone', 'Asia/Shanghai');
-        $this->tz = $timeZone;
     }
     /**
      * 创建私有链接
@@ -58,15 +57,16 @@ class MongoDB
      */
     private function connect()
     {
-        $uri = 'mongodb://'.implode($this->config['host'], ',').'/';
+        $config = $this->config->get('mongodb.'.$this->active);
+        $uri = 'mongodb://'.implode($config['host'], ',').'/';
         try {
-            $client = new Client($uri, $this->config['uriOptions'], $this->config['driverOptions']);
+            $client = new Client($uri, $config['uriOptions'], $config['driverOptions']);
         } catch (\Exception $e) {
             throw new \Exception("无法链接 mongodb  url=$uri");
             $client = null;
         }
         $this->manager = $client;
-        $this->database = $this->config['database'];
+        $this->database = $config['database'];
     }
 
 
@@ -1037,7 +1037,8 @@ class MongoDB
         $this->database;
         $this->collection = '';
         $this->updates = [];
-        $this->result;
-        $this->tz;
+        $this->result = [];
+        $this->tz = null;
+        $this->active = null;
     }
 }

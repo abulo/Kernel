@@ -30,7 +30,7 @@ use Kernel\CoreBase\SwooleException;
 use Kernel\Coroutine\Coroutine;
 use Kernel\Memory\Pool;
 use Kernel\Test\TestModule;
-
+use Kernel\Asyn\MongoDB\MongoDB;
 /**
  * Created by PhpStorm.
  * User: zhangjincheng
@@ -632,7 +632,28 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                 }
                 Actor::recovery($workerId);
             }
+        }else{
+            //mongodb 是阻塞连接,所以将连接放在 task 进程中
+            $this->initSyncPools($workerId);
         }
+    }
+
+
+    public function initSyncPools($workerId)
+    {
+        $asynPools = [];
+        if ($this->config->get('mongodb.enable', false)) {
+            $activePools = $this->config->get('redis.active');
+            if (is_string($activePools)) {
+                $activePools = explode(',', $activePools);
+            }
+
+            foreach ($activePools as $poolKey) {
+                $asynPools[MongoDB::SyncName . $poolKey] = new MongoDB($this->config, $poolKey);
+            }
+        }
+
+        $this->asynPools = $asynPools;
     }
 
     /**
@@ -755,6 +776,12 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     public function getMysqlPool($name)
     {
         return $this->asynPools[MysqlAsynPool::AsynName . $name]??null;
+    }
+
+
+    public function getMongoPool($name)
+    {
+        return $this->asynPools[MongoDB::SyncName . $name]??null;
     }
 
     /**
