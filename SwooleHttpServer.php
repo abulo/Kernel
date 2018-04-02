@@ -47,7 +47,7 @@ abstract class SwooleHttpServer extends SwooleServer
     public function __construct()
     {
         parent::__construct();
-        $this->cachePath = BIN_DIR . "/bladeCache";
+        $this->cachePath = BIN_DIR . "/viewCache";
         if (!is_dir($this->cachePath)) {
             mkdir($this->cachePath);
         }
