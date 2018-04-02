@@ -372,7 +372,7 @@ abstract class SwooleHttpServer extends SwooleServer
                     $middleware_method_name = $this->portManager->getMethodPrefix($server_port) . $route->getMiddlewareMethodName();
                     $middleware_controller_instance = ControllerFactory::getInstance()->getController($middleware_controller_name);
                     if ($middleware_controller_instance != null) {
-                        $middleware_result =  $middleware_controller_instance->setRequestResponse($request, $response, $middleware_controller_name, $middleware_method_name, []);
+                        $middleware_result =  $middleware_controller_instance->setRequestResponse($request, $response, $middleware_controller_name, $middleware_method_name, [],false);
 
                         if ($middleware_result!=null) {
                             $response->status($middleware_result['status']);
@@ -395,7 +395,7 @@ abstract class SwooleHttpServer extends SwooleServer
                         // $controller_instance->destroy();
                     } else {
                         $request->route = $cHandler;
-                        $controller_instance->setRequestResponse($request, $response, $controller_name, $method_name, $route->getParams());
+                        $controller_instance->setRequestResponse($request, $response, $controller_name, $method_name, $route->getParams(),false);
                         $controller_instance->destroy();
                     }
                 } else {
