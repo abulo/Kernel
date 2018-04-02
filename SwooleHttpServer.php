@@ -366,7 +366,6 @@ abstract class SwooleHttpServer extends SwooleServer
                 $path = $route->getPath();
                 $middleware_route = $route->getMiddleware();
                 $request->route = $cHandler;
-                var_dump($middleware_route);
                 //路由上的中间件
                 if ($middleware_route) {
                     $middleware_controller_name = $route->getMiddlewareControllerName();
@@ -379,6 +378,7 @@ abstract class SwooleHttpServer extends SwooleServer
                             $response->status($middleware_result['status']);
                             $response->header($middleware_result['header'][0], $middleware_result['header'][1]);
                             $response->end($middleware_result['content']);
+                            $middleware_result->destroy();
                             return ;
                         }
                     } else {
@@ -396,6 +396,7 @@ abstract class SwooleHttpServer extends SwooleServer
                     } else {
                         $request->route = $cHandler;
                         $controller_instance->setRequestResponse($request, $response, $controller_name, $method_name, $route->getParams());
+                        $controller_instance->destroy();
                     }
                 } else {
                     throw new \Exception('no controller');

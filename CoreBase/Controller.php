@@ -154,7 +154,7 @@ class Controller extends CoreBase
      * @param $params
      * @return \Generator
      */
-    public function setRequestResponse($request, $response, $controller_name, $method_name, $params)
+    public function setRequestResponse($request, $response, $controller_name, $method_name, $params , $destroy = true)
     {
 
         $this->request = $request;
@@ -166,7 +166,7 @@ class Controller extends CoreBase
         $this->request_type = SwooleMarco::HTTP_REQUEST;
         $this->fd = $request->fd;
 
-        return $this->execute($controller_name, $method_name, $params);
+        return $this->execute($controller_name, $method_name, $params ,$destroy);
     }
 
     /**
@@ -175,7 +175,7 @@ class Controller extends CoreBase
      * @param $params
      * @return \Generator
      */
-    protected function execute($controller_name, $method_name, $params)
+    protected function execute($controller_name, $method_name, $params,$destroy = true)
     {
         if (!is_callable([$this, $method_name])) {
             $this->context['raw_method_name'] = "$controller_name:$method_name";
@@ -186,18 +186,23 @@ class Controller extends CoreBase
             $this->initialization($controller_name, $method_name);
             if ($params == null) {
                 $result = $this->getProxy()->$method_name();
-                $this->destroy();
-                return $result;
+
             } else {
                 $result = $this->getProxy()->$method_name($params);
-                $this->destroy();
-                return $result;
+                // $this->destroy();
+                // return $result;
             }
         } catch (Throwable $e) {
             $this->getProxy()->onExceptionHandle($e);
             $this->getProxy()->afterCall($method_name);
         }
-        $this->destroy();
+        if($destroy)
+        {
+            $this->destroy();
+        }
+
+
+        return $result;
     }
 
     /**
