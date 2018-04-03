@@ -256,7 +256,7 @@ class Paginator
                     $html .= '<a href="'.$page['url'].'">'.$page['num'].'</a>';
                 }
             } else {
-                $html .= '<span  style="margin:0px;">' . $page['num'] . '</span>';
+                $html .= '<span>' . $page['num'] . '</span>';
             }
         }
         if ($this->getNextUrl()) {
