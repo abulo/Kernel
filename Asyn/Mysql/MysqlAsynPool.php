@@ -35,7 +35,7 @@ class MysqlAsynPool implements IAsynPool
         $this->config = getInstance()->config;
         $this->client_max_count = $this->config->get('mysql.asyn_max_count', 10);
         if (getInstance()->isTaskWorker()) {
-            return;
+            return ;
         }
         $this->pool_chan = new \chan($this->client_max_count);
         for ($i = 0; $i < $this->client_max_count; $i++) {
@@ -96,7 +96,7 @@ class MysqlAsynPool implements IAsynPool
     /**
      * 回滚事务
      * @param   $client
-     * @return          
+     * @return
      */
     public function rollback($client)
     {

@@ -177,9 +177,11 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      */
     public function getMysql($poolKey)
     {
-        // return $this->mysql_pool->getSync();
+
         return $this->asynPools[MysqlAsynPool::AsynName . $poolKey]->getSync();
+
     }
+
 
     /**
      * 开始前创建共享内存保存USID值
@@ -378,6 +380,8 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
         // return $this->redis_pool->getSync();
         return $this->asynPools[RedisAsynPool::AsynName . $poolKey]->getSync();
     }
+
+
     /**
      * 广播(全部FD)
      * @param $data
@@ -641,7 +645,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
 
     public function initSyncPools($workerId)
     {
-        $asynPools = [];
+        // $asynPools = [];
         if ($this->config->get('mongodb.enable', false)) {
             $activePools = $this->config->get('mongodb.active');
             if (is_string($activePools)) {
@@ -649,11 +653,11 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
             }
 
             foreach ($activePools as $poolKey) {
-                $asynPools[MongoDB::SyncName . $poolKey] = new MongoDB($this->config, $poolKey);
+                $this->asynPools[MongoDB::SyncName . $poolKey] = new MongoDB($this->config, $poolKey);
             }
         }
 
-        $this->asynPools = $asynPools;
+        // $this->asynPools = $asynPools;
     }
 
     /**
@@ -719,13 +723,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      */
     public function initAsynPools($workerId)
     {
-        // $this->asynPools = [];
-        // if ($this->config->get('redis.enable', true)) {
-        //     $this->asynPools['redisPool'] = new RedisAsynPool($this->config, $this->config->get('redis.active'));
-        // }
-        // if ($this->config->get('mysql.enable', true)) {
-        //     $this->asynPools['mysqlPool'] = new MysqlAsynPool($this->config, $this->config->get('mysql.active'));
-        // }
+
 
         $asynPools = [];
         if ($this->config->get('redis.enable', false)) {
@@ -759,9 +757,8 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
 
 
         if ($this->config->get('error.dingding_enable', false)) {
-            $this->asynPools['dingdingRest'] = new HttpClientPool($this->config, $this->config->get('error.dingding_url'));
+            $asynPools['dingdingRest'] = new HttpClientPool($this->config, $this->config->get('error.dingding_url'));
         }
-
 
         $this->asynPools = $asynPools;
     }
@@ -797,7 +794,10 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                 $activePools = explode(',', $activePools);
             }
             foreach ($activePools as $poolKey) {
-                $this->asynPools[MysqlAsynPool::AsynName . $poolKey] = $this->asynPools[MysqlAsynPool::AsynName . $poolKey]->installDbBuilder();
+                if(!$this->isTaskWorker())
+                {
+                    $this->asynPools[MysqlAsynPool::AsynName . $poolKey] = $this->asynPools[MysqlAsynPool::AsynName . $poolKey]->installDbBuilder();
+                }
             }
         }
 
