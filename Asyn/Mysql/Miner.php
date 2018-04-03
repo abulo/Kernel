@@ -2416,17 +2416,35 @@ class Miner
     // }
     public function begin()
     {
-        return $this->mysql_pool->begin();
+        if (getInstance()->isTaskWorker())
+        {
+            $this->pdoBeginTrans();
+            return $this;
+        }else{
+            return $this->mysql_pool->begin();
+        }
     }
 
     public function commit()
     {
-        return $this->mysql_pool->commit($this->client);
+        if (getInstance()->isTaskWorker())
+        {
+            return $this->pdoCommitTrans();
+        }else{
+            return $this->mysql_pool->commit($this->client);
+        }
     }
 
     public function rollback()
     {
-        return $this->mysql_pool->rollback($this->client);
+        if (getInstance()->isTaskWorker())
+        {
+            return $this->pdoRollBackTrans();
+        }else{
+            return $this->mysql_pool->rollback($this->client);
+        }
+
+
     }
 
 
@@ -2442,7 +2460,7 @@ class Miner
         if (getInstance()->isTaskWorker()) {//如果是task进程自动转换为同步模式
 
             // secho('$ql===========',$sql);
-            // $this->mergeInto($this->mysql_pool->getSync());
+            // $this->mergeInto($this->getSync());
             // $this->clear();
             $data = $this->pdoQuery($sql);
             return new MysqlSyncHelp($sql, $data);
@@ -2540,6 +2558,8 @@ class Miner
         if (!$pdoStatement) {
             $data = false;
         }
+
+
         $data['result'] = 1;
         $isSelect = false;
         if ($sql != null) {//代表手动执行的sql
@@ -2556,7 +2576,10 @@ class Miner
             $data['insert_id'] = $this->pdoInsertId();
             $data['affected_rows'] = $pdoStatement->rowCount();
         }
-        $pdoStatement->closeCursor();
+        if (!$this->PdoConnection->inTransaction()) {
+            $pdoStatement->closeCursor();
+
+        }
         $this->clear();
         return $data;
     }
@@ -2580,6 +2603,7 @@ class Miner
         } else {
             $statement = $sql;
         }
+
         // Only execute if a statement is set.
         if ($statement) {
             try {
@@ -2606,6 +2630,7 @@ class Miner
                     throw $e;
                 }
             }
+
             return $PdoStatement;
         } else {
             return false;
