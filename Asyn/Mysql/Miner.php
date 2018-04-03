@@ -2440,9 +2440,11 @@ class Miner
     {
         $mySqlCoroutine = Pool::getInstance()->get(MySqlCoroutine::class);
         if (getInstance()->isTaskWorker()) {//如果是task进程自动转换为同步模式
-            $this->mergeInto($this->mysql_pool->getSync());
-            $this->clear();
-            $data = $this->mysql_pool->getSync()->pdoQuery($sql);
+
+            // secho('$ql===========',$sql);
+            // $this->mergeInto($this->mysql_pool->getSync());
+            // $this->clear();
+            $data = $this->pdoQuery($sql);
             return new MysqlSyncHelp($sql, $data);
         } else {
             if ($sql != null) {
