@@ -127,6 +127,20 @@ class HttpOutput
 
 
 
+
+    public function xml($output = '', $gzip = true)
+    {
+        if (!$this->controller->canEnd()) {
+            return;
+        }
+        $this->setHeader('Content-Type', 'application/xml; charset=UTF-8');
+        // $this->clientId();
+        $this->end($output, $gzip);
+        return;
+    }
+
+
+
     public function json($output = '', $gzip = true)
     {
         $this->setHeader('Content-Type', 'application/json; charset=UTF-8');
@@ -173,6 +187,25 @@ class HttpOutput
         $response = [
             'status' => $code,
             'header' => ['Content-Type','text/html; charset=UTF-8'],
+            'content'=> $output,
+        ];
+        return $response;
+    }
+
+
+
+    public function middleware_end_xml($output = null, $code = 200)
+    {
+        if (!$this->controller->canEnd()) {
+            return;
+        }
+        // $this->clientId();
+        if (null == $output) {
+            return $output;
+        }
+        $response = [
+            'status' => $code,
+            'header' => ['Content-Type','application/xml; charset=UTF-8'],
             'content'=> $output,
         ];
         return $response;
