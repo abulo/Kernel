@@ -42,8 +42,7 @@ namespace Kernel\Asyn\Es\Lexer;
  *
  */
 
-require_once dirname(__FILE__) . '/LexerSplitter.php';
-require_once dirname(__FILE__) . '/../exceptions/InvalidParameterException.php';
+use Kernel\Asyn\Es\Exceptions\InvalidParameterException;
 
 /**
  * This class splits the SQL string into little parts, which the parser can
