@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * ValuesBuilder.php
  *
- * Builds aliases.
+ * Builds the VALUES part of the INSERT statement.
  *
  * PHP version 5
  *
@@ -37,36 +37,43 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: ValuesBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
+use Kernel\Asyn\Es\Exceptions\UnableToCreateSQLException;
+
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for the VALUES part of INSERT statement.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class ValuesBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildRecord($parsed)
     {
-        return isset($parsed['alias']);
+        $builder = new RecordBuilder();
+        return $builder->build($parsed);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
-            return "";
-        }
         $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
+        foreach ($parsed as $k => $v) {
+            $len = strlen($sql);
+            $sql .= $this->buildRecord($v);
+
+            if ($len == strlen($sql)) {
+                throw new UnableToCreateSQLException('VALUES', $k, $v, 'expr_type');
+            }
+
+            $sql .= ",";
         }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        $sql = substr($sql, 0, -1);
+        return "VALUES " . $sql;
     }
 }

@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * CreateTableOptionsBuilder.php
  *
- * Builds aliases.
+ * Builds the table-options statement part of CREATE TABLE.
  *
  * PHP version 5
  *
@@ -37,36 +37,71 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: CreateTableOptionsBuilder.php 923 2014-01-08 12:20:30Z phosco@gmx.de $
  *
  */
 
+use Kernel\Asyn\Es\Utils\ExpressionType;
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for the table-options statement part of CREATE TABLE.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class CreateTableOptionsBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildExpression($parsed)
     {
-        return isset($parsed['alias']);
+        $builder = new SelectExpressionBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildCharacterSet($parsed)
+    {
+        $builder = new CharacterSetBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildCollation($parsed)
+    {
+        $builder = new CollationBuilder();
+        return $builder->build($parsed);
+    }
+
+    /**
+     * Returns a well-formatted delimiter string. If you don't need nice SQL,
+     * you could simply return $parsed['delim'].
+     *
+     * @param array $parsed The part of the output array, which contains the current expression.
+     * @return a string, which is added right after the expression
+     */
+    protected function getDelimiter($parsed)
+    {
+        return ($parsed['delim'] === false ? '' : (trim($parsed['delim']) . ' '));
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
+        if (!isset($parsed['options']) || $parsed['options'] === false) {
             return "";
         }
+        $options = $parsed['options'];
         $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
+        foreach ($options as $k => $v) {
+            $len = strlen($sql);
+            $sql .= $this->buildExpression($v);
+            $sql .= $this->buildCharacterSet($v);
+            $sql .= $this->buildCollation($v);
+
+            if ($len == strlen($sql)) {
+                throw new UnableToCreateSQLException('CREATE TABLE options', $k, $v, 'expr_type');
+            }
+
+            $sql .= $this->getDelimiter($v);
         }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        return " " . substr($sql, 0, -1);
     }
 }

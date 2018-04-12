@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * CollationBuilder.php
  *
- * Builds aliases.
+ * Builds the collation expression part of CREATE TABLE.
  *
  * PHP version 5
  *
@@ -37,36 +37,61 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: CollationBuilder.php 922 2014-01-08 12:19:35Z phosco@gmx.de $
  *
  */
 
+
+use Kernel\Asyn\Es\Utils\ExpressionType;
+use Kernel\Asyn\Es\Exceptions\UnableToCreateSQLException;
+
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for the collation statement part of CREATE TABLE.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class CollationBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildOperator($parsed)
     {
-        return isset($parsed['alias']);
+        $builder = new OperatorBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildConstant($parsed)
+    {
+        $builder = new ConstantBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildReserved($parsed)
+    {
+        $builder = new ReservedBuilder();
+        return $builder->build($parsed);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
+        if ($parsed['expr_type'] !== ExpressionType::COLLATE) {
             return "";
         }
         $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
+        foreach ($parsed['sub_tree'] as $k => $v) {
+            $len = strlen($sql);
+            $sql .= $this->buildReserved($v);
+            $sql .= $this->buildOperator($v);
+            $sql .= $this->buildConstant($v);
+
+            if ($len == strlen($sql)) {
+                throw new UnableToCreateSQLException('CREATE TABLE options collation subtree', $k, $v, 'expr_type');
+            }
+
+            $sql .= " ";
         }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        return substr($sql, 0, -1);
     }
 }

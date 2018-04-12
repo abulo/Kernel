@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * CreateTableDefinitionBuilder.php
  *
- * Builds aliases.
+ * Builds the create definitions of CREATE TABLE.
  *
  * PHP version 5
  *
@@ -37,36 +37,33 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: CreateTableDefinitionBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
+
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for the create definitions of CREATE TABLE.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class CreateTableDefinitionBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildTableBracketExpression($parsed)
     {
-        return isset($parsed['alias']);
+        $builder = new TableBracketExpressionBuilder();
+        return $builder->build($parsed);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
+        if (!isset($parsed) || $parsed['create-def'] === false) {
             return "";
         }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
-        }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        return $this->buildTableBracketExpression($parsed['create-def']);
     }
 }

@@ -1,10 +1,8 @@
 <?php
-namespace Kernel\Asyn\Es\Builders;
-
 /**
- * AliasBuilder.php
+ * GroupByBuilder.php
  *
- * Builds aliases.
+ * Builds the GROUP-BY clause.
  *
  * PHP version 5
  *
@@ -37,36 +35,58 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: GroupByBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
+
+use Kernel\Asyn\Es\Exceptions\UnableToCreateSQLException;
+
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for the GROUP-BY clause.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class GroupByBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildColRef($parsed)
     {
-        return isset($parsed['alias']);
+        $builder = new ColumnReferenceBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildPosition($parsed)
+    {
+        $builder = new PositionBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildFunction($parsed)
+    {
+        $builder = new FunctionBuilder();
+        return $builder->build($parsed);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
-            return "";
-        }
         $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
+        foreach ($parsed as $k => $v) {
+            $len = strlen($sql);
+            $sql .= $this->buildColRef($v);
+            $sql .= $this->buildPosition($v);
+            $sql .= $this->buildFunction($v);
+
+            if ($len == strlen($sql)) {
+                throw new UnableToCreateSQLException('GROUP', $k, $v, 'expr_type');
+            }
+
+            $sql .= ", ";
         }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        $sql = substr($sql, 0, -2);
+        return "GROUP BY " . $sql;
     }
 }

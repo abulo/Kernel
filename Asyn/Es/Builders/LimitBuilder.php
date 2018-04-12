@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * LimitBuilder.php
  *
- * Builds aliases.
+ * Builds the LIMIT statement.
  *
  * PHP version 5
  *
@@ -37,36 +37,30 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: LimitBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
+
+use Kernel\Asyn\Es\Exceptions\UnableToCreateSQLException;
+
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder LIMIT statement.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class LimitBuilder
 {
-
-    public function hasAlias($parsed)
-    {
-        return isset($parsed['alias']);
-    }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
-            return "";
+        $sql = ($parsed['offset'] ? $parsed['offset'] . ", " : "") . $parsed['rowcount'];
+        if ($sql === "") {
+            throw new UnableToCreateSQLException('LIMIT', 'rowcount', $parsed, 'rowcount');
         }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
-        }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        return "LIMIT " . $sql;
     }
 }

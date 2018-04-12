@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * TableBracketExpressionBuilder.php
  *
- * Builds aliases.
+ * Builds the table expressions within the create definitions of CREATE TABLE.
  *
  * PHP version 5
  *
@@ -37,36 +37,79 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: TableBracketExpressionBuilder.php 928 2014-01-08 13:01:57Z phosco@gmx.de $
  *
  */
 
+
+use Kernel\Asyn\Es\Utils\ExpressionType;
+use Kernel\Asyn\Es\Exceptions\UnableToCreateSQLException;
+
+
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for the table expressions
+ * within the create definitions of CREATE TABLE.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class TableBracketExpressionBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildColDef($parsed)
     {
-        return isset($parsed['alias']);
+        $builder = new ColumnDefinitionBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildPrimaryKey($parsed)
+    {
+        $builder = new PrimaryKeyBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildForeignKey($parsed)
+    {
+        $builder = new ForeignKeyBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildCheck($parsed)
+    {
+        $builder = new CheckBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildLikeExpression($parsed)
+    {
+        $builder = new LikeExpressionBuilder();
+        return $builder->build($parsed);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
+        if ($parsed['expr_type'] !== ExpressionType::BRACKET_EXPRESSION) {
             return "";
         }
         $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
+        foreach ($parsed['sub_tree'] as $k => $v) {
+            $len = strlen($sql);
+            $sql .= $this->buildColDef($v);
+            $sql .= $this->buildPrimaryKey($v);
+            $sql .= $this->buildCheck($v);
+            $sql .= $this->buildLikeExpression($v);
+            $sql .= $this->buildForeignKey($v);
+
+            if ($len == strlen($sql)) {
+                throw new UnableToCreateSQLException('CREATE TABLE create-def expression subtree', $k, $v, 'expr_type');
+            }
+
+            $sql .= ", ";
         }
-        $sql .= " " . $parsed['alias']['name'];
+
+        $sql = " (" . substr($sql, 0, -2) . ")";
         return $sql;
     }
 }

@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * InListBuilder.php
  *
- * Builds aliases.
+ * Builds lists of values for the IN statement.
  *
  * PHP version 5
  *
@@ -37,36 +37,36 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: InListBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
+
+use Kernel\Asyn\Es\Utils\ExpressionType;
+
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder list of values for the IN statement.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class InListBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildSubTree($parsed, $delim)
     {
-        return isset($parsed['alias']);
+        $builder = new SubTreeBuilder();
+        return $builder->build($parsed, $delim);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
+        if ($parsed['expr_type'] !== ExpressionType::IN_LIST) {
             return "";
         }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
-        }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        $sql = $this->buildSubTree($parsed, ", ");
+        return "(" . $sql . ")";
     }
 }

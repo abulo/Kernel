@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * IndexTypeBuilder.php
  *
- * Builds aliases.
+ * Builds index type part of a PRIMARY KEY statement part of CREATE TABLE.
  *
  * PHP version 5
  *
@@ -37,36 +37,46 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: IndexTypeBuilder.php 910 2014-01-08 10:46:12Z phosco@gmx.de $
  *
  */
 
+use Kernel\Asyn\Es\Utils\ExpressionType;
+use Kernel\Asyn\Es\Exceptions\UnableToCreateSQLException;
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for the index type of a PRIMARY KEY
+ * statement part of CREATE TABLE.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class IndexTypeBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildReserved($parsed)
     {
-        return isset($parsed['alias']);
+        $builder = new ReservedBuilder();
+        return $builder->build($parsed);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
+        if ($parsed['expr_type'] !== ExpressionType::INDEX_TYPE) {
             return "";
         }
         $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
+        foreach ($parsed['sub_tree'] as $k => $v) {
+            $len = strlen($sql);
+            $sql .= $this->buildReserved($v);
+
+            if ($len == strlen($sql)) {
+                throw new UnableToCreateSQLException('CREATE TABLE primary key index type subtree', $k, $v, 'expr_type');
+            }
+
+            $sql .= " ";
         }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        return substr($sql, 0, -1);
     }
 }

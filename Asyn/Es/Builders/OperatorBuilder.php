@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * OperatorBuilder.php
  *
- * Builds aliases.
+ * Builds operators.
  *
  * PHP version 5
  *
@@ -37,36 +37,29 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: OperatorBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
+
+use Kernel\Asyn\Es\Utils\ExpressionType;
+
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for operators.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class OperatorBuilder
 {
-
-    public function hasAlias($parsed)
-    {
-        return isset($parsed['alias']);
-    }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
+        if ($parsed['expr_type'] !== ExpressionType::OPERATOR) {
             return "";
         }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
-        }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        return $parsed['base_expr'];
     }
 }

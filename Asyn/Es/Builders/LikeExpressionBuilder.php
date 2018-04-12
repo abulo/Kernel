@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * LikeExpressionBuilder.php
  *
- * Builds aliases.
+ * Builds the LIKE keyword within parenthesis.
  *
  * PHP version 5
  *
@@ -37,36 +37,55 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: LikeExpressionBuilder.php 906 2014-01-07 14:38:08Z phosco@gmx.de $
  *
  */
 
+
+use Kernel\Asyn\Es\Utils\ExpressionType;
+
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for the (LIKE) keyword within a
+ * CREATE TABLE statement. There are difference to LIKE (without parenthesis),
+ * the latter is a top-level element of the output array.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class LikeExpressionBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildTable($parsed, $index)
     {
-        return isset($parsed['alias']);
+        $builder = new TableBuilder();
+        return $builder->build($parsed, $index);
+    }
+
+    protected function buildReserved($parsed)
+    {
+        $builder = new ReservedBuilder();
+        return $builder->build($parsed);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
+        if ($parsed['expr_type'] !== ExpressionType::LIKE) {
             return "";
         }
         $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
+        foreach ($parsed['sub_tree'] as $k => $v) {
+            $len = strlen($sql);
+            $sql .= $this->buildReserved($v);
+            $sql .= $this->buildTable($v, 0);
+
+            if ($len == strlen($sql)) {
+                throw new UnableToCreateSQLException('CREATE TABLE create-def (like) subtree', $k, $v, 'expr_type');
+            }
+
+            $sql .= " ";
         }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        return substr($sql, 0, -1);
     }
 }

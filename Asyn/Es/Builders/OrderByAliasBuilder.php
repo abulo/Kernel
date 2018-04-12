@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * OrderByAliasBuilder.php
  *
- * Builds aliases.
+ * Builds an alias within an ORDER-BY clause.
  *
  * PHP version 5
  *
@@ -37,36 +37,34 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: OrderByAliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
+use Kernel\Asyn\Es\Utils\ExpressionType;
+
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for an alias within the ORDER-BY clause.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class OrderByAliasBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildDirection($parsed)
     {
-        return isset($parsed['alias']);
+        $builder = new DirectionBuilder();
+        return $builder->build($parsed);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
+        if ($parsed['expr_type'] !== ExpressionType::ALIAS) {
             return "";
         }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
-        }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        return $parsed['base_expr'] . $this->buildDirection($parsed);
     }
 }

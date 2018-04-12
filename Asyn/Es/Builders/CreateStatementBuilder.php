@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * CreateStatement.php
  *
- * Builds aliases.
+ * Builds the CREATE statement
  *
  * PHP version 5
  *
@@ -37,36 +37,49 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: CreateStatementBuilder.php 930 2014-01-08 13:07:55Z phosco@gmx.de $
  *
  */
 
+
 /**
- * This class implements the builder for aliases.
- * You can overwrite all functions to achieve another handling.
+ * This class implements the builder for the whole Create statement. You can overwrite
+ * all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class CreateStatementBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildLIKE($parsed)
     {
-        return isset($parsed['alias']);
+        $builder = new LikeBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildSelectStatement($parsed)
+    {
+        $builder = new SelectStatementBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildCREATE($parsed)
+    {
+        $builder = new CreateBuilder();
+        return $builder->build($parsed);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
-            return "";
+        $sql = $this->buildCREATE($parsed);
+        if (isset($parsed['LIKE'])) {
+            $sql .= " " . $this->buildLIKE($parsed['LIKE']);
         }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
+        if (isset($parsed['SELECT'])) {
+            $sql .= " " . $this->buildSelectStatement($parsed);
         }
-        $sql .= " " . $parsed['alias']['name'];
         return $sql;
     }
 }

@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * ShowStatementBuilder.php
  *
- * Builds aliases.
+ * Builds the SHOW statement.
  *
  * PHP version 5
  *
@@ -37,36 +37,40 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: ShowStatementBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
+
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for the SHOW statement.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class ShowStatementBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildWHERE($parsed)
     {
-        return isset($parsed['alias']);
+        $builder = new WhereBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildSHOW($parsed)
+    {
+        $builder = new ShowBuilder();
+        return $builder->build($parsed);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
-            return "";
+        $sql = $this->buildSHOW($parsed);
+        if (isset($parsed['WHERE'])) {
+            $sql .= " " . $this->buildWHERE($parsed['WHERE']);
         }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
-        }
-        $sql .= " " . $parsed['alias']['name'];
         return $sql;
     }
 }

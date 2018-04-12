@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * ShowBuilder.php
  *
- * Builds aliases.
+ * Builds the SHOW statement.
  *
  * PHP version 5
  *
@@ -37,36 +37,87 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: ShowBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
+use Kernel\Asyn\Es\Exceptions\UnableToCreateSQLException;
+
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for the SHOW statement.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class ShowBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildTable($parsed, $delim)
     {
-        return isset($parsed['alias']);
+        $builder = new TableBuilder();
+        return $builder->build($parsed, $delim);
+    }
+
+    protected function buildFunction($parsed)
+    {
+        $builder = new FunctionBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildProcedure($parsed)
+    {
+        $builder = new ProcedureBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildDatabase($parsed)
+    {
+        $builder = new DatabaseBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildEngine($parsed)
+    {
+        $builder = new EngineBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildConstant($parsed)
+    {
+        $builder = new ConstantBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildReserved($parsed)
+    {
+        $builder = new ReservedBuilder();
+        return $builder->build($parsed);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
-            return "";
-        }
+        $show = $parsed['SHOW'];
         $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
+        foreach ($show as $k => $v) {
+            $len = strlen($sql);
+            $sql .= $this->buildReserved($v);
+            $sql .= $this->buildConstant($v);
+            $sql .= $this->buildEngine($v);
+            $sql .= $this->buildDatabase($v);
+            $sql .= $this->buildProcedure($v);
+            $sql .= $this->buildFunction($v);
+            $sql .= $this->buildTable($v, 0);
+
+            if ($len == strlen($sql)) {
+                throw new UnableToCreateSQLException('SHOW', $k, $v, 'expr_type');
+            }
+
+            $sql .= " ";
         }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+
+        $sql = substr($sql, 0, -1);
+        return "SHOW " . $sql;
     }
 }

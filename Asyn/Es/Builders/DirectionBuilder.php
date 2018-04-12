@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * DirectionBuilder.php
  *
- * Builds aliases.
+ * Builds direction (e.g. of the order-by clause).
  *
  * PHP version 5
  *
@@ -37,36 +37,26 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: DirectionBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for directions (e.g. of the order-by clause).
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class DirectionBuilder
 {
-
-    public function hasAlias($parsed)
-    {
-        return isset($parsed['alias']);
-    }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
+        if (!isset($parsed['direction']) || $parsed['direction'] === false) {
             return "";
         }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
-        }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        return (" " . $parsed['direction']);
     }
 }

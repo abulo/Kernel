@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * UpdateStatement.php
  *
- * Builds aliases.
+ * Builds the UPDATE statement
  *
  * PHP version 5
  *
@@ -37,36 +37,46 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: UpdateStatementBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
+
 /**
- * This class implements the builder for aliases.
- * You can overwrite all functions to achieve another handling.
+ * This class implements the builder for the whole Update statement. You can overwrite
+ * all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class UpdateStatementBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildWHERE($parsed)
     {
-        return isset($parsed['alias']);
+        $builder = new WhereBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildSET($parsed)
+    {
+        $builder = new SetBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildUPDATE($parsed)
+    {
+        $builder = new UpdateBuilder();
+        return $builder->build($parsed);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
-            return "";
+        $sql = $this->buildUPDATE($parsed['UPDATE']) . " " . $this->buildSET($parsed['SET']);
+        if (isset($parsed['WHERE'])) {
+            $sql .= " " . $this->buildWHERE($parsed['WHERE']);
         }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
-        }
-        $sql .= " " . $parsed['alias']['name'];
         return $sql;
     }
 }

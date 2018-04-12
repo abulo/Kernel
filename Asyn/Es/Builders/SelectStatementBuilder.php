@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * SelectStatement.php
  *
- * Builds aliases.
+ * Builds the SELECT statement
  *
  * PHP version 5
  *
@@ -37,36 +37,76 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: SelectStatementBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
+
 /**
- * This class implements the builder for aliases.
- * You can overwrite all functions to achieve another handling.
+ * This class implements the builder for the whole Select statement. You can overwrite
+ * all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class SelectStatementBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildSELECT($parsed)
     {
-        return isset($parsed['alias']);
+        $builder = new SelectBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildFROM($parsed)
+    {
+        $builder = new FromBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildWHERE($parsed)
+    {
+        $builder = new WhereBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildGROUP($parsed)
+    {
+        $builder = new GroupByBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildORDER($parsed)
+    {
+        $builder = new OrderByBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildLIMIT($parsed)
+    {
+        $builder = new LimitBuilder();
+        return $builder->build($parsed);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
-            return "";
+        $sql = $this->buildSELECT($parsed['SELECT']);
+        if (isset($parsed['FROM'])) {
+            $sql .= " " . $this->buildFROM($parsed['FROM']);
         }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
+        if (isset($parsed['WHERE'])) {
+            $sql .= " " . $this->buildWHERE($parsed['WHERE']);
         }
-        $sql .= " " . $parsed['alias']['name'];
+        if (isset($parsed['GROUP'])) {
+            $sql .= " " . $this->buildGROUP($parsed['GROUP']);
+        }
+        if (isset($parsed['ORDER'])) {
+            $sql .= " " . $this->buildORDER($parsed['ORDER']);
+        }
+        if (isset($parsed['LIMIT'])) {
+            $sql .= " " . $this->buildLIMIT($parsed['LIMIT']);
+        }
         return $sql;
     }
 }

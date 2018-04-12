@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * IndexColumnBuilder.php
  *
- * Builds aliases.
+ * Builds the column entries of the column-list parts of CREATE TABLE.
  *
  * PHP version 5
  *
@@ -37,36 +37,43 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: IndexColumnBuilder.php 917 2014-01-08 11:47:42Z phosco@gmx.de $
  *
  */
 
+
+use Kernel\Asyn\Es\Utils\ExpressionType;
+use Kernel\Asyn\Es\Exceptions\UnableToCreateSQLException;
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for index column entries of the column-list
+ * parts of CREATE TABLE.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class IndexColumnBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildLength($parsed)
     {
-        return isset($parsed['alias']);
+        return ($parsed === false ? '' : ('(' . $parsed . ')'));
+    }
+
+    protected function buildDirection($parsed)
+    {
+        return ($parsed === false ? '' : (' ' . $parsed));
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
+        if ($parsed['expr_type'] !== ExpressionType::INDEX_COLUMN) {
             return "";
         }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
-        }
-        $sql .= " " . $parsed['alias']['name'];
+        $sql = $parsed['name'];
+        $sql .= $this->buildLength($parsed['length']);
+        $sql .= $this->buildDirection($parsed['dir']);
         return $sql;
     }
 }

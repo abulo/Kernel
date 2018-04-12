@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * DeleteBuilder.php
  *
- * Builds aliases.
+ * Builds the DELETE statement
  *
  * PHP version 5
  *
@@ -37,36 +37,27 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: DeleteBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
 /**
- * This class implements the builder for aliases.
- * You can overwrite all functions to achieve another handling.
+ * This class implements the builder for the [DELETE] part. You can overwrite
+ * all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class DeleteBuilder
 {
-
-    public function hasAlias($parsed)
-    {
-        return isset($parsed['alias']);
-    }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
-            return "";
+        $sql = "DELETE";
+        foreach ($parsed['TABLES'] as $k => $v) {
+            $sql .= $v . ",";
         }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
-        }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        return substr($sql, 0, -1);
     }
 }

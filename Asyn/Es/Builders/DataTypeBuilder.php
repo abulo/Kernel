@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * DataTypeBuilder.php
  *
- * Builds aliases.
+ * Builds the data-type statement part of CREATE TABLE.
  *
  * PHP version 5
  *
@@ -37,36 +37,28 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: DataTypeBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
+use Kernel\Asyn\Es\Utils\ExpressionType;
+
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for the data-type statement part of CREATE TABLE.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class DataTypeBuilder
 {
-
-    public function hasAlias($parsed)
-    {
-        return isset($parsed['alias']);
-    }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
+        if ($parsed['expr_type'] !== ExpressionType::DATA_TYPE) {
             return "";
         }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
-        }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        return $parsed['base_expr'];
     }
 }

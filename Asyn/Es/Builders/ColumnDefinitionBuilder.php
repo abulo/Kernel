@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * ColumnDefinitionBuilder.php
  *
- * Builds aliases.
+ * Builds the column definition statement part of CREATE TABLE.
  *
  * PHP version 5
  *
@@ -37,36 +37,53 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: ColumnDefinitionBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
+use Kernel\Asyn\Es\Utils\ExpressionType;
+use Kernel\Asyn\Es\Exceptions\UnableToCreateSQLException;
+
 /**
- * This class implements the builder for aliases.
- * You can overwrite all functions to achieve another handling.
+ * This class implements the builder for the columndefinition statement part
+ * of CREATE TABLE. You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class ColumnDefinitionBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildColRef($parsed)
     {
-        return isset($parsed['alias']);
+        $builder = new ColumnReferenceBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildColumnType($parsed)
+    {
+        $builder = new ColumnTypeBuilder();
+        return $builder->build($parsed);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
+        if ($parsed['expr_type'] !== ExpressionType::COLDEF) {
             return "";
         }
         $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
+        foreach ($parsed['sub_tree'] as $k => $v) {
+            $len = strlen($sql);
+            $sql .= $this->buildColRef($v);
+            $sql .= $this->buildColumnType($v);
+
+            if ($len == strlen($sql)) {
+                throw new UnableToCreateSQLException('CREATE TABLE primary key subtree', $k, $v, 'expr_type');
+            }
+
+            $sql .= " ";
         }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        return substr($sql, 0, -1);
     }
 }

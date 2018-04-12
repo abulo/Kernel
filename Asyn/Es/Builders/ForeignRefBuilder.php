@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * ForeignRefBuilder.php
  *
- * Builds aliases.
+ * Builds the FOREIGN KEY REFERENCES statement part of CREATE TABLE.
  *
  * PHP version 5
  *
@@ -37,36 +37,61 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: ForeignRefBuilder.php 927 2014-01-08 13:01:17Z phosco@gmx.de $
  *
  */
 
+
+use Kernel\Asyn\Es\Utils\ExpressionType;
+use Kernel\Asyn\Es\Exceptions\UnableToCreateSQLException;
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for the FOREIGN KEY REFERENCES statement
+ * part of CREATE TABLE.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class ForeignRefBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildTable($parsed)
     {
-        return isset($parsed['alias']);
+        $builder = new TableBuilder();
+        return $builder->build($parsed, 0);
+    }
+
+    protected function buildColumnList($parsed)
+    {
+        $builder = new ColumnListBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildReserved($parsed)
+    {
+        $builder = new ReservedBuilder();
+        return $builder->build($parsed);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
+        if ($parsed['expr_type'] !== ExpressionType::REFERENCE) {
             return "";
         }
         $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
+        foreach ($parsed['sub_tree'] as $k => $v) {
+            $len = strlen($sql);
+            $sql .= $this->buildTable($v);
+            $sql .= $this->buildReserved($v);
+            $sql .= $this->buildColumnList($v);
+
+            if ($len == strlen($sql)) {
+                throw new UnableToCreateSQLException('CREATE TABLE foreign ref subtree', $k, $v, 'expr_type');
+            }
+
+            $sql .= " ";
         }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        return substr($sql, 0, -1);
     }
 }

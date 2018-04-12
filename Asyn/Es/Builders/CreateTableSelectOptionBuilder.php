@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * CreateTableSelectOptionBuilder.php
  *
- * Builds aliases.
+ * Builds the select-options statement part of CREATE TABLE.
  *
  * PHP version 5
  *
@@ -37,36 +37,30 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: CreateTableSelectOptionBuilder.php 932 2014-01-08 13:15:26Z phosco@gmx.de $
  *
  */
 
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for the select-options statement part of CREATE TABLE.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class CreateTableSelectOptionBuilder
 {
-
-    public function hasAlias($parsed)
-    {
-        return isset($parsed['alias']);
-    }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
+        if (!isset($parsed['select-option']) || $parsed['select-option'] === false) {
             return "";
         }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
-        }
-        $sql .= " " . $parsed['alias']['name'];
+        $option = $parsed['select-option'];
+
+        $sql = ($option['duplicates'] === false ? '' : (' ' . $option['duplicates']));
+        $sql .= ($option['as'] === false ? '' : ' AS');
         return $sql;
     }
 }

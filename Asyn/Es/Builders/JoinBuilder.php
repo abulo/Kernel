@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * JoinBuilder.php
  *
- * Builds aliases.
+ * Builds the JOIN statement parts (within FROM).
  *
  * PHP version 5
  *
@@ -37,36 +37,38 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: JoinBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
+use Kernel\Asyn\Es\Exceptions\UnableToCreateSQLException;
+
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for the JOIN statement parts (within FROM).
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class JoinBuilder
 {
-
-    public function hasAlias($parsed)
-    {
-        return isset($parsed['alias']);
-    }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
-            return "";
+        if ($parsed === 'CROSS') {
+            return ", ";
         }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
+        if ($parsed === 'JOIN') {
+            return " INNER JOIN ";
         }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        if ($parsed === 'LEFT') {
+            return " LEFT JOIN ";
+        }
+        if ($parsed === 'RIGHT') {
+            return " RIGHT JOIN ";
+        }
+        // TODO: add more
+        throw new UnsupportedFeatureException($parsed);
     }
 }

@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * InsertBuilder.php
  *
- * Builds aliases.
+ * Builds the [INSERT] statement part.
  *
  * PHP version 5
  *
@@ -37,36 +37,55 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: InsertBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
+
+use Kernel\Asyn\Es\Exceptions\UnableToCreateSQLException;
+
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for the [INSERT] statement parts.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class InsertBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildColRef($parsed)
     {
-        return isset($parsed['alias']);
+        $builder = new ColumnReferenceBuilder();
+        return $builder->build($parsed);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
-            return "";
+        $sql = "INSERT INTO " . $parsed['table'];
+
+        if ($parsed['columns'] === false) {
+            return $sql;
         }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
+
+        $columns = "";
+        foreach ($parsed['columns'] as $k => $v) {
+            $len = strlen($columns);
+            $columns .= $this->buildColRef($v);
+
+            if ($len == strlen($columns)) {
+                throw new UnableToCreateSQLException('INSERT[columns]', $k, $v, 'expr_type');
+            }
+
+            $columns .= ",";
         }
-        $sql .= " " . $parsed['alias']['name'];
+
+        if ($columns !== "") {
+            $columns = " (" . substr($columns, 0, -1) . ")";
+        }
+
+        $sql .= $columns;
         return $sql;
     }
 }

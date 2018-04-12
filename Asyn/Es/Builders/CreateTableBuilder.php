@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * CreateTable.php
  *
- * Builds aliases.
+ * Builds the CREATE TABLE statement
  *
  * PHP version 5
  *
@@ -37,36 +37,47 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: CreateTableBuilder.php 892 2013-12-31 00:21:33Z phosco@gmx.de $
  *
  */
 
+use Kernel\Asyn\Es\Exceptions\UnableToCreateSQLException;
+
 /**
- * This class implements the builder for aliases.
- * You can overwrite all functions to achieve another handling.
+ * This class implements the builder for the CREATE TABLE statement. You can overwrite
+ * all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class CreateTableBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildCreateTableDefinition($parsed)
     {
-        return isset($parsed['alias']);
+        $builder = new CreateTableDefinitionBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildCreateTableOptions($parsed)
+    {
+        $builder = new CreateTableOptionsBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildCreateTableSelectOption($parsed)
+    {
+        $builder = new CreateTableSelectOptionBuilder();
+        return $builder->build($parsed);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
-            return "";
-        }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
-        }
-        $sql .= " " . $parsed['alias']['name'];
+        $sql = $parsed['name'];
+        $sql .= $this->buildCreateTableDefinition($parsed);
+        $sql .= $this->buildCreateTableOptions($parsed);
+        $sql .= $this->buildCreateTableSelectOption($parsed);
         return $sql;
     }
 }

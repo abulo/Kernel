@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * LikeBuilder.php
  *
- * Builds aliases.
+ * Builds the LIKE statement part of a CREATE TABLE statement.
  *
  * PHP version 5
  *
@@ -37,36 +37,35 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: LikeBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
+use Kernel\Asyn\Es\Exceptions\UnableToCreateSQLException;
+
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for the LIKE statement part of CREATE TABLE.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class LikeBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildTable($parsed, $index)
     {
-        return isset($parsed['alias']);
+        $builder = new TableBuilder();
+        return $builder->build($parsed, $index);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
-            return "";
+        $sql = $this->buildTable($parsed, 0);
+        if (strlen($sql) === 0) {
+            throw new UnableToCreateSQLException('LIKE', "", $like, 'table');
         }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
-        }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        return "LIKE " . $sql;
     }
 }

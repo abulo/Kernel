@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * InsertStatement.php
  *
- * Builds aliases.
+ * Builds the INSERT statement
  *
  * PHP version 5
  *
@@ -37,36 +37,38 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: InsertStatementBuilder.php 834 2013-12-18 10:14:26Z phosco@gmx.de $
  *
  */
 
+
 /**
- * This class implements the builder for aliases.
- * You can overwrite all functions to achieve another handling.
+ * This class implements the builder for the whole Insert statement. You can overwrite
+ * all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class InsertStatementBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildVALUES($parsed)
     {
-        return isset($parsed['alias']);
+        $builder = new ValuesBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildINSERT($parsed)
+    {
+        $builder = new InsertBuilder($parsed);
+        return $builder->build($parsed);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
-            return "";
-        }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
-        }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        // TODO: are there more than one tables possible (like [INSERT][1])
+        return $this->buildINSERT($parsed['INSERT'][0]) . " " . $this->buildVALUES($parsed['VALUES']);
+        // TODO: subquery?
     }
 }

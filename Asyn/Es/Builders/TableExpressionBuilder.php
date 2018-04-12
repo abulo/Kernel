@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * TableExpressionBuilder.php
  *
- * Builds aliases.
+ * Builds the table name/join options.
  *
  * PHP version 5
  *
@@ -37,36 +37,69 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: TableExpressionBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
+
+
+use Kernel\Asyn\Es\Utils\ExpressionType;
+
 /**
- * This class implements the builder for aliases.
+ * This class implements the builder for the table name and join options.
  * You can overwrite all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class TableExpressionBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildFROM($parsed)
     {
-        return isset($parsed['alias']);
+        $builder = new FromBuilder();
+        return $builder->build($parsed);
     }
 
-    public function build($parsed)
+    protected function buildAlias($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
+        $builder = new AliasBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildJoin($parsed)
+    {
+        $builder = new JoinBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildRefType($parsed)
+    {
+        $builder = new RefTypeBuilder();
+        return $builder->build($parsed);
+    }
+
+    protected function buildRefClause($parsed)
+    {
+        $builder = new RefClauseBuilder();
+        return $builder->build($parsed);
+    }
+
+    public function build($parsed, $index)
+    {
+        if ($parsed['expr_type'] !== ExpressionType::TABLE_EXPRESSION) {
             return "";
         }
-        $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
+        $sql = substr($this->buildFROM($parsed['sub_tree']), 5); // remove FROM keyword
+        $sql = "(" . $sql . ")";
+        $sql .= $this->buildAlias($parsed);
+
+        if ($index !== 0) {
+            $sql = $this->buildJoin($parsed['join_type']) . $sql;
+            $sql .= $this->buildRefType($parsed['ref_type']);
+            $sql .= $this->buildRefClause($parsed['ref_clause']);
         }
-        $sql .= " " . $parsed['alias']['name'];
         return $sql;
     }
 }

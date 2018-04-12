@@ -2,9 +2,9 @@
 namespace Kernel\Asyn\Es\Builders;
 
 /**
- * AliasBuilder.php
+ * FromBuilder.php
  *
- * Builds aliases.
+ * Builds the FROM statement
  *
  * PHP version 5
  *
@@ -37,36 +37,55 @@ namespace Kernel\Asyn\Es\Builders;
  * @author    André Rothe <andre.rothe@phosco.info>
  * @copyright 2010-2014 Justin Swanhart and André Rothe
  * @license   http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
- * @version   SVN: $Id: AliasBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
+ * @version   SVN: $Id: FromBuilder.php 830 2013-12-18 09:35:42Z phosco@gmx.de $
  *
  */
 
+
+use Kernel\Asyn\Es\Exceptions\UnableToCreateSQLException;
+
 /**
- * This class implements the builder for aliases.
- * You can overwrite all functions to achieve another handling.
+ * This class implements the builder for the [FROM] part. You can overwrite
+ * all functions to achieve another handling.
  *
  * @author  André Rothe <andre.rothe@phosco.info>
  * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
  *
  */
-class AliasBuilder
+class FromBuilder
 {
 
-    public function hasAlias($parsed)
+    protected function buildTable($parsed, $key)
     {
-        return isset($parsed['alias']);
+        $builder = new TableBuilder();
+        return $builder->build($parsed, $key);
+    }
+
+    protected function buildTableExpression($parsed, $key)
+    {
+        $builder = new TableExpressionBuilder();
+        return $builder->build($parsed, $key);
+    }
+
+    protected function buildSubQuery($parsed, $key)
+    {
+        $builder = new SubQueryBuilder();
+        return $builder->build($parsed, $key);
     }
 
     public function build($parsed)
     {
-        if (!isset($parsed['alias']) || $parsed['alias'] === false) {
-            return "";
-        }
         $sql = "";
-        if ($parsed['alias']['as']) {
-            $sql .= " as";
+        foreach ($parsed as $k => $v) {
+            $len = strlen($sql);
+            $sql .= $this->buildTable($v, $k);
+            $sql .= $this->buildTableExpression($v, $k);
+            $sql .= $this->buildSubquery($v, $k);
+
+            if ($len == strlen($sql)) {
+                throw new UnableToCreateSQLException('FROM', $k, $v, 'expr_type');
+            }
         }
-        $sql .= " " . $parsed['alias']['name'];
-        return $sql;
+        return "FROM " . $sql;
     }
 }
