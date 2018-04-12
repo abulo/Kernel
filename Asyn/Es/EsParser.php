@@ -3,6 +3,7 @@ namespace Kernel\Asyn\Es;
 
 use Kernel\Asyn\Es\Positions\PositionCalculator;
 use Kernel\Asyn\Es\Processors\DefaultProcessor;
+use Kernel\Asyn\HttpClient\HttpClient;
 
 class EsParser
 {
@@ -228,26 +229,36 @@ class EsParser
 
     private function getEsData($url)
     {
-            $ch = curl_init($url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1) ;
-            curl_setopt($ch, CURLOPT_TIMEOUT, 60);
-            curl_setopt($ch, CURLOPT_HEADER, 0);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_SSLVERSION, 3);
-            curl_setopt($ch, CURLOPT_BINARYTRANSFER, true) ;
-            $output = curl_exec($ch);
-        if ($output === false) {  //超时处理
-            if (curl_errno($ch) == CURLE_OPERATION_TIMEDOUT) {
-                my_file_put_contents("getEsData.txt", "时间：".date('Ymd-H:i:s', time())."\r\n错误内容为：curl通过get方式请求{$url}的连接超时\r\n");
-            }
+        $parsed_url = parse_url($url);
+
+        $scheme   = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '';
+        $host     = isset($parsed_url['host']) ? $parsed_url['host'] : '';
+        $port     = isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '';
+        $path     = isset($parsed_url['path']) ? $parsed_url['path'] : '';
+        $query    = isset($parsed_url['query']) ? $parsed_url['query'] : '';
+
+        $url = "$scheme$host$port";
+        $http_client = new HttpClient(null, $url);
+        $http_client->setMethod('GET');
+        if($query)
+        {
+            $query = parse_str($query);
+            $http_client->setQuery($query);
         }
-            curl_close($ch);
-           $output=json_decode($output, true);
-        if (empty($output)) {
-            return array();
+
+        $response = [];
+
+        if($path)
+        {
+            $response = $http_client->coroutineExecute($path);
+
+            $response=json_decode($response, true);
         }
-            return $output['version']['number'];
+
+        if (empty($response)) {
+            return [];
+        }
+        return $response['version']['number'];
     }
 
 
@@ -255,37 +266,35 @@ class EsParser
     private function PostEs($postdata, $json = true, $token = false)
     {
         $url=$this->url;
+
         $datastring = json_encode($postdata, true);
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_URL, $url) ;
-        curl_setopt($ch, CURLOPT_POST, 1) ;
-        curl_setopt($ch, CURLOPT_HEADER, 0);
-        curl_setopt($ch, CURLINFO_HEADER_OUT, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 60);   //只需要设置一个秒的数量就可以
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSLVERSION, 3);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $datastring);
-        if ($json) {
-              curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                    'Content-Type: application/json;',
-                    'Content-Length: ' . strlen($datastring)));
+        $parsed_url = parse_url($url);
+
+        $scheme   = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '';
+        $host     = isset($parsed_url['host']) ? $parsed_url['host'] : '';
+        $port     = isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '';
+        $path     = isset($parsed_url['path']) ? $parsed_url['path'] : '';
+        $query    = isset($parsed_url['query']) ? '?'.$parsed_url['query'] : '';
+
+        $url = "$scheme$host$port";
+
+        $http_client = new HttpClient(null, $url);
+        $http_client->setMethod('POST');
+        $http_client->setQuery($postdata);
+        if($json)
+        {
+            $http_client->addHeader('Content-Type','application/json;');
+            $http_client->addHeader('Content-Length',strlen($datastring));
         }
+
         if ($token) {
-                curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                        'Content-Type: application/json; charset=utf-8',
-                        'Content-Length: ' . strlen($datastring),
-                        'Authorization:'.$token
-                    ));
+            $http_client->addHeader('Content-Type','application/json; charset=utf-8');
+            $http_client->addHeader('Content-Length',strlen($datastring));
+            $http_client->addHeader('Authorization',$token);
         }
-        $output=curl_exec($ch);
-        if ($output === false) {  //超时处理
-            if (curl_errno($ch) == CURLE_OPERATION_TIMEDOUT) {
-                file_put_contents("getEsData.txt", "时间：".date('Ymd-H:i:s', time())."\r\n错误内容为：curl通过post方式请求{$this->url}的连接超时\r\n");
-            }
-        }
-        curl_close($ch);
+
+        $output = $http_client->coroutineExecute("$path$query");
+
         $output=json_decode($output, true);
         if (empty($output)) {
               $this->result=json_encode(array(), true);
