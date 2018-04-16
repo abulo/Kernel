@@ -4,9 +4,16 @@ namespace Kernel;
 
 use Gelf\Publisher;
 use Monolog\Formatter\JsonFormatter;
+use Monolog\Formatter\MongoDBFormatter;
 use Monolog\Handler\GelfHandler;
 use Monolog\ErrorHandler;
 use Monolog\Handler\MongoDBHandler;
+use Monolog\Processor\UidProcessor;
+use Monolog\Processor\ProcessIdProcessor;
+use Monolog\Processor\PsrLogMessageProcessor;
+use Monolog\Processor\IntrospectionProcessor;
+use Monolog\Processor\MemoryUsageProcessor;
+use Monolog\Processor\MemoryPeakUsageProcessor;
 use DateTimeZone;
 use MongoDB\Client;
 use Monolog\Handler\RotatingFileHandler;
@@ -17,6 +24,8 @@ use Kernel\Components\Backstage\BackstageHelp;
 use Kernel\Components\Event\EventDispatcher;
 use Kernel\Components\GrayLog\UdpTransport;
 use Kernel\Components\Log\SDJsonFormatter;
+use Kernel\Components\Log\SDMongodbFormatter;
+
 use Kernel\Components\Middleware\MiddlewareManager;
 use Kernel\Components\Process\ProcessRPC;
 use Kernel\CoreBase\ControllerFactory;
@@ -166,6 +175,13 @@ abstract class SwooleServer extends ProcessRPC
                 );
                 $handel->setFormatter(new JsonFormatter());
                 $logHandle->pushHandler($handel);
+                $logHandle->pushProcessor(new UidProcessor());
+                $logHandle->pushProcessor(new ProcessIdProcessor());
+                $logHandle->pushProcessor(new PsrLogMessageProcessor());
+                $logHandle->pushProcessor(new IntrospectionProcessor());
+                $logHandle->pushProcessor(new MemoryUsageProcessor());
+                $logHandle->pushProcessor(new MemoryPeakUsageProcessor());
+
                 break;
             case 'mongodb':
                 $uri = 'mongodb://'.implode($this->config->get('log.mongodb.host'), ',').'/';
@@ -179,8 +195,14 @@ abstract class SwooleServer extends ProcessRPC
                     $this->config->get('log.mongodb.database'),
                     $this->config->get('log.mongodb.collection', 'logger')
                 );
-                $handel->setFormatter(new JsonFormatter());
+                $handel->setFormatter(new SDMongodbFormatter());
                 $logHandle->pushHandler($handel);
+                $logHandle->pushProcessor(new UidProcessor());
+                $logHandle->pushProcessor(new ProcessIdProcessor());
+                $logHandle->pushProcessor(new PsrLogMessageProcessor());
+                $logHandle->pushProcessor(new IntrospectionProcessor());
+                $logHandle->pushProcessor(new MemoryUsageProcessor());
+                $logHandle->pushProcessor(new MemoryPeakUsageProcessor());
                 break;
         }
         ErrorHandler::register($logHandle);
