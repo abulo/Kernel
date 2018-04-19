@@ -347,6 +347,7 @@ abstract class SwooleHttpServer extends SwooleServer
             $server_port = $this->getServerPort($request->fd);
         }
 
+
         $request = $this->beforeSwooleHttpRequest($request);
 
         $middleware_names = $this->portManager->getMiddlewares($server_port);
