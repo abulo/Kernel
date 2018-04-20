@@ -610,6 +610,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
         $this->initAsynPools($workerId);
         $this->initRedisProxy($workerId);
         $this->initMysqlProxy($workerId);
+        $this->initSyncPools($workerId);
         // $this->redis_pool = $this->asynPools['redisPool'] ?? null;
         // $this->mysql_pool = $this->asynPools['mysqlPool'] ?? null;
         //进程锁保证只有一个进程会执行以下的代码,reload也不会执行
@@ -638,7 +639,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
             }
         }else{
             //mongodb 是阻塞连接,所以将连接放在 task 进程中
-            $this->initSyncPools($workerId);
+            // $this->initSyncPools($workerId);
         }
     }
 
