@@ -10,7 +10,7 @@ class Paginator
     protected $itemsPerPage;
     protected $currentPage;
     protected $urlPattern;
-    protected $maxPagesToShow = 9;
+    public $maxPagesToShow = 9;
     // protected $previousText = '上一页';
     // protected $nextText = '下一页';
     /**
