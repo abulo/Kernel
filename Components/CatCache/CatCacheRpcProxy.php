@@ -40,8 +40,10 @@ class CatCacheRpcProxy implements \ArrayAccess
                 if ($key > $time) {
                     break;
                 }
-                $value['param_arr'][] = "timer_back.$key";
-                EventDispatcher::getInstance()->randomDispatch(TimerCallBack::KEY, $value);
+                foreach ($value as $mkey => $mvalue) {
+                    $mvalue['param_arr'][] = "timer_back.$key.$mkey";
+                    EventDispatcher::getInstance()->randomDispatch(TimerCallBack::KEY, $mvalue);
+                }
             }
         });
     }
@@ -67,8 +69,7 @@ class CatCacheRpcProxy implements \ArrayAccess
             $this->time_count = 0;
         }
         $this->time_count++;
-        $time = $time * 1000 + $this->time_count;
-        $key = "timer_back.$time";
+        $key = "timer_back.$time.$this->time_count";
         $this->map[$key] = $data;
         return $key;
     }

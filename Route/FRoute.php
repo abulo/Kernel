@@ -153,13 +153,13 @@ class FRoute implements IRoute
         return $this->client_data->params??null;
     }
 
-    public function errorHandle(\Exception $e, $fd)
+    public function errorHandle(\Throwable $e, $fd)
     {
         getInstance()->send($fd, "Error:" . $e->getMessage(), true);
         getInstance()->close($fd);
     }
 
-    public function errorHttpHandle(\Exception $e, $request, $response)
+    public function errorHttpHandle(\Throwable $e, $request, $response)
     {
 
         $template = getInstance()->loader->view(KERNEL_PATH.DS.'Views'.DS.'error_404');
@@ -168,4 +168,8 @@ class FRoute implements IRoute
         $response->header('HTTP/1.1', '404 Not Found');
         $response->end($content);
     }
+    
+    
+    
+    
 }

@@ -28,7 +28,6 @@ class ConsulProcess extends Process
         }
 
         $this->exec(BIN_DIR . "/exec/consul", ['agent', '-ui', '-config-dir', BIN_DIR . '/exec/consul.d/'.getNodeName()]);
-        sleep(5);
     }
 
     /**

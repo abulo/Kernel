@@ -18,29 +18,33 @@ class Test extends Controller
         throw new \Exception("test");
     }
 
-    public function http_test()
+    public function http_redis()
     {
-        $test = $this->loader->model("TestModel2", $this);
-        $test->test();
-        $test->test2();
-        $this->http_output->end($this->getContext());
+        $this->redis_pool->getCoroutine()->incr("test");
     }
 
+    public function http_createActor()
+    {
+        Actor::create(TestActor::class, "test");
+    }
     public function http_actor()
     {
         $a = Actor::getRpc("test");
         $a->test();
     }
-
-    public function http_redis()
+    public function login($uid)
     {
-        $this->redis->get("a");
+        $this->bindUid($uid);
+        $this->send("ok");
     }
-
-    public function http_mysql()
+    public function mySub($topic)
     {
-        $this->db->begin(function ($client) {
-            $testModel = $this->loader->model("TestModel", $this);
-        });
+        $this->addSub($topic);
+        $this->send("ok");
+    }
+    public function myPub($topic)
+    {
+        $this->sendPub($topic, "hello");
+        $this->send("ok");
     }
 }

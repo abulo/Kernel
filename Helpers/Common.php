@@ -136,17 +136,13 @@ function checkExtension()
         secho("STA", "[版本错误]PHP版本必须大于7.0.0\n");
         $check = false;
     }
-    if (version_compare(SWOOLE_VERSION, '1.9.18', '<')) {
-        secho("STA", "[版本建议]Swoole推荐使用1.9.18版本,之前版本存在bug");
+    if (SWOOLE_VERSION[0] != 2) {
+        secho("STA", "[版本错误]不支持1.0版本swoole，请安装2.0版本");
         $check = false;
     }
 
-    // if (SWOOLE_VERSION[0] == 2) {
-    //     secho("STA", "[版本错误]不支持2.0版本swoole，请安装1.9版本");
-    //     $check = false;
-    // }
     if (!class_exists('swoole_redis')) {
-        secho("STA", "[编译错误]swoole编译缺少--enable-async-redis");
+        secho("STA", "[编译错误]swoole编译缺少--enable-async-redis,具体参见文档http://docs.sder.xin/%E7%8E%AF%E5%A2%83%E8%A6%81%E6%B1%82.html");
         $check = false;
     }
     if (!extension_loaded('redis')) {
@@ -194,15 +190,25 @@ function isDarwin()
         return false;
     }
 }
-
+function displayExceptionHandler(\Throwable $exception)
+{
+    getInstance()->log->error($exception->getMessage(), ["trace"=>$exception->getTrace()]);
+    secho("EX", "------------------发生异常：".$exception->getMessage()."-----------------------");
+    $string = $exception->getTraceAsString();
+    $arr = explode("#", $string);
+    unset($arr[0]);
+    foreach ($arr as $value) {
+        secho("EX", "#".$value);
+    }
+}
 /**
  * 代替sleep
- * @param $time
+ * @param $ms
  * @return mixed
  */
-function sleepCoroutine($time)
+function sleepCoroutine($ms)
 {
-    \co::sleep($time / 1000);
+    \co::sleep($ms / 1000);
 }
 
 /**

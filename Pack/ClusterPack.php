@@ -75,7 +75,7 @@ class ClusterPack implements IPack
         ];
     }
 
-    public function errorHandle($e, $fd)
+    public function errorHandle(\Throwable $e, $fd)
     {
         getInstance()->close($fd);
     }

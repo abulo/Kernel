@@ -125,6 +125,7 @@ class CoreBase extends Child
         $this->is_destroy = true;
         foreach ($this->dbQueryBuilders as $dbQueryBuilder) {
             $dbQueryBuilder->clear();
+            $dbQueryBuilder->setClient(null);
             Pool::getInstance()->push($dbQueryBuilder);
         }
         $this->dbQueryBuilders = [];

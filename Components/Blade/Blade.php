@@ -110,4 +110,17 @@ class Blade
     {
         return $this->container['view'];
     }
+
+     /**
+     * Register a valid view extension and its engine.
+     *
+     * @param  string    $extension
+     * @param  string    $engine
+     * @param  \Closure  $resolver
+     * @return void
+     */
+    public function addExtension($extension, $engine, $resolver = null)
+    {
+        return $this->container['view']->addExtension($extension, $engine, $resolver = null);
+    }
 }
