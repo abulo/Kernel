@@ -789,18 +789,18 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     public function onOpenServiceInitialization()
     {
 
-        if ($this->config->get('mysql.enable', false)) {
-            $activePools = $this->config->get('mysql.active');
-            if (is_string($activePools)) {
-                $activePools = explode(',', $activePools);
-            }
-            foreach ($activePools as $poolKey) {
-                if(!$this->isTaskWorker())
-                {
-                    $this->asynPools[MysqlAsynPool::AsynName . $poolKey] = $this->asynPools[MysqlAsynPool::AsynName . $poolKey]->installDbBuilder();
-                }
-            }
-        }
+        // if ($this->config->get('mysql.enable', false)) {
+        //     $activePools = $this->config->get('mysql.active');
+        //     if (is_string($activePools)) {
+        //         $activePools = explode(',', $activePools);
+        //     }
+        //     foreach ($activePools as $poolKey) {
+        //         if(!$this->isTaskWorker())
+        //         {
+        //             $this->asynPools[MysqlAsynPool::AsynName . $poolKey] = $this->asynPools[MysqlAsynPool::AsynName . $poolKey]->installDbBuilder();
+        //         }
+        //     }
+        // }
 
         // if ($this->mysql_pool != null) {
         //     $this->mysql_pool->installDbBuilder();
