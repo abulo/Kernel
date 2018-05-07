@@ -14,7 +14,7 @@ class Token
     {
         $key = md5($key ? $key : 'weimeng');
         $abc = @openssl_encrypt($string, 'des-ede3', $key, true);
-        return strtoupper(bin2hex($abc));
+        return strtoupper(@bin2hex($abc));
     }
     /**
      * 解密
@@ -25,8 +25,14 @@ class Token
     public static function decode($string, $key = '')
     {
         $key = md5($key ? $key : 'weimeng');
-        $string=pack("H*", strtolower($string));
-        $abc = @openssl_decrypt($string, 'des-ede3', $key, true);
+        try {
+            $string=@pack("H*", strtolower($string));
+            $abc = @openssl_decrypt($string, 'des-ede3', $key, true);
+        } catch (\Exception $e) {
+            $abc = false;
+        }
+
+
         return  $abc;
     }
 }
