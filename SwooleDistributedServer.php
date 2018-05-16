@@ -216,6 +216,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
 
     /**
      * 创建用户进程
+     * @throws \Exception
      */
     public function startProcess()
     {
@@ -386,6 +387,8 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * 广播(全部FD)
      * @param $data
      * @param bool $fromDispatch
+     * @throws SwooleException
+     * @throws \Exception
      */
     public function sendToAllFd($data, $fromDispatch = false)
     {
@@ -413,6 +416,8 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * 广播
      * @param $data
      * @param bool $fromDispatch
+     * @throws SwooleException
+     * @throws \Exception
      */
     public function sendToAll($data, $fromDispatch = false)
     {
@@ -441,6 +446,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * @param $uid
      * @param $data
      * @param $fromDispatch
+     * @throws \Exception
      */
     public function sendToUid($uid, $data, $fromDispatch = false)
     {
@@ -475,6 +481,8 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * @param $uids
      * @param $data
      * @param $fromDispatch
+     * @throws SwooleException
+     * @throws \Exception
      */
     public function sendToUids($uids, $data, $fromDispatch = false)
     {
@@ -515,6 +523,8 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     /**
      * 获取Topic的数量
      * @param $topic
+     * @return
+     * @throws \Exception
      */
     public function getSubMembersCountCoroutine($topic)
     {
@@ -524,6 +534,8 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     /**
      * 获取Topic的Member
      * @param $topic
+     * @return
+     * @throws \Exception
      */
     public function getSubMembersCoroutine($topic)
     {
@@ -534,6 +546,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * 获取uid的所有订阅
      * @param $uid
      * @return mixed
+     * @throws \Exception
      */
     public function getUidTopicsCoroutine($uid)
     {
@@ -544,6 +557,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * 添加订阅
      * @param $topic
      * @param $uid
+     * @throws \Exception
      */
     public function addSub($topic, $uid)
     {
@@ -555,6 +569,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * 移除订阅
      * @param $topic
      * @param $uid
+     * @throws \Exception
      */
     public function removeSub($topic, $uid)
     {
@@ -566,6 +581,8 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * @param $topic
      * @param $data
      * @param array $excludeUids
+     * @throws Asyn\MQTT\Exception
+     * @throws \Exception
      */
     public function pub($topic, $data, $excludeUids = [])
     {
@@ -602,7 +619,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * 重写onSwooleWorkerStart方法，添加异步redis
      * @param $serv
      * @param $workerId
-     * @throws SwooleException
+     * @throws \Exception
      */
     public function onSwooleWorkerStart($serv, $workerId)
     {
@@ -811,6 +828,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * 连接断开
      * @param $serv
      * @param $fd
+     * @throws Asyn\MQTT\Exception
      */
     public function onSwooleClose($serv, $fd)
     {
@@ -823,6 +841,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * WS连接断开
      * @param $serv
      * @param $fd
+     * @throws Asyn\MQTT\Exception
      */
     public function onSwooleWSClose($serv, $fd)
     {
@@ -862,6 +881,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * 踢用户下线
      * @param $uid
      * @param bool $fromDispatch
+     * @throws \Exception
      */
     public function kickUid($uid, $fromDispatch = false)
     {
@@ -908,6 +928,8 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * 解绑uid，链接断开自动解绑
      * @param $uid
      * @param $fd
+     * @throws Asyn\MQTT\Exception
+     * @throws \Exception
      */
     public function unBindUid($uid, $fd)
     {
@@ -925,7 +947,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * uid是否在线(协程)
      * @param $uid
      * @return int
-     * @throws SwooleException
+     * @throws \Exception
      */
     public function coroutineUidIsOnline($uid)
     {
@@ -940,7 +962,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     /**
      * 获取在线人数(协程)
      * @return int
-     * @throws SwooleException
+     * @throws \Exception
      */
     public function coroutineCountOnline()
     {
@@ -953,8 +975,8 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
 
     /**
      * 获取所有在线uid
-     * @return int
-     * @throws SwooleException
+     * @return array
+     * @throws \Exception
      */
     public function coroutineGetAllUids()
     {
@@ -1025,6 +1047,8 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     /**
      * 获得服务器状态
      * @return mixed
+     * @throws Asyn\MQTT\Exception
+     * @throws \Exception
      */
     public function getStatus()
     {
@@ -1121,6 +1145,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * 发布uid信息
      * @param $uid
      * @return mixed|null
+     * @throws \Exception
      */
     public function getUidInfo($uid)
     {

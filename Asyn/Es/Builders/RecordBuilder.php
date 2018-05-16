@@ -44,6 +44,7 @@ namespace Kernel\Asyn\Es\Builders;
 
 use Kernel\Asyn\Es\Utils\ExpressionType;
 use Kernel\Asyn\Es\Exceptions\UnableToCreateSQLException;
+
 /**
  * This class implements the builder for the records within INSERT statement.
  * You can overwrite all functions to achieve another handling.

@@ -147,6 +147,16 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer
             return;
         }
         $server_port = $fdinfo['server_port'];
+        //允许数据监控的情况就pub
+        if ($this->allow_MonitorFlowData) {
+            $uid = $this->getUidFromFd($fd);
+            if (!empty($uid)) {
+                try {
+                    getInstance()->pub('$SYS_CHANNEL/'."$uid/send", $data);
+                } catch (\Throwable $e) {
+                }
+            }
+        }
         if ($ifPack) {
             $pack = $this->portManager->getPack($server_port);
             if ($pack != null) {
@@ -198,6 +208,15 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer
         } catch (\Throwable $e) {
             $pack->errorHandle($e, $fd);
             return null;
+        }
+        //是否允许流量监控
+        if ($this->allow_MonitorFlowData) {
+            if (!empty($uid)) {
+                try {
+                    getInstance()->pub('$SYS_CHANNEL/'."$uid/recv", $client_data);
+                } catch (\Throwable $e) {
+                }
+            }
         }
         $middleware_names = $this->portManager->getMiddlewares($server_port);
         $context = [];

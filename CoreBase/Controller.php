@@ -99,15 +99,15 @@ class Controller extends CoreBase
     /**
      * @var bool
      */
-    private $isEnableError;
+    protected $isEnableError;
     /**
      * @var bool
      */
-    private $isErrorHttpShow;
+    protected $isErrorHttpShow;
     /**
      * @var Error
      */
-    private $Error;
+    protected $Error;
 
     /**
      * Controller constructor.
@@ -131,7 +131,7 @@ class Controller extends CoreBase
      * @param $controller_name
      * @param $method_name
      * @param $params
-     * @return \Generator
+     * @return void
      */
     public function setClientData($uid, $fd, $client_data, $controller_name, $method_name, $params)
     {
@@ -157,7 +157,7 @@ class Controller extends CoreBase
      * @param $controller_name
      * @param $method_name
      * @param $params
-     * @return \Generator
+     * @return void
      */
     public function setRequestResponse($request, $response, $controller_name, $method_name, $params , $destroy = true)
     {
@@ -178,7 +178,7 @@ class Controller extends CoreBase
      * @param $controller_name
      * @param $method_name
      * @param $params
-     * @return \Generator
+     * @return void
      */
     protected function execute($controller_name, $method_name, $params,$destroy = true)
     {
@@ -254,7 +254,6 @@ class Controller extends CoreBase
 
     /**
      * 异常的回调(如果需要继承$autoSendAndDestroy传flase)
-     * @param \Throwable $e
      * @param callable $handle
      */
     public function onExceptionHandle(\Throwable $e, $handle = null)
@@ -313,7 +312,6 @@ class Controller extends CoreBase
     /**
      * 向当前客户端发送消息
      * @param $data
-     * @throws SwooleException
      */
     protected function send($data)
     {
@@ -365,6 +363,7 @@ class Controller extends CoreBase
 
     /**
      * 当控制器方法不存在的时候的默认方法
+     * @throws SwooleException
      */
     public function defaultMethod()
     {
@@ -380,7 +379,7 @@ class Controller extends CoreBase
      * sendToUid
      * @param $uid
      * @param $data
-     * @throws SwooleException
+     * @throws \Exception
      */
     protected function sendToUid($uid, $data)
     {
@@ -437,6 +436,7 @@ class Controller extends CoreBase
     /**
      * 踢用户
      * @param $uid
+     * @throws \Exception
      */
     protected function kickUid($uid)
     {
@@ -468,6 +468,7 @@ class Controller extends CoreBase
 
     /**
      * unBindUid
+     * @throws \Kernel\Asyn\MQTT\Exception
      */
     protected function unBindUid()
     {
@@ -512,6 +513,8 @@ class Controller extends CoreBase
     /**
      * 重定向到404
      * @param int $code
+     * @throws SwooleException
+     * @throws SwooleRedirectException
      */
     protected function redirect404($code = 302)
     {
@@ -524,6 +527,8 @@ class Controller extends CoreBase
      * @param $controllerName
      * @param $methodName
      * @param int $code
+     * @throws SwooleException
+     * @throws SwooleRedirectException
      */
     protected function redirectController($controllerName, $methodName, $code = 302)
     {
@@ -554,6 +559,7 @@ class Controller extends CoreBase
 
     /**
      * @param $topic
+     * @throws \Exception
      */
     protected function removeSub($topic)
     {
@@ -568,6 +574,7 @@ class Controller extends CoreBase
      * @param $topic
      * @param $data
      * @param array $excludeUids 需要排除的uids
+     * @throws \Kernel\Asyn\MQTT\Exception
      */
     protected function sendPub($topic, $data, $excludeUids = [])
     {

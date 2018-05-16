@@ -19,10 +19,14 @@ use Kernel\Memory\Pool;
 abstract class AMQPTaskProcess extends Process
 {
     /**
-     * @var AMQPChannel
+     * @var AMQP
      */
-    protected $channel;
+    protected $connection;
 
+    /**
+     * @param $process
+     * @throws \Exception
+     */
     public function start($process)
     {
         $this->initAsynPools();
@@ -31,6 +35,7 @@ abstract class AMQPTaskProcess extends Process
 
     /**
      * @param null $active
+     * @throws \Exception
      */
     protected function connectAMQP($active = null)
     {
@@ -48,19 +53,19 @@ abstract class AMQPTaskProcess extends Process
         $user = $this->config['amqp'][$active]['user'];
         $password = $this->config['amqp'][$active]['password'];
         $vhost = $this->config['amqp'][$active]['vhost'];
-        $connection = new AMQP($host, $port, $user, $password, $vhost);
-        $this->channel = $connection->channel();
+        $this->connection = new AMQP($host, $port, $user, $password, $vhost);
     }
 
     /**
      * 创建完全匹配队列名称的消费者
+     * @param $channel
      * @param $queue
      * @param int $prefetch_count
      * @param bool $global
      * @param $exchange
      * @param $consumerTag
      */
-    protected function createDirectConsume($queue, $prefetch_count = 2, $global = false, $exchange = null, $consumerTag = null)
+    protected function createDirectConsume(AMQPChannel $channel, $queue, $prefetch_count = 2, $global = false, $exchange = null, $consumerTag = null)
     {
         if ($exchange == null) {
             $exchange = create_uuid('route');
@@ -68,23 +73,24 @@ abstract class AMQPTaskProcess extends Process
         if ($consumerTag == null) {
             $consumerTag = create_uuid('consumer');
         }
-        $this->channel->queue_declare($queue, true);
-        $this->channel->exchange_declare($exchange, 'direct');
-        $this->channel->queue_bind($queue, $exchange);
-        $this->channel->basic_qos(0, $prefetch_count, $global);
-        $this->channel->basic_consume($queue, $consumerTag, false, false, false, false, [$this, 'process_message']);
+        $channel->queue_declare($queue, true);
+        $channel->exchange_declare($exchange, 'direct');
+        $channel->queue_bind($queue, $exchange);
+        $channel->basic_qos(0, $prefetch_count, $global);
+        $channel->basic_consume($queue, $consumerTag, false, false, false, false, [$this, '_process_message']);
     }
 
     /**
      * 初始化各种连接池
+     * @throws \Kernel\CoreBase\SwooleException
      */
     protected function initAsynPools()
     {
         if ($this->config->get('redis.enable', true)) {
-            getInstance()->addAsynPool('redisPool', new RedisAsynPool($this->config, $this->config->get('redis.active')));
+            //getInstance()->addAsynPool('redisPool', new RedisAsynPool($this->config, $this->config->get('redis.active')));
         }
         if ($this->config->get('mysql.enable', true)) {
-            getInstance()->addAsynPool('mysqlPool', new MysqlAsynPool($this->config, $this->config->get('mysql.active')));
+            //getInstance()->addAsynPool('mysqlPool', new MysqlAsynPool($this->config, $this->config->get('mysql.active')));
         }
     }
 
@@ -92,20 +98,48 @@ abstract class AMQPTaskProcess extends Process
      * 处理消息
      * @param $message
      */
-    public function process_message(AMQPMessage $message)
+    public function _process_message(AMQPMessage $message)
     {
         go(function () use ($message) {
-            $task = Pool::getInstance()->get($this->route($message->getBody()));
-            $task->reUse();
-            $task->initialization($message);
-            $task->handle($message->getBody());
+            $this->process_message($message);
         });
     }
 
+    public function process_message(AMQPMessage $message)
+    {
+        $task = Pool::getInstance()->get($this->route($message->getBody()));
+        $task->reUse();
+        $task->initialization($message);
+        $task->handle($message->getBody());
+    }
+    /**
+     * 成功应答
+     * @param $message
+     */
+    public function ack($message)
+    {
+        $channel = $message->delivery_info['channel'];
+        $delivery_tag = $message->delivery_info['delivery_tag'];
+        $channel->basic_ack($delivery_tag);
+    }
+
+    /**
+     * 拒绝（是否重新如队列）
+     * @param $message
+     * @param bool $requeue
+     */
+    public function reject($message, $requeue = true)
+    {
+        $channel = $message->delivery_info['channel'];
+        $delivery_tag = $message->delivery_info['delivery_tag'];
+        $channel->basic_reject($delivery_tag, $requeue);
+    }
     /**
      * 路由消息返回class名称
      * @param $body
      * @return string
      */
-    abstract protected function route($body);
+    protected function route($body)
+    {
+    }
 }

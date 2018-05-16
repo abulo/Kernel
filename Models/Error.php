@@ -37,6 +37,11 @@ class Error extends Model
         $this->url = $this->config->get('error.url');
     }
 
+    /**
+     * @param $title
+     * @param $data
+     * @throws \Kernel\CoreBase\SwooleException
+     */
     public function push($title, $data)
     {
         $id = session_create_id();
@@ -54,6 +59,7 @@ class Error extends Model
      * @param $title
      * @param string $link
      * @return \Kernel\Asyn\HttpClient\HttpClientRequestCoroutine
+     * @throws \Kernel\CoreBase\SwooleException
      */
     public function sendLinkMessage($title, $link = '')
     {
@@ -69,10 +75,12 @@ class Error extends Model
             ->setHeaders(['Content-type' => 'application/json'])->setMethod('POST')->coroutineExecute($this->robot);
         return $result;
     }
+
     /**
      * @param $title
      * @param string $text
      * @return \Generator
+     * @throws \Kernel\CoreBase\SwooleException
      */
     public function sendMarkDownMessage($title, $text = '')
     {

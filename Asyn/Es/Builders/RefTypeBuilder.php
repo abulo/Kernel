@@ -43,6 +43,7 @@ namespace Kernel\Asyn\Es\Builders;
 
 
 use Kernel\Asyn\Es\Exceptions\UnsupportedFeatureException;
+
 /**
  * This class implements the references type within a JOIN.
  * You can overwrite all functions to achieve another handling.

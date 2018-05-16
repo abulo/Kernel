@@ -25,7 +25,6 @@ use Kernel\Components\Event\EventDispatcher;
 use Kernel\Components\GrayLog\UdpTransport;
 use Kernel\Components\Log\SDJsonFormatter;
 use Kernel\Components\Log\SDMongodbFormatter;
-
 use Kernel\Components\Middleware\MiddlewareManager;
 use Kernel\Components\Process\ProcessRPC;
 use Kernel\CoreBase\ControllerFactory;
@@ -48,7 +47,7 @@ abstract class SwooleServer extends ProcessRPC
     /**
      * 版本
      */
-    const version = "v1";
+    const version = "3.2.0";
 
     /**
      * server name
@@ -127,6 +126,12 @@ abstract class SwooleServer extends ProcessRPC
      * @var int
      */
     protected $max_connection;
+    
+    
+    /**
+     * @var bool
+     */
+    protected $allow_MonitorFlowData;
 
 
 
@@ -211,6 +216,7 @@ abstract class SwooleServer extends ProcessRPC
 
     /**
      * SwooleServer constructor.
+     * @throws \Noodlehaus\Exception\EmptyDirectoryException
      */
     public function __construct()
     {
@@ -238,10 +244,12 @@ abstract class SwooleServer extends ProcessRPC
         if ($this->loader == null) {
             $this->loader = new Loader();
         }
+        $this->allow_MonitorFlowData = $this->config->get("allow_MonitorFlowData", false);
     }
 
     /**
      * 加载配置
+     * @throws \Noodlehaus\Exception\EmptyDirectoryException
      */
     protected function setConfig()
     {
@@ -431,7 +439,15 @@ abstract class SwooleServer extends ProcessRPC
             $pack->errorHandle($e, $fd);
             return;
         }
-
+        //是否允许流量监控
+        if ($this->allow_MonitorFlowData) {
+            if (!empty($uid)) {
+                try {
+                    getInstance()->pub('$SYS_CHANNEL/'."$uid/recv", $client_data);
+                } catch (\Throwable $e) {
+                }
+            }
+        }
         $middleware_names = $this->portManager->getMiddlewares($server_port);
         $context = [];
         $path = '';
@@ -536,6 +552,7 @@ abstract class SwooleServer extends ProcessRPC
      * @param $serv
      * @param $from_worker_id
      * @param $message
+     * @throws \Exception
      */
     public function onSwoolePipeMessage($serv, $from_worker_id, $message)
     {

@@ -42,6 +42,7 @@ namespace Kernel\Asyn\Es\Builders;
  */
 
 use Kernel\Asyn\Es\Utils\ExpressionType;
+
 /**
  * This class implements the builder for the table-options statement part of CREATE TABLE.
  * You can overwrite all functions to achieve another handling.

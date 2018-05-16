@@ -26,12 +26,15 @@ class EsParser
     private $count_tmp_filter_have=0;
     private $count_tmp_range_have=0;
     private $count_fi_have=0;
+    private $arrtmp=array();
     private $tmp_str='';
     private $tmp_str_filter='';
     private $tmp_fi='';
     private $tmp_str_range='';
     private $tmp_lock='';
     private $tmp_lock_str='';
+    private $tmp_or=0;
+    private $tmp_and=0;
     private $tmp_lock_fi='';
     private $tmp_lock_range='';
     private $tmp_str_have='';
@@ -46,6 +49,12 @@ class EsParser
     private $limit;
     public $result;
     public $explain;
+    public $build;
+    private $scrolltime='3m';
+    private $scrollurl='';
+    private $basescrollurl='';
+    private $isscroll=0;
+    public $scroll;
     /**
      * Constructor. It simply calls the parse() function.
      * Use the public variable $parsed to get the output.
@@ -66,6 +75,8 @@ class EsParser
             $this->index_es=$es_config['index'];
             $this->type_es=$es_config['type'];
             $this->url=$es_config['url'];
+            $this->scrollurl=$es_config['url'];
+            $this->basescrollurl=$es_config['url'];
             if (!isset($es_config['version'])) {
                 $version=$this->getEsData($es_config['url']);
                 if ($version) {
@@ -185,14 +196,34 @@ class EsParser
         if (!isset($this->Builderarr) && empty($this->Builderarr)) {
             $this->Builderarr['query']['match_all']=(object)array();
         }
+        return $this;
+    }
+    public function build()
+    {
         //request
         return $this->PostEs($this->Builderarr);
     }
-
     public function explain()
     {
         $this->explain=json_encode($this->Builderarr, true);
         return $this->explain;
+    }
+
+
+    public function scroll($scrollid = '')
+    {
+        $this->isscroll=1;
+        if ($scrollid) {
+            $this->scrollurl=$this->basescrollurl;
+            $this->scrollurl .="/_search/scroll?pretty";
+            $this->Builderarr=array();
+            $this->Builderarr['scroll']=$this->scrolltime;
+            $this->Builderarr['scroll_id']=$scrollid;
+        } else {
+            $this->scrollurl .="/".$this->index_es."/".$this->type_es."/_search?pretty&scroll=".$this->scrolltime;
+        }
+        $this->url=$this->scrollurl;
+        return $this->PostEs($this->Builderarr);
     }
 
 
@@ -229,36 +260,26 @@ class EsParser
 
     private function getEsData($url)
     {
-        $parsed_url = parse_url($url);
-
-        $scheme   = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '';
-        $host     = isset($parsed_url['host']) ? $parsed_url['host'] : '';
-        $port     = isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '';
-        $path     = isset($parsed_url['path']) ? $parsed_url['path'] : '';
-        $query    = isset($parsed_url['query']) ? $parsed_url['query'] : '';
-
-        $url = "$scheme$host$port";
-        $http_client = new HttpClient(null, $url);
-        $http_client->setMethod('GET');
-        if($query)
-        {
-            $query = parse_str($query);
-            $http_client->setQuery($query);
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1) ;
+            curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+            curl_setopt($ch, CURLOPT_HEADER, 0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSLVERSION, 3);
+            curl_setopt($ch, CURLOPT_BINARYTRANSFER, true) ;
+            $output = curl_exec($ch);
+        if ($output === false) {  //超时处理
+            if (curl_errno($ch) == CURLE_OPERATION_TIMEDOUT) {
+                secho("getEsData.txt", "时间：".date('Ymd-H:i:s', time())."\r\n错误内容为：curl通过get方式请求{$url}的连接超时\r\n");
+            }
         }
-
-        $response = [];
-
-        if($path)
-        {
-            $response = $http_client->coroutineExecute($path);
-
-            $response=json_decode($response, true);
+            curl_close($ch);
+           $output=json_decode($output, true);
+        if (empty($output)) {
+            return array();
         }
-
-        if (empty($response)) {
-            return [];
-        }
-        return $response['version']['number'];
+            return $output['version']['number'];
     }
 
 
@@ -266,35 +287,37 @@ class EsParser
     private function PostEs($postdata, $json = true, $token = false)
     {
         $url=$this->url;
-
         $datastring = json_encode($postdata, true);
-        $parsed_url = parse_url($url);
-
-        $scheme   = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '';
-        $host     = isset($parsed_url['host']) ? $parsed_url['host'] : '';
-        $port     = isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '';
-        $path     = isset($parsed_url['path']) ? $parsed_url['path'] : '';
-        $query    = isset($parsed_url['query']) ? '?'.$parsed_url['query'] : '';
-
-        $url = "$scheme$host$port";
-
-        $http_client = new HttpClient(null, $url);
-        $http_client->setMethod('POST');
-        $http_client->setQuery($postdata);
-        if($json)
-        {
-            $http_client->addHeader('Content-Type','application/json;');
-            $http_client->addHeader('Content-Length',strlen($datastring));
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_URL, $url) ;
+        curl_setopt($ch, CURLOPT_POST, 1) ;
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch, CURLINFO_HEADER_OUT, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 60);   //只需要设置一个秒的数量就可以
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSLVERSION, 3);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $datastring);
+        if ($json) {
+              curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                    'Content-Type: application/json;',
+                    'Content-Length: ' . strlen($datastring)));
         }
-
         if ($token) {
-            $http_client->addHeader('Content-Type','application/json; charset=utf-8');
-            $http_client->addHeader('Content-Length',strlen($datastring));
-            $http_client->addHeader('Authorization',$token);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                        'Content-Type: application/json; charset=utf-8',
+                        'Content-Length: ' . strlen($datastring),
+                        'Authorization:'.$token
+                    ));
         }
-
-        $output = $http_client->coroutineExecute("$path$query");
-
+        $output=curl_exec($ch);
+        if ($output === false) {  //超时处理
+            if (curl_errno($ch) == CURLE_OPERATION_TIMEDOUT) {
+                secho("getEsData.txt", "时间：".date('Ymd-H:i:s', time())."\r\n错误内容为：curl通过post方式请求{$this->url}的连接超时\r\n");
+            }
+        }
+        curl_close($ch);
         $output=json_decode($output, true);
         if (empty($output)) {
               $this->result=json_encode(array(), true);
@@ -376,6 +399,9 @@ class EsParser
                 }
             }
             $outputs['total']=$total_str;
+            if ($this->isscroll && isset($output['_scroll_id'])) {
+                $outputs['scrollid']=$output['_scroll_id'];
+            }
             $this->result=json_encode($outputs, true);
         }
         return $this->result;
@@ -387,8 +413,15 @@ class EsParser
             if ($arr[$i]['expr_type']=='bracket_expression') {
                 if ($arr[$i]['sub_tree']) {
                     if (count($arr[$i]['sub_tree'])>1) {
-                        for ($jj=0; $jj<count($arr[$i]['sub_tree']); $jj++) {
-                            $this->whereor($arr[$i]['sub_tree'], $jj);
+                        if (isset($arr[$i]['sub_tree'][0]['expr_type']) && $arr[$i]['sub_tree'][0]['expr_type']=='bracket_expression') {
+                            for ($jj=0; $jj<count($arr[$i]['sub_tree']); $jj++) {
+                                $this->whereor($arr[$i]['sub_tree'], $jj);
+                            }
+                        } else {
+                            $tmp_arr=$arr[$i]['sub_tree'];
+                            for ($j=0; $j<count($tmp_arr); $j++) {
+                                $this->whereext($tmp_arr, $j);
+                            }
                         }
                     } else {
                         if (isset($arr[$i]['sub_tree'][0]['expr_type']) && $arr[$i]['sub_tree'][0]['expr_type']=='bracket_expression') {
@@ -509,6 +542,52 @@ class EsParser
                         }
                     }
                     break;
+                case '<>':
+                    if ($arr[$i-1]['base_expr']==$arr[$i+1]['base_expr']) {
+                        break;
+                    }
+                    if (isset($arr[$i+2]['base_expr']) && strtolower($arr[$i+2]['base_expr'])=='and' || isset($arr[$i-2]['base_expr']) && strtolower($arr[$i-2]['base_expr'])=='and') {
+                        if (strrpos($arr[$i-1]['base_expr'], ".")) {
+                            $term_tmp_arr=explode(".", $arr[$i-1]['base_expr']);
+                            if ($term_tmp_arr[1]!='keyword') {
+                                $termk=$term_tmp_arr[1];
+                            } else {
+                                $termk=$arr[$i-1]['base_expr'];
+                            }
+                        } else {
+                            $termk=$arr[$i-1]['base_expr'];
+                        }
+                        $tmp_da_str=str_replace('"', '', $arr[$i+1]['base_expr']);
+                        $tmp_da_str=str_replace("'", "", $tmp_da_str);
+                        if (!is_numeric($arr[$i+1]['base_expr']) && $this->version_es=='8.x') {
+                                $term['match_phrase'][$termk.'.keyword']['query']=$tmp_da_str;
+                                $tmp_or['bool']['must_not'][]=$term;
+                        } else {
+                                $term['match_phrase'][$termk]['query']=$tmp_da_str;
+                                $tmp_or['bool']['must_not'][]=$term;
+                        }
+                    } else {
+                        if (strrpos($arr[$i-1]['base_expr'], ".")) {
+                            $term_tmp_arr=explode(".", $arr[$i-1]['base_expr']);
+                            if ($term_tmp_arr[1]!='keyword') {
+                                $termk=$term_tmp_arr[1];
+                            } else {
+                                $termk=$arr[$i-1]['base_expr'];
+                            }
+                        } else {
+                            $termk=$arr[$i-1]['base_expr'];
+                        }
+                        $tmp_da_str=str_replace('"', '', $arr[$i+1]['base_expr']);
+                        $tmp_da_str=str_replace("'", "", $tmp_da_str);
+                        if (!is_numeric($arr[$i+1]['base_expr']) && $this->version_es=='8.x') {
+                            $term['match_phrase'][$termk.'.keyword']['query']=$tmp_da_str;
+                            $tmp_or['bool']['must_not'][]=$term;
+                        } else {
+                            $term['match_phrase'][$termk]['query']=$tmp_da_str;
+                            $tmp_or['bool']['must_not'][]=$term;
+                        }
+                    }
+                    break;
                 case 'in':
                     if (strtolower($arr[$i-1]['base_expr'])=='not') {
                         break;
@@ -567,14 +646,29 @@ class EsParser
                             $tmp_la_str=str_replace('"', '', $arr[$i+2]['base_expr']);
                             $tmp_la_str=str_replace("'", "", $tmp_la_str);
                             if (!is_numeric($arr[$i+2]['base_expr']) && $this->version_es=='8.x') {
-                                $term['match'][$termk.'.keyword']=str_replace("%", "", $tmp_la_str);
+                                //$term['match_phrase'][$termk.'.keyword']=str_replace("%","",$tmp_la_str);
+                                $term['wildcard'][$termk.'.keyword']=str_replace("%", "*", $tmp_la_str);
                                 $tmp_or['bool']['must_not'][]=$term;
                             } else {
-                                $term['match'][$termk]=str_replace("%", "", $tmp_la_str);
+                                //$term['match_phrase'][$termk]=str_replace("%","",$tmp_la_str);
+                                $term['wildcard'][$termk]=str_replace("%", "*", $tmp_la_str);
                                 $tmp_or['bool']['must_not'][]=$term;
                             }
                             break;
+
+                        case 'null':
+                            $tmp_or['exists']['field']=$arr[$i-2]['base_expr'];
+                            break;
                     }
+                    break;
+                case 'is':
+                    if ($arr[$i-1]['base_expr']==$arr[$i+1]['base_expr']) {
+                        break;
+                    }
+                    if (strtolower($arr[$i+1]['base_expr'])=='not') {
+                        break;
+                    }
+                    $tmp_or['bool']['must_not'][]['exists']['field']=$arr[$i-1]['base_expr'];
                     break;
                 case '>':
                     if (strrpos($arr[$i-1]['base_expr'], ".")) {
@@ -606,10 +700,10 @@ class EsParser
                     } else {
                         $termk=$arr[$i-1]['base_expr'];
                     }
-                    $tmp_da_str=str_replace('"', '', $arr[$i+1]['base_expr']);
-                    $tmp_da_str=str_replace("'", "", $tmp_da_str);
-                    $is_date=strtotime($tmp_da_str)?strtotime($tmp_da_str):false;
-                    $tmp_or['range'][$termk]['gte']=$tmp_da_str;
+                        $tmp_da_str=str_replace('"', '', $arr[$i+1]['base_expr']);
+                        $tmp_da_str=str_replace("'", "", $tmp_da_str);
+                        $is_date=strtotime($tmp_da_str)?strtotime($tmp_da_str):false;
+                        $tmp_or['range'][$termk]['gte']=$tmp_da_str;
                     if (!isset($tmp_or['range'][$termk]['time_zone']) && $is_date) {
                         $tmp_or['range'][$termk]['time_zone']="+08:00";
                     }
@@ -669,10 +763,12 @@ class EsParser
                     $tmp_la_str=str_replace('"', '', $arr[$i+1]['base_expr']);
                     $tmp_la_str=str_replace("'", "", $tmp_la_str);
                     if (!is_numeric($arr[$i+1]['base_expr']) && $this->version_es=='8.x') {
-                        $term['match'][$termk.'.keyword']=str_replace("%", "", $tmp_la_str);
+                        //$term['match_phrase'][$termk.'.keyword']=str_replace("%","",$tmp_la_str);
+                        $term['wildcard'][$termk.'.keyword']=str_replace("%", "*", $tmp_la_str);
                         $tmp_or['bool']['must'][]=$term;
                     } else {
-                        $term['match'][$termk]=str_replace("%", "", $tmp_la_str);
+                        //$term['match_phrase'][$termk]=str_replace("%","",$tmp_la_str);
+                        $term['wildcard'][$termk]=str_replace("%", "*", $tmp_la_str);
                         $tmp_or['bool']['must'][]=$term;
                     }
                     break;
@@ -687,23 +783,32 @@ class EsParser
                     } else {
                         $termk=$arr[$i-1]['base_expr'];
                     }
-                     $tmp_da_str=str_replace('"', '', $arr[$i+1]['base_expr']);
-                     $tmp_da_str=str_replace("'", "", $tmp_da_str);
-                     $is_date=strtotime($tmp_da_str)?strtotime($tmp_da_str):false;
-                     $tmp_or['range'][$termk]['gte']=$tmp_da_str;
+                         $tmp_da_str=str_replace('"', '', $arr[$i+1]['base_expr']);
+                         $tmp_da_str=str_replace("'", "", $tmp_da_str);
+                         $is_date=strtotime($tmp_da_str)?strtotime($tmp_da_str):false;
+                         $tmp_or['range'][$termk]['gte']=$tmp_da_str;
                     if (!isset($tmp_or['range'][$termk]['time_zone']) && $is_date) {
                         $tmp_or['range'][$termk]['time_zone']="+08:00";
                     }
-                     $tmp_da_str=str_replace('"', '', $arr[$i+3]['base_expr']);
-                     $tmp_da_str=str_replace("'", "", $tmp_da_str);
-                     $tmp_or['range'][$termk]['lte']=$tmp_da_str;
+                         $tmp_da_str=str_replace('"', '', $arr[$i+3]['base_expr']);
+                         $tmp_da_str=str_replace("'", "", $tmp_da_str);
+                         $tmp_or['range'][$termk]['lte']=$tmp_da_str;
                     break;
             }
         }
         return $tmp_or;
     }
 
-
+    private function whereorink($arr, $i)
+    {
+        $tmparrs=$arr;
+        if (isset($tmparrs[$i]['base_expr']) && strtolower($tmparrs[$i]['base_expr'])!='or') {
+            $this->arrtmp[]=$arr[$i];
+            $i=$i+1;
+            $this->whereorink($tmparrs, $i);
+        }
+        return $this->arrtmp;
+    }
 
     private function whereor($arr, $i)
     {
@@ -715,9 +820,7 @@ class EsParser
         switch ($lowerstr) {
             case 'or':
                 if (isset($this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]) && $this->tmp_lock!='' && $this->tmp_lock!=$lowerstr) {
-                    if ($this->tmp_str_filter=='') {
-                        $this->count_tmp_filter++;
-                    } elseif ($this->tmp_str_filter!='' && $this->tmp_str_filter!=$termk) {
+                    if ($this->tmp_str_filter=='' && !$this->tmp_or) {
                         $this->count_tmp_filter++;
                     }
                 } elseif ($this->tmp_str!='' && $this->tmp_str!=$termk) {
@@ -726,18 +829,22 @@ class EsParser
                 if (isset($this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must'][0]) && $this->tmp_lock_str!='' && $this->tmp_lock_str!=$lowerstr) {
                     if ($this->tmp_str=='') {
                         $this->count_tmp++;
-                    } elseif ($this->tmp_str!='' && $this->tmp_str!=$termk) {
-                        $this->count_tmp++;
                     }
                 }
                 if (!isset($arr[$i-2])) {
-                    $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must'][$this->count_tmp]['bool']['should'][]=$this->whereorext($arr[$i-1]['sub_tree']);
+                    $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must'][0]['bool']['should'][]=$this->whereorext($arr[$i-1]['sub_tree']);
                 }
-                $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must'][$this->count_tmp]['bool']['should'][]=$this->whereorext($arr[$i+1]['sub_tree']);
+                if ($arr[$i+1]['expr_type']=='bracket_expression') {
+                    $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must'][0]['bool']['should'][]=$this->whereorext($arr[$i+1]['sub_tree']);
+                } else {
+                    $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must'][0]['bool']['should'][]=$this->whereorext($this->whereorink($arr, $i+1));
+                    $this->arrtmp=array();
+                }
+                $this->tmp_or=1;
                 break;
             case 'and':
                 if (isset($this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]) && $this->tmp_lock!='' && $this->tmp_lock!=$lowerstr) {
-                    if ($this->tmp_str_filter=='') {
+                    if ($this->tmp_str_filter=='' && !$this->tmp_and) {
                         $this->count_tmp_filter++;
                     } elseif ($this->tmp_str_filter!='' && $this->tmp_str_filter!=$termk) {
                         $this->count_tmp_filter++;
@@ -748,7 +855,13 @@ class EsParser
                 if (!isset($arr[$i-2])) {
                     $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must'][]=$this->whereorext($arr[$i-1]['sub_tree']);
                 }
-                $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must'][]=$this->whereorext($arr[$i+1]['sub_tree']);
+                if ($arr[$i+1]['expr_type']=='bracket_expression') {
+                    $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must'][]=$this->whereorext($arr[$i+1]['sub_tree']);
+                } else {
+                    $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must'][]=$this->whereorext($this->whereorink($arr, $i+1));
+                    $this->arrtmp=array();
+                }
+                $this->tmp_and=1;
                 break;
         }
     }
@@ -992,6 +1105,131 @@ class EsParser
                     $tmp_da_str=str_replace("'", "", $tmp_da_str);
                     if (isset($this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]) && $this->tmp_lock!='' && $this->tmp_lock!=$lowerstr) {
                         if ($this->tmp_str_filter=='') {
+                                $this->count_tmp_filter++;
+                        } elseif ($this->tmp_str_filter!='' && $this->tmp_str_filter!=$termk) {
+                            $this->count_tmp_filter++;
+                        }
+                    } elseif ($this->tmp_str!='' && $this->tmp_str!=$termk) {
+                        $this->count_tmp_filter++;
+                    }
+                    if (!is_numeric($arr[$i+1]['base_expr']) && $this->version_es=='8.x') {
+                        $term['match_phrase'][$termk.'.keyword']['query']=$tmp_da_str;
+                        $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must_not'][]=$term;
+                    } else {
+                        $term['match_phrase'][$termk]['query']=$tmp_da_str;
+                        $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must_not'][]=$term;
+                    }
+                            unset($term['match_phrase']);
+                        $this->tmp_lock_str=$lowerstr;
+                }
+                $this->tmp_lock=$lowerstr;
+                $this->tmp_str=$lowerstr;
+                break;
+            case '<>':
+                if ($arr[$i-1]['base_expr']==$arr[$i+1]['base_expr']) {
+                    break;
+                }
+                if (isset($arr[$i+2]['base_expr']) && strtolower($arr[$i+2]['base_expr'])=='or' || isset($arr[$i-2]['base_expr']) && strtolower($arr[$i-2]['base_expr'])=='or') {
+                    if (strrpos($arr[$i-1]['base_expr'], ".")) {
+                        $term_tmp_arr=explode(".", $arr[$i-1]['base_expr']);
+                        if ($term_tmp_arr[1]!='keyword') {
+                            $termk=$term_tmp_arr[1];
+                        } else {
+                            $termk=$arr[$i-1]['base_expr'];
+                        }
+                    } else {
+                        $termk=$arr[$i-1]['base_expr'];
+                    }
+                    $tmp_da_str=str_replace('"', '', $arr[$i+1]['base_expr']);
+                    $tmp_da_str=str_replace("'", "", $tmp_da_str);
+
+                    if (isset($this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]) && $this->tmp_lock!='' && $this->tmp_lock!=$lowerstr) {
+                        if ($this->tmp_str_filter=='') {
+                            $this->count_tmp_filter++;
+                        } elseif ($this->tmp_str_filter!='' && $this->tmp_str_filter!=$termk) {
+                            $this->count_tmp_filter++;
+                        }
+                    } elseif ($this->tmp_str!='' && $this->tmp_str!=$termk) {
+                            $this->count_tmp_filter++;
+                    }
+                    if (isset($this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must_not'][0]) && $this->tmp_lock_str!='' && $this->tmp_lock_str!=$lowerstr) {
+                        if ($this->tmp_str=='') {
+                            $this->count_tmp++;
+                        } elseif ($this->tmp_str!='' && $this->tmp_str!=$termk) {
+                            $this->count_tmp++;
+                        }
+                    }
+                    if (isset($this->parsed['UPDATE']) && !empty($this->parsed['UPDATE'])) {
+                        $this->url .=$tmp_da_str ."/_update?pretty";
+                    } else {
+                        if (!is_numeric($arr[$i+1]['base_expr']) && $this->version_es=='8.x') {
+                            $term['match_phrase'][$termk.'.keyword']['query']=$tmp_da_str;
+                            $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must_not'][$this->count_tmp]['bool']['should'][]=$term;
+                        } else {
+                            $term['match_phrase'][$termk]['query']=$tmp_da_str;
+                            $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must_not'][$this->count_tmp]['bool']['should'][]=$term;
+                        }
+                            unset($term['match_phrase']);
+                    }
+                    $this->tmp_lock=$lowerstr;
+                    $this->tmp_lock_str=$lowerstr;
+                } elseif (isset($arr[$i+2]['base_expr']) && strtolower($arr[$i+2]['base_expr'])=='and' || isset($arr[$i-2]['base_expr']) && strtolower($arr[$i-2]['base_expr'])=='and') {
+                    if (strrpos($arr[$i-1]['base_expr'], ".")) {
+                        $term_tmp_arr=explode(".", $arr[$i-1]['base_expr']);
+                        if ($term_tmp_arr[1]!='keyword') {
+                            $termk=$term_tmp_arr[1];
+                        } else {
+                            $termk=$arr[$i-1]['base_expr'];
+                        }
+                    } else {
+                        $termk=$arr[$i-1]['base_expr'];
+                    }
+                    $tmp_da_str=str_replace('"', '', $arr[$i+1]['base_expr']);
+                    $tmp_da_str=str_replace("'", "", $tmp_da_str);
+                    if (isset($this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]) && $this->tmp_lock_str!='' && $this->tmp_lock_str!=$lowerstr) {
+                        if ($this->tmp_str=='') {
+                            $this->count_tmp++;
+                        } elseif ($this->tmp_str!='' && $this->tmp_str!=$termk) {
+                            $this->count_tmp++;
+                        }
+                    }
+                    if (isset($this->parsed['UPDATE']) && !empty($this->parsed['UPDATE'])) {
+                        $this->url .=$tmp_da_str ."/_update?pretty";
+                    } else {
+                        if (isset($this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]) && $this->tmp_lock!='' && $this->tmp_lock!=$lowerstr) {
+                            if ($this->tmp_str_filter=='') {
+                                $this->count_tmp_filter++;
+                            } elseif ($this->tmp_str_filter!='' && $this->tmp_str_filter!=$termk) {
+                                $this->count_tmp_filter++;
+                            }
+                        } elseif ($this->tmp_str!='' && $this->tmp_str!=$termk) {
+                            $this->count_tmp_filter++;
+                        }
+                        if (!is_numeric($arr[$i+1]['base_expr']) && $this->version_es=='8.x') {
+                            $term['match_phrase'][$termk.'.keyword']['query']=$tmp_da_str;
+                            $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must_not'][]=$term;
+                        } else {
+                            $term['match_phrase'][$termk]['query']=$tmp_da_str;
+                            $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must_not'][]=$term;
+                        }
+                            unset($term['match_phrase']);
+                    }
+                    $this->tmp_lock_str=$lowerstr;
+                } else {
+                    if (strrpos($arr[$i-1]['base_expr'], ".")) {
+                        $term_tmp_arr=explode(".", $arr[$i-1]['base_expr']);
+                        if ($term_tmp_arr[1]!='keyword') {
+                            $termk=$term_tmp_arr[1];
+                        } else {
+                            $termk=$arr[$i-1]['base_expr'];
+                        }
+                    } else {
+                        $termk=$arr[$i-1]['base_expr'];
+                    }
+                    $tmp_da_str=str_replace('"', '', $arr[$i+1]['base_expr']);
+                    $tmp_da_str=str_replace("'", "", $tmp_da_str);
+                    if (isset($this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]) && $this->tmp_lock!='' && $this->tmp_lock!=$lowerstr) {
+                        if ($this->tmp_str_filter=='') {
                             $this->count_tmp_filter++;
                         } elseif ($this->tmp_str_filter!='' && $this->tmp_str_filter!=$termk) {
                             $this->count_tmp_filter++;
@@ -1119,14 +1357,54 @@ class EsParser
                         $tmp_la_str=str_replace('"', '', $arr[$i+2]['base_expr']);
                         $tmp_la_str=str_replace("'", "", $tmp_la_str);
                         if (!is_numeric($arr[$i+2]['base_expr']) && $this->version_es=='8.x') {
-                            $term['match'][$termk.'.keyword']=str_replace("%", "", $tmp_la_str);
+                            // $term['match_phrase'][$termk.'.keyword']=str_replace("%","",$tmp_la_str);
+                            $term['wildcard'][$termk.'.keyword']=str_replace("%", "*", $tmp_la_str);
                             $this->Builderarr['query']['filter'][$this->count_tmp_filter]['bool']['must_not'][]=$term;
                         } else {
-                            $term['match'][$termk]=str_replace("%", "", $tmp_la_str);
+                            //$term['match_phrase'][$termk]=str_replace("%","",$tmp_la_str);
+                            $term['wildcard'][$termk]=str_replace("%", "*", $tmp_la_str);
                             $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must_not'][]=$term;
                         }
                         break;
+                    case 'null':
+                        $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['exists']['field']=$arr[$i-2]['base_expr'];
+                        break;
                 }
+                $this->tmp_lock=$lowerstr;
+                $this->tmp_str=$termk;
+                unset($termk);
+                break;
+            case 'is':
+                if ($arr[$i-1]['base_expr']==$arr[$i+1]['base_expr']) {
+                    break;
+                }
+                if (strtolower($arr[$i+1]['base_expr'])=='not') {
+                    break;
+                }
+                if (strrpos($arr[$i-1]['base_expr'], ".")) {
+                    $term_tmp_arr=explode(".", $arr[$i-1]['base_expr']);
+                    if ($term_tmp_arr[1]!='keyword') {
+                        if ($term_tmp_arr[1]!='keyword') {
+                            $termk=$term_tmp_arr[1];
+                        } else {
+                            $termk=$arr[$i-1]['base_expr'];
+                        }
+                    } else {
+                        $termk=$arr[$i-1]['base_expr'];
+                    }
+                } else {
+                    $termk=$arr[$i-1]['base_expr'];
+                }
+                if (isset($this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]) && $this->tmp_lock!='' && $this->tmp_lock==$lowerstr) {
+                    if ($this->tmp_str_filter=='') {
+                        $this->count_tmp_filter++;
+                    } elseif ($this->tmp_str_filter!='' && $this->tmp_str_filter!=$termk) {
+                        $this->count_tmp_filter++;
+                    }
+                } elseif ($this->tmp_str!='' && $this->tmp_str!=$termk) {
+                        $this->count_tmp_filter++;
+                }
+                $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must_not'][]['exists']['field']=$arr[$i-1]['base_expr'];
                 $this->tmp_lock=$lowerstr;
                 $this->tmp_str=$termk;
                 unset($termk);
@@ -1449,10 +1727,12 @@ class EsParser
                         }
                     }
                     if (!is_numeric($arr[$i+1]['base_expr']) && $this->version_es=='8.x') {
-                        $term['match'][$termk.'.keyword']=str_replace("%", "", $tmp_la_str);
-                        $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must'][$this->count_fi]['bool']['should'][]=$term;
+                            //$term['match_phrase'][$termk.'.keyword']=str_replace("%","",$tmp_la_str);
+                            $term['wildcard'][$termk.'.keyword']=str_replace("%", "*", $tmp_la_str);
+                            $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must'][$this->count_fi]['bool']['should'][]=$term;
                     } else {
-                        $term['match'][$termk]=str_replace("%", "", $tmp_la_str);
+                        //$term['match_phrase'][$termk]=str_replace("%","",$tmp_la_str);
+                        $term['wildcard'][$termk]=str_replace("%", "*", $tmp_la_str);
                         $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must'][$this->count_fi]['bool']['should'][]=$term;
                     }
                 } else {
@@ -1471,17 +1751,19 @@ class EsParser
                         }
                     }
                     if (!is_numeric($arr[$i+1]['base_expr']) && $this->version_es=='8.x') {
-                        $term['match'][$termk.'.keyword']=str_replace("%", "", $tmp_la_str);
+                        //$term['match_phrase'][$termk.'.keyword']=str_replace("%","",$tmp_la_str);
+                        $term['wildcard'][$termk.'.keyword']=str_replace("%", "*", $tmp_la_str);
                         $this->Builderarr['query']['filter'][$this->count_tmp_filter]['must'][$this->count_tmp]['bool']['must'][]=$term;
                     } else {
-                        $term['match'][$termk]=str_replace("%", "", $tmp_la_str);
+                        //$term['match_phrase'][$termk]=str_replace("%","",$tmp_la_str);
+                        $term['wildcard'][$termk]=str_replace("%", "*", $tmp_la_str);
                         $this->Builderarr['query']['bool']['filter'][$this->count_tmp_filter]['bool']['must'][]=$term;
                     }
                 }
-                unset($term['match']);
-                $this->tmp_lock_str=$lowerstr;
-                $this->tmp_lock=$lowerstr;
-                $this->tmp_lock_fi=$lowerstr;
+                    unset($term['wildcard']);
+                    $this->tmp_lock_str=$lowerstr;
+                    $this->tmp_lock=$lowerstr;
+                    $this->tmp_lock_fi=$lowerstr;
                 break;
             case 'between':
                 if ($arr[$i-1]['base_expr']==$arr[$i+1]['base_expr']) {
@@ -2250,10 +2532,12 @@ class EsParser
                         }
                     }
                     if (!is_numeric($arr[$i+1]['base_expr']) && $this->version_es=='8.x') {
-                        $term['match'][$termk.'.keyword']=str_replace("%", "", $tmp_la_str);
+                       //$term['match_phrase'][$termk.'.keyword']=str_replace("%","",$tmp_la_str);
+                        $term['wildcard'][$termk.'.keyword']=str_replace("%", "*", $tmp_la_str);
                         $this->havingagg['having']['filter']['bool']['must'][$this->count_fi_have]['bool']['should'][]=$term;
                     } else {
-                        $term['match'][$termk]=str_replace("%", "", $tmp_la_str);
+                        //$term['match_phrase'][$termk]=str_replace("%","",$tmp_la_str);\
+                        $term['wildcard'][$termk]=str_replace("%", "*", $tmp_la_str);
                         $this->havingagg['having']['filter']['bool']['must'][$this->count_fi_have]['bool']['should'][]=$term;
                     }
                 } else {
@@ -2272,17 +2556,20 @@ class EsParser
                         }
                     }
                     if (!is_numeric($arr[$i+1]['base_expr']) && $this->version_es=='8.x') {
-                        $term['match'][$termk.'.keyword']=str_replace("%", "", $tmp_la_str);
-                        $this->havingagg['having']['filter']['must'][$this->count_tmp_have]['bool']['must'][]=$term;
+                            //$term['match_phrase'][$termk.'.keyword']=str_replace("%","",$tmp_la_str);
+                            //wildcard
+                            $term['wildcard'][$termk.'.keyword']=str_replace("%", "*", $tmp_la_str);
+                            $this->havingagg['having']['filter']['must'][$this->count_tmp_have]['bool']['must'][]=$term;
                     } else {
-                        $term['match'][$termk]=str_replace("%", "", $tmp_la_str);
+                        //$term['match_phrase'][$termk]=str_replace("%","",$tmp_la_str);
+                        $term['wildcard'][$termk]=str_replace("%", "*", $tmp_la_str);
                         $this->havingagg['having']['filter']['bool']['must'][]=$term;
                     }
                 }
-                unset($term['match']);
-                $this->tmp_lock_str_have=$lowerstr;
-                $this->tmp_lock_have=$lowerstr;
-                $this->tmp_lock_fi_have=$lowerstr;
+                    unset($term['wildcard']);
+                    $this->tmp_lock_str_have=$lowerstr;
+                    $this->tmp_lock_have=$lowerstr;
+                    $this->tmp_lock_fi_have=$lowerstr;
                 break;
             case 'between':
                 if (strrpos($arr[$i-1]['base_expr'], ".")) {

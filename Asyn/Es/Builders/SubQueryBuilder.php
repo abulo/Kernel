@@ -43,6 +43,7 @@ namespace Kernel\Asyn\Es\Builders;
 
 
 use Kernel\Asyn\Es\Utils\ExpressionType;
+
 /**
  * This class implements the builder for sub-queries.
  * You can overwrite all functions to achieve another handling.

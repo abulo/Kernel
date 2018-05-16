@@ -43,6 +43,7 @@ namespace Kernel\Asyn\Es\Builders;
 
 use Kernel\Asyn\Es\Utils\ExpressionType;
 use Kernel\Asyn\Es\Exceptions\UnableToCreateSQLException;
+
 /**
  * This class implements the builder for the index type of a PRIMARY KEY
  * statement part of CREATE TABLE.

@@ -65,6 +65,7 @@ class Task extends TaskProxy
      * sendToUid
      * @param $uid
      * @param $data
+     * @throws \Exception
      */
     protected function sendToUid($uid, $data)
     {
@@ -75,6 +76,7 @@ class Task extends TaskProxy
      * sendToUids
      * @param $uids
      * @param $data
+     * @throws SwooleException
      */
     protected function sendToUids($uids, $data)
     {
@@ -84,12 +86,17 @@ class Task extends TaskProxy
     /**
      * sendToAll
      * @param $data
+     * @throws SwooleException
      */
     protected function sendToAll($data)
     {
         getInstance()->sendToAll($data);
     }
 
+    /**
+     * @param $data
+     * @throws SwooleException
+     */
     protected function sendToAllFd($data)
     {
         getInstance()->sendToAllFd($data);

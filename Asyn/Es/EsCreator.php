@@ -9,6 +9,13 @@ use Kernel\Asyn\Es\Builders\InsertStatementBuilder;
 use Kernel\Asyn\Es\Builders\CreateStatementBuilder;
 use Kernel\Asyn\Es\Builders\ShowStatementBuilder;
 
+/**
+ * This class generates SQL from the output of the PHPSQLParser.
+ *
+ * @author  André Rothe <andre.rothe@phosco.info>
+ * @license http://www.debian.org/misc/bsd.license  BSD License (3 Clause)
+ *
+ */
 class PHPSQLCreator
 {
 
