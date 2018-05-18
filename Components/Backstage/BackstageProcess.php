@@ -19,6 +19,7 @@ class BackstageProcess extends Process
      */
     public function start($process)
     {
+        return ;
         $path = $this->config->get("backstage.bin_path", false);
 
         if (!is_file($path)) {
