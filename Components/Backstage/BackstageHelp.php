@@ -29,7 +29,7 @@ class BackstageHelp
             'socket_type' => PortManager::SOCK_WS,
             'socket_name' => $name,
             'socket_port' => $port,
-            'route_tool' => 'ConsoleRoute',
+            'route_tool' => 'BackstageRoute',
             'pack_tool' => 'ConsolePack',
             'opcode' => PortManager::WEBSOCKET_OPCODE_TEXT,
             'event_controller_name' => Console::class,

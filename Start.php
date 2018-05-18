@@ -443,9 +443,9 @@ class Start
         self::$leader->set($bool ? 1 : 0);
         if (getInstance()->isCluster()) {
             if ($bool) {
-                secho("CONSUL", "Leader变更，被选举为Leader");
+                secho("CONSUL", "Leader变更，被选举为Leader，服务器 IP:".getBindIp());
             } else {
-                secho("CONSUL", "Leader变更，本机不是Leader");
+                secho("CONSUL", "Leader变更，本机不是Leader，服务器 IP:".getBindIp());
             }
         }
     }
