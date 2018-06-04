@@ -39,6 +39,13 @@ class SdTcpRpcPool extends AsynPool
      */
     protected $pack;
 
+    /**
+     * SdTcpRpcPool constructor.
+     * @param $config
+     * @param $config_name
+     * @param $connect
+     * @throws SwooleException
+     */
     public function __construct($config, $config_name, $connect)
     {
         parent::__construct($config);
@@ -109,6 +116,10 @@ class SdTcpRpcPool extends AsynPool
                 $result['result'] = null;
                 unset($this->command_backup[$token]);
                 $this->distribute($result);
+            }
+            if (count($this->commands) > 0) {//有残留的任务
+                $command = $this->commands->shift();
+                $this->execute($command);
             }
         }
     }

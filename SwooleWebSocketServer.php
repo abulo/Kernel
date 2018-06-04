@@ -29,6 +29,7 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer
 
     /**
      * 启动
+     * @throws \Exception
      */
     public function start()
     {
@@ -89,6 +90,7 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer
 
     /**
      * @param $serv
+     * @throws \Exception
      */
     public function onSwooleWorkerStart($serv, $workerId)
     {
@@ -135,6 +137,7 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer
      * @param $data
      * @param bool $ifPack
      * @param $topic
+     * @throws \Exception
      */
     public function send($fd, $data, $ifPack = false, $topic = null)
     {

@@ -287,7 +287,7 @@ abstract class SwooleServer extends ProcessRPC
         swoole_async_set([
             'aio_mode' => SWOOLE_AIO_BASE,
             'thread_num' => 100,
-            'socket_buffer_size' => 128 * 1024 * 1024,
+            'socket_buffer_size' => 1024 * 1024 * 1024,
             'dns_server' => '114.114.114.114',
         ]);
     }
