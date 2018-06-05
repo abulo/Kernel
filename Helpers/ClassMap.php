@@ -35,6 +35,8 @@ return [
         'Symfony\Component\Inflector' => dirname(__DIR__).DS.'Library'.DS.'symfony'.DS.'inflector',
         'Symfony\Component\OptionsResolver' => dirname(__DIR__).DS.'Library'.DS.'symfony'.DS.'options-resolver',
         'Symfony\Component\PropertyAccess' => dirname(__DIR__).DS.'Library'.DS.'symfony'.DS.'property-access',
+        
+        'Overtrue\Pinyin' =>  dirname(__DIR__).DS.'Library'.DS.'overtrue'.DS.'pinyin'.DS.'src',
         'Kernel'=>dirname(__DIR__),
     ],
     'files' => [

@@ -85,3 +85,6 @@
 [submodule "Library/filp/whoops"]
 	path = Library/filp/whoops
 	url = https://github.com/filp/whoops.git
+[submodule "Library/overtrue/pinyin"]
+	path = Library/overtrue/pinyin
+	url = https://github.com/overtrue/pinyin.git
