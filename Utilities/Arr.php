@@ -492,9 +492,15 @@ class Arr
     {
         $arr = [];
         $arr_tmp = explode(';', $string);
-        foreach ($arr_tmp as $key => $value) {
-            $tmp = explode('=', $value);
-            $arr[$tmp[0]] = $tmp[1];
+        if($arr_tmp)
+        {
+            foreach ($arr_tmp as $key => $value) {
+                $tmp = explode('=', $value);
+                if(is_array($tmp) && !empty($tmp)  && isset($tmp[0])  && isset($tmp[1]))
+                {
+                    $arr[$tmp[0]] = $tmp[1];
+                }
+            }
         }
         return $arr;
     }
