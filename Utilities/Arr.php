@@ -504,4 +504,17 @@ class Arr
         }
         return $arr;
     }
+
+
+    public static function arrFilter($array, $keys)
+    {
+        $bool = true;
+        foreach ($keys as $item) {
+            if (!isset($array[$item])) {
+                $bool = false;
+                break;
+            }
+        }
+        return $bool;
+    }
 }

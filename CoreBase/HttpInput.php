@@ -270,4 +270,11 @@ class HttpInput
     {
         return $this->request->files;
     }
+
+
+    public function getIp()
+    {
+        return $this->getRequestHeader('x-real-ip', '0.0.0.0');
+    }
+
 }
