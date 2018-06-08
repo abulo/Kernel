@@ -649,9 +649,9 @@ class MongoDB
         try {
             $filter = (array)$this->wheres;
             $this->orderBy($this->sorts);
-            $options = [
+            // $options = [
 
-            ];
+            // ];
             $table = $this->collection;
             $db = $this->database;
             $documents = $this->manager->$db->$table->aggregate($pipeline, $options);
