@@ -467,6 +467,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * @param $uid
      * @param $data
      * @param $topic
+     * @throws \Exception
      */
     public function pubToUid($uid, $data, $topic)
     {

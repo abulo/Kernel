@@ -20,7 +20,11 @@ class Child extends AOP
     public $core_name;
 
     /**
-     * @var
+     * @var Child
+     */
+    public $root;
+    /**
+     * @var Child
      */
 
     public $parent;

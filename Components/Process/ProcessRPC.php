@@ -28,6 +28,7 @@ abstract class ProcessRPC extends Child
     /**
      * 設置RPC代理
      * @param $object
+     * @throws \ReflectionException
      */
     public function setRPCProxy($object)
     {
@@ -37,6 +38,7 @@ abstract class ProcessRPC extends Child
 
     /**
      * @param $object
+     * @throws \ReflectionException
      */
     public function phaseProxy($object)
     {
@@ -71,6 +73,7 @@ abstract class ProcessRPC extends Child
      * @param $oneWay
      * @param $worker_id
      * @return string
+     * @throws \Exception
      */
     public function processRpcCall($name, $arguments, $oneWay, $worker_id)
     {
@@ -136,6 +139,7 @@ abstract class ProcessRPC extends Child
     /**
      * @param $data
      * @param $worker_id
+     * @throws \Exception
      */
     protected function sendMessage($data, $worker_id)
     {

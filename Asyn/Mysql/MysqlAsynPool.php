@@ -19,6 +19,7 @@ class MysqlAsynPool implements IAsynPool
     protected $mysql_arr;
     private $active;
     protected $config;
+    protected $name;
     /**
      * @var Miner
      */
@@ -206,7 +207,7 @@ class MysqlAsynPool implements IAsynPool
      * @param null $client
      * @param MySqlCoroutine $mysqlCoroutine
      * @return mixed
-     * @throws SwooleException
+     * @throws \Throwable
      */
     public function prepare($sql, $statement, $holder, $client = null, MySqlCoroutine $mysqlCoroutine)
     {
@@ -287,5 +288,13 @@ class MysqlAsynPool implements IAsynPool
         $this->mysql_client = new Miner();
         $this->mysql_client->pdoConnect($activeConfig);
         return $this->mysql_client;
+    }
+
+    /**
+     * @param $name
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
     }
 }

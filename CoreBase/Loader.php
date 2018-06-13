@@ -35,18 +35,16 @@ class Loader implements ILoader
         if (empty($model)) {
             return null;
         }
-        $root = $parent;
-        while (isset($root)) {
-            if ($model == $root->core_name) {
-                return AOP::getAOP($root);
-            }
-            if ($root->hasChild($model)) {
-                return AOP::getAOP($root->getChild($model));
-            }
-            $root = $root->parent ?? null;
+        if ($parent->root == null) {
+            $parent->root = $parent;
+        }
+        $root = $parent->root;
+        if ($root->hasChild($model)) {
+            return AOP::getAOP($root->getChild($model));
         }
         $model_instance = $this->_model_factory->getModel($model);
-        $parent->addChild($model_instance);
+        $model_instance->root = $root;
+        $root->addChild($model_instance);
         $model_instance->initialization($parent->getContext());
         return AOP::getAOP($model_instance);
     }

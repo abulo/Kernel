@@ -89,7 +89,7 @@ class Controller extends CoreBase
     /**
      * @var Miner
      */
-    protected $db;
+    public $db;
 
     /**
      * @var \Redis
@@ -120,6 +120,7 @@ class Controller extends CoreBase
         $this->http_output = new HttpOutput($this);
         $this->isEnableError = $this->config->get('error.enable');
         $this->isErrorHttpShow = $this->config->get('error.http_show', true);
+        $this->root = $this;
     }
 
     /**
@@ -133,6 +134,7 @@ class Controller extends CoreBase
      * @param $params
      * @return void
      * @throws \Exception
+     * @throws Throwable
      */
     public function setClientData($uid, $fd, $client_data, $controller_name, $method_name, $params)
     {
@@ -160,10 +162,10 @@ class Controller extends CoreBase
      * @param $params
      * @return void
      * @throws \Exception
+     * @throws Throwable
      */
     public function setRequestResponse($request, $response, $controller_name, $method_name, $params , $destroy = true)
     {
-
         $this->request = $request;
         $this->response = $response;
         $this->http_input->set($request);
@@ -172,7 +174,6 @@ class Controller extends CoreBase
         $this->isRPC = empty($this->rpc_request_id) ? false : true;
         $this->request_type = SwooleMarco::HTTP_REQUEST;
         $this->fd = $request->fd;
-        $params = array_values($params);
         return $this->execute($controller_name, $method_name, $params ,$destroy);
     }
 
@@ -181,6 +182,8 @@ class Controller extends CoreBase
      * @param $method_name
      * @param $params
      * @return void
+     * @throws \Exception
+     * @throws Throwable
      */
     protected function execute($controller_name, $method_name, $params,$destroy = true)
     {
@@ -195,7 +198,8 @@ class Controller extends CoreBase
                 $result = $this->getProxy()->$method_name();
 
             } else {
-                $result = $this->getProxy()->$method_name(...$params);
+                $params = array_values($params);
+                $this->getProxy()->$method_name(...$params);
             }
         } catch (Throwable $e) {
             $this->getProxy()->onExceptionHandle($e);
