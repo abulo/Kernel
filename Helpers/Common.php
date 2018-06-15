@@ -136,8 +136,8 @@ function checkExtension()
         secho("STA", "[版本错误]PHP版本必须大于7.0.0\n");
         $check = false;
     }
-    if (SWOOLE_VERSION[0] != 2) {
-        secho("STA", "[版本错误]不支持1.0版本swoole，请安装2.0版本");
+    if (SWOOLE_VERSION[0] == 1) {
+        secho("STA", "[版本错误]不支持1.0版本swoole，请安装2.0以上版本");
         $check = false;
     }
 
@@ -339,4 +339,18 @@ function format_date($time)
     $mi = (int)($time / 60) - 60 * $hour - 60 * 24 * $day;
     $se = $time - 60 * $mi - 60 * 60 * $hour - 60 * 60 * 24 * $day;
     return "$day 天 $hour 小时 $mi 分 $se 秒";
+}
+
+function sd_call_user_func($function, ...$parameter)
+{
+    if (is_callable($function)) {
+        return $function(...$parameter);
+    }
+}
+
+function sd_call_user_func_array($function, $parameter)
+{
+    if (is_callable($function)) {
+        return $function(...$parameter);
+    }
 }

@@ -8,6 +8,7 @@
 
 namespace Kernel\Controllers;
 
+use Kernel\Components\Event\EventDispatcher;
 use Kernel\CoreBase\Actor;
 use Kernel\CoreBase\Controller;
 

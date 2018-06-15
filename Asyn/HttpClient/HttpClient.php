@@ -162,7 +162,7 @@ class HttpClient
                     $data['headers'] = $client->headers;
                     $data['body'] = $client->body;
                     $data['statusCode'] = $client->statusCode;
-                    \co::call_user_func($callBack, $data);
+                    sd_call_user_func($callBack, $data);
                 });
             });
         } else {
@@ -186,7 +186,7 @@ class HttpClient
                 $data['headers'] = $client->headers;
                 $data['body'] = $client->body;
                 $data['statusCode'] = $client->statusCode;
-                \co::call_user_func($callBack, $data);
+                sd_call_user_func($callBack, $data);
             });
         }
     }

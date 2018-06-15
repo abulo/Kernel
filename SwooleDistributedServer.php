@@ -253,7 +253,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
             $this->server->sendMessage($send_data, $i);
         }
         //自己的进程是收不到消息的所以这里执行下
-        \co::call_user_func($callStaticFuc, $uns_data);
+        sd_call_user_func($callStaticFuc, $uns_data);
     }
 
     /**
@@ -271,8 +271,9 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
             }
             $this->server->sendMessage($send_data, $i);
         }
+        ProcessManager::getInstance()->sendToAllProcess($send_data);
         //自己的进程是收不到消息的所以这里执行下
-        \co::call_user_func($callStaticFuc, $uns_data);
+        sd_call_user_func($callStaticFuc, $uns_data);
     }
 
     /**
@@ -287,7 +288,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
         $id = rand(0, getInstance()->worker_num - 1);
         if ($this->server->worker_id == $id) {
             //自己的进程是收不到消息的所以这里执行下
-            \co::call_user_func($callStaticFuc, $uns_data);
+            sd_call_user_func($callStaticFuc, $uns_data);
         } else {
             getInstance()->server->sendMessage($send_data, $id);
         }
@@ -305,7 +306,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
         $send_data = getInstance()->packServerMessageBody($type, $uns_data, $callStaticFuc);
         if ($this->server->worker_id == $workerId) {
             //自己的进程是收不到消息的所以这里执行下
-            \co::call_user_func($callStaticFuc, $uns_data);
+            sd_call_user_func($callStaticFuc, $uns_data);
         } else {
             getInstance()->server->sendMessage($send_data, $workerId);
         }
@@ -337,7 +338,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                 return null;
             case SwooleMarco::MSG_TYPE_SEND_ALL_FD;//发送广播
                 foreach ($serv->connections as $fd) {
-                    $serv->send($fd, $message['data'], true);
+                    $this->send($fd, $message['data'], true);
                 }
                 return null;
             case SwooleMarco::SERVER_TYPE_TASK://task任务
@@ -350,7 +351,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                 if (is_callable($call)) {
                     //给task做初始化操作
                     $task->initialization($task_id, $from_id, $this->server->worker_pid, $task_name, $task_fuc_name, $task_context);
-                    $result = call_user_func_array($call, $task_data);
+                    $result = sd_call_user_func_array($call, $task_data);
                 } else {
                     throw new SwooleException("method $task_fuc_name not exist in $task_name");
                 }
@@ -400,7 +401,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                 $this->server->task($send_data);
             } else {
                 foreach ($this->server->connections as $fd) {
-                    $this->server->send($fd, $data, true);
+                    $this->send($fd, $data, true);
                 }
             }
         }

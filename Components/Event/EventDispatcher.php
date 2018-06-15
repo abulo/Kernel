@@ -59,16 +59,12 @@ class EventDispatcher
     public function remove($type, $listener)
     {
         if (array_key_exists($type, $this->_eventListeners)) {
-            $numListeners = count($this->_eventListeners [$type]);
-        } else {
-            $numListeners = 0;
-        }
-        if ($numListeners > 0) {
             $index = array_search($listener, $this->_eventListeners [$type]);
             if ($index !== null) {
                 unset($this->_eventListeners [$type] [$index]);
             }
         }
+        $numListeners = count($this->_eventListeners [$type]);
         if ($numListeners == 0) {
             unset($this->_eventListeners [$type]);
         }
@@ -122,7 +118,7 @@ class EventDispatcher
             return;
         }
         foreach ($listeners as $listener) {
-            \co::call_user_func($listener, $event);
+            sd_call_user_func($listener, $event);
         }
     }
 
@@ -188,7 +184,7 @@ class EventDispatcher
      * 协程的仅仅一次的回调
      * @param $eventType
      * @param callable $set
-     * @return
+     * @return mixed
      */
     public function addOnceCoroutine($eventType, callable $set = null)
     {

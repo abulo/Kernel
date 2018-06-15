@@ -43,11 +43,15 @@ use Kernel\Container\Container;
  */
 abstract class SwooleServer extends ProcessRPC
 {
+    /**
+     * 配置文件版本
+     */
+    const config_version = 3;
 
     /**
      * 版本
      */
-    const version = "3.2.3";
+    const version = "3.2.5";
 
     /**
      * server name
@@ -348,7 +352,7 @@ abstract class SwooleServer extends ProcessRPC
     /**
      * 创建uid->fd共享内存表
      */
-    protected function createUidTable()
+    public function createUidTable()
     {
         $this->max_connection = $this->config['server']['set']['max_connection'] ?? 65536;
         $this->uid_fd_table = new \swoole_table($this->max_connection);
@@ -586,7 +590,7 @@ abstract class SwooleServer extends ProcessRPC
         $log .= json_encode($data);
         $this->log->alert($log);
         if ($this->onErrorHandel != null) {
-            \co::call_user_func($this->onErrorHandel, '【！！！】服务器进程异常退出', $log);
+            sd_call_user_func($this->onErrorHandel, '【！！！】服务器进程异常退出', $log);
         }
     }
 
@@ -643,7 +647,7 @@ abstract class SwooleServer extends ProcessRPC
      */
     public function __call($name, $arguments)
     {
-        return \co::call_user_func_array(array($this->server, $name), $arguments);
+        return sd_call_user_func_array(array($this->server, $name), $arguments);
     }
 
     /**

@@ -45,6 +45,10 @@ abstract class Actor extends CoreBase
      */
     protected $beginId = 0;
     /**
+     * @var int
+     */
+    protected $startBeginTime = 0;
+    /**
      * 当前事务ID
      * @var int
      */
@@ -58,7 +62,12 @@ abstract class Actor extends CoreBase
     /**
      * @var Miner
      */
-    protected $db;
+    public $db;
+
+    /**
+     * @var \Redis
+     */
+    protected $redis;
 
     /**
      * @param $name
@@ -157,14 +166,28 @@ abstract class Actor extends CoreBase
         $oneWay = $data['oneWay'];
         $node = $data['node'];
         $bindId = $data['bindId'];
+        if ($this->startBeginTime != null && getMillisecond() - $this->startBeginTime > 200) {//超过200ms还是没有消息过来就end
+            $this->end($this->nowAffairId);
+            return;
+        }
         if (!empty($this->nowAffairId)) {//代表有事务
             if ($bindId != $this->nowAffairId || empty($bindId)) {//不是当前的事务，或者不是事务就放进邮箱中
                 array_push($this->mailbox, $data);
                 return;
+            } else {//来了当前的事务代表没有超时那么就清除startBeginTime
+                $this->startBeginTime = null;
+            }
+        } else {//没有事务
+            if (!empty($bindId)) {//处理的有事务
+                $generator = new RPCThrowable(new \Exception("不再事务中，不能执行事务"));
+                if (!$oneWay) {
+                    $this->rpcBack($workerId, $token, $generator, $node);
+                }
+                return;
             }
         }
         try {
-            $generator = \co::call_user_func_array([$this, $function], $params);
+            $generator = sd_call_user_func_array([$this, $function], $params);
         } catch (\Throwable $e) {
             $generator = new RPCThrowable($e);
         }
@@ -181,6 +204,7 @@ abstract class Actor extends CoreBase
     {
         $this->beginId++;
         $this->nowAffairId = $this->beginId;
+        $this->startBeginTime = getMillisecond();
         return $this->beginId;
     }
 
@@ -354,6 +378,12 @@ abstract class Actor extends CoreBase
      */
     public static function call($actorName, $call, $params = null, $oneWay = false, $bindId = null, callable $set = null)
     {
+        if ($actorName!=Actor::ALL_COMMAND) {
+            $has = Actor::has($actorName);
+            if (!$has) {
+                throw new \Exception("$actorName 不存在这个actor");
+            }
+        }
         $data['call'] = $call;
         $data['params'] = $params;
         $data['bindId'] = $bindId;

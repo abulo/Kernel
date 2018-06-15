@@ -197,7 +197,7 @@ class TimerTask extends CoreBase
                 $model = getInstance()->loader->model($timer_task['model_name'], $child);
                 $startTime = getMillisecond();
                 $path = "[TimerTask] " . $timer_task['model_name'] . "::" . $timer_task['method_name'];
-                \co::call_user_func([$model, $timer_task['method_name']]);
+                sd_call_user_func([$model, $timer_task['method_name']]);
                 $child->destroy();
                 Pool::getInstance()->push($child);
                 ProcessManager::getInstance()->getRpcCall(SDHelpProcess::class, true)->addStatistics($path, getMillisecond() - $startTime);

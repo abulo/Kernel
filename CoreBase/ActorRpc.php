@@ -33,6 +33,7 @@ class ActorRpc
      * @param callable|null $fail
      * @param int $timeOut
      * @return null
+     * @throws \Exception
      */
     public function beginCo(callable $run = null, callable $fail = null, $timeOut = 10000)
     {
@@ -70,6 +71,7 @@ class ActorRpc
      * @param $name
      * @param $arguments
      * @return null
+     * @throws \Exception
      */
     public function __call($name, $arguments)
     {
@@ -80,6 +82,7 @@ class ActorRpc
      * 没有返回的call
      * @param $name
      * @param $arguments
+     * @throws \Exception
      */
     public function oneWayCall($name, $arguments = null)
     {

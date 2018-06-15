@@ -194,23 +194,26 @@ class Controller extends CoreBase
         $result = false;
         try {
             $this->initialization($controller_name, $method_name);
+        } catch (Throwable $e) {
+            $this->getProxy()->onExceptionHandle($e);
+            $this->destroy();
+            return $result;
+        }
+        try {
             if ($params == null) {
                 $result = $this->getProxy()->$method_name();
-
             } else {
                 $params = array_values($params);
                 $this->getProxy()->$method_name(...$params);
             }
         } catch (Throwable $e) {
-            $this->getProxy()->onExceptionHandle($e);
             $this->getProxy()->afterCall($method_name);
+            $this->getProxy()->onExceptionHandle($e);
         }
         if($destroy)
         {
             $this->destroy();
         }
-
-
         return $result;
     }
 
@@ -315,7 +318,7 @@ class Controller extends CoreBase
                     break;
             }
         } else {
-            \co::call_user_func($handle, $e);
+            sd_call_user_func($handle, $e);
         }
     }
 

@@ -206,7 +206,7 @@ class TestModule
                     $parmasArray = array_merge($dataProviderValue, $parmasArray);
 
                     try {
-                        $result = \co::call_user_func_array([$classInstance, $method], $parmasArray);
+                        $result = sd_call_user_func_array([$classInstance, $method], $parmasArray);
                         $classData[$method]['result'] = $result;
                         $this->printSuccess();
                     } catch (SwooleTestException $e) {
