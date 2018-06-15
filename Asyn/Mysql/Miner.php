@@ -8,13 +8,14 @@
 
 namespace Kernel\Asyn\Mysql;
 
+use Kernel\CoreBase\Child;
 use Kernel\Memory\Pool;
 
 /**
  * A dead simple PHP class for building SQL statements. No manual string
  * concatenation necessary.
  */
-class Miner
+class Miner extends Child
 {
 
     /**
@@ -323,9 +324,11 @@ class Miner
      * @param $mysql_pool
      * @return $this
      */
-    public function setPool($mysql_pool)
+    public function setPool(MysqlAsynPool $mysql_pool)
     {
+        $this->core_name = $mysql_pool->getAsynName();
         $this->mysql_pool = $mysql_pool;
+        $this->clear();
         return $this;
     }
 
@@ -1347,7 +1350,12 @@ class Miner
     public function quote($value)
     {
         $PdoConnection = $this->getPdoConnection();
-
+        if ($value === true) {
+            return 1;
+        }
+        if ($value === false) {
+            return 0;
+        }
         // If a PDO database connection is set, use it to quote the value using
         // the underlying database. Otherwise, quote it manually.
         if ($PdoConnection) {
@@ -1605,11 +1613,11 @@ class Miner
             $autoQuote = $this->getAutoQuote($set['quote']);
 
             if ($usePlaceholders && $autoQuote) {
-                $statement .= $set['column'] . " " . self::EQUALS . " ?, ";
+                $statement .= "`".$set['column'] . "` " . self::EQUALS . " ?, ";
 
                 $this->setPlaceholderValues[] = $set['value'];
             } else {
-                $statement .= $set['column'] . " " . self::EQUALS . " " . $this->autoQuote($set['value'], $autoQuote) . ", ";
+                $statement .= "`".$set['column'] . "` " . self::EQUALS . " " . $this->autoQuote($set['value'], $autoQuote) . ", ";
             }
         }
 
@@ -2416,35 +2424,30 @@ class Miner
     // }
     public function begin()
     {
-        if (getInstance()->isTaskWorker())
-        {
+        if (getInstance()->isTaskWorker()) {
             $this->pdoBeginTrans();
             return $this;
-        }else{
+        } else {
             return $this->mysql_pool->begin();
         }
     }
 
     public function commit()
     {
-        if (getInstance()->isTaskWorker())
-        {
+        if (getInstance()->isTaskWorker()) {
             return $this->pdoCommitTrans();
-        }else{
+        } else {
             return $this->mysql_pool->commit($this->client);
         }
     }
 
     public function rollback()
     {
-        if (getInstance()->isTaskWorker())
-        {
+        if (getInstance()->isTaskWorker()) {
             return $this->pdoRollBackTrans();
-        }else{
+        } else {
             return $this->mysql_pool->rollback($this->client);
         }
-
-
     }
 
 
@@ -2458,7 +2461,6 @@ class Miner
     {
         $mySqlCoroutine = Pool::getInstance()->get(MySqlCoroutine::class);
         if (getInstance()->isTaskWorker()) {//如果是task进程自动转换为同步模式
-
             // secho('$ql===========',$sql);
             // $this->mergeInto($this->getSync());
             // $this->clear();
@@ -2578,7 +2580,6 @@ class Miner
         }
         if (!$this->PdoConnection->inTransaction()) {
             $pdoStatement->closeCursor();
-
         }
         $this->clear();
         return $data;

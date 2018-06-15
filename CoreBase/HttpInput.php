@@ -54,11 +54,11 @@ class HttpInput
      * @param $xss_clean
      * @return string
      */
-    public function postGet($index, $default = null,$use_xss = true)
+    public function postGet($index, $default = null, $use_xss = true)
     {
         return isset($this->request->post[$index])
-            ? $this->post($index, $default,$use_xss)
-            : $this->get($index, $default,$use_xss);
+            ? $this->post($index, $default, $use_xss)
+            : $this->get($index, $default, $use_xss);
     }
 
     /**
@@ -67,15 +67,13 @@ class HttpInput
      * @param $xss_clean
      * @return string
      */
-    public function post($index, $default = null,$use_xss = true)
+    public function post($index, $default = null, $use_xss = true)
     {
-        if($use_xss)
-        {
+        if ($use_xss) {
             return XssClean::getXssClean()->xss_clean($this->request->post[$index]??$default);
-        }else{
+        } else {
             return $this->request->post[$index]??$default;
         }
-
     }
 
     /**
@@ -84,16 +82,13 @@ class HttpInput
      * @param $xss_clean
      * @return string
      */
-    public function get($index, $default = null,$use_xss = true)
+    public function get($index, $default = null, $use_xss = true)
     {
-        if($use_xss)
-        {
+        if ($use_xss) {
             return XssClean::getXssClean()->xss_clean($this->request->get[$index]??$default);
-        }else{
+        } else {
             return $this->request->get[$index]??$default;
         }
-
-
     }
 
     /**
@@ -102,11 +97,11 @@ class HttpInput
      * @param $xss_clean
      * @return string
      */
-    public function getPost($index, $default = null,$use_xss = true)
+    public function getPost($index, $default = null, $use_xss = true)
     {
         return isset($this->request->get[$index])
-            ? $this->get($index, $default,$use_xss)
-            : $this->post($index, $default,$use_xss);
+            ? $this->get($index, $default, $use_xss)
+            : $this->post($index, $default, $use_xss);
     }
 
     /**
@@ -117,13 +112,11 @@ class HttpInput
         $result = [];
         if (is_array($this->request->post)) {
             foreach ($this->request->post as $item => $val) {
-                if($use_xss)
-                {
+                if ($use_xss) {
                     $result[$item] = XssClean::getXssClean()->xss_clean($val);
-                }else{
+                } else {
                     $result[$item] = $val;
                 }
-
             }
         }
         return $result;
@@ -138,11 +131,9 @@ class HttpInput
 
         if (is_array($this->request->get)) {
             foreach ($this->request->get as $item => $val) {
-
-                if($use_xss)
-                {
+                if ($use_xss) {
                     $result[$item] = XssClean::getXssClean()->xss_clean($val);
-                }else{
+                } else {
                     $result[$item] = $val;
                 }
             }
@@ -164,15 +155,13 @@ class HttpInput
      * @param bool $xss_clean
      * @return array|bool|string
      */
-    public function header($index, $default = null,$use_xss = true)
+    public function header($index, $default = null, $use_xss = true)
     {
-        if($use_xss)
-        {
+        if ($use_xss) {
             return XssClean::getXssClean()->xss_clean($this->request->header[$index]??$default);
-        }else{
+        } else {
             return $this->request->header[$index]??$default;
         }
-
     }
 
     /**
@@ -276,5 +265,4 @@ class HttpInput
     {
         return $this->getRequestHeader('x-real-ip', '0.0.0.0');
     }
-
 }

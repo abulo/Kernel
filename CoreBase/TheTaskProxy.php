@@ -6,7 +6,6 @@ use Kernel\Components\AOP\Proxy;
 use Kernel\Coroutine\CoroutineNull;
 use Kernel\Memory\Pool;
 
-
 class TheTaskProxy extends Proxy
 {
 

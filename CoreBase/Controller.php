@@ -164,7 +164,7 @@ class Controller extends CoreBase
      * @throws \Exception
      * @throws Throwable
      */
-    public function setRequestResponse($request, $response, $controller_name, $method_name, $params , $destroy = true)
+    public function setRequestResponse($request, $response, $controller_name, $method_name, $params, $destroy = true)
     {
         $this->request = $request;
         $this->response = $response;
@@ -174,7 +174,7 @@ class Controller extends CoreBase
         $this->isRPC = empty($this->rpc_request_id) ? false : true;
         $this->request_type = SwooleMarco::HTTP_REQUEST;
         $this->fd = $request->fd;
-        return $this->execute($controller_name, $method_name, $params ,$destroy);
+        return $this->execute($controller_name, $method_name, $params, $destroy);
     }
 
     /**
@@ -185,7 +185,7 @@ class Controller extends CoreBase
      * @throws \Exception
      * @throws Throwable
      */
-    protected function execute($controller_name, $method_name, $params,$destroy = true)
+    protected function execute($controller_name, $method_name, $params, $destroy = true)
     {
         if (!is_callable([$this, $method_name])) {
             $this->context['raw_method_name'] = "$controller_name:$method_name";
@@ -207,13 +207,12 @@ class Controller extends CoreBase
                 $this->getProxy()->$method_name(...$params);
             }
         } catch (Throwable $e) {
-            $this->getProxy()->afterCall($method_name);
             $this->getProxy()->onExceptionHandle($e);
         }
-        if($destroy)
-        {
+        if ($destroy) {
             $this->destroy();
         }
+        
         return $result;
     }
 
@@ -234,7 +233,7 @@ class Controller extends CoreBase
         $this->context['controller_name'] = $controller_name;
         $this->context['method_name'] = "$controller_name::$method_name";
         $this->context['ip'] = $this->getFdInfo()['remote_ip'];
-        $this->context['x-real-ip'] = $this->http_input->getRequestHeader('x-real-ip',0);
+        $this->context['x-real-ip'] = $this->http_input->getRequestHeader('x-real-ip', 0);
 
         if (!empty($this->uid)) {
             $this->context['uid'] = $this->uid;

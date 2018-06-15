@@ -104,7 +104,6 @@ class MysqlAsynPool implements IAsynPool
         $client->query("rollback");
         $this->dbQueryBuilder->setClient(null);
         $this->pushToPool($client);
-
     }
 
 
@@ -126,8 +125,7 @@ class MysqlAsynPool implements IAsynPool
             $client->query("commit");
         } catch (\Throwable $e) {
             $client->query("rollback");
-            if ($errorFuc != null)
-            {
+            if ($errorFuc != null) {
                 $errorFuc($client);
             }
         } finally {

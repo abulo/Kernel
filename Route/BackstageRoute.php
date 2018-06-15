@@ -69,7 +69,6 @@ class BackstageRoute implements IRoute
         $this->client_data->method_name = substr($request->server['request_uri'], 1);
         $this->client_data->handler = $this->client_data->controller_name.'@'.$this->client_data->method_name;
         $this->client_data->params = $request->get ?? [];
-
     }
 
     public function getHandler()
@@ -153,8 +152,4 @@ class BackstageRoute implements IRoute
         $response->header('HTTP/1.1', '404 Not Found');
         $response->end($content);
     }
-
-
-
-
 }

@@ -24,13 +24,11 @@ class MysqlProxy
     public function master()
     {
         $master = $this->proxy_config['master'];
-        if(getInstance()->isTaskWorker())
-        {
+        if (getInstance()->isTaskWorker()) {
             return getInstance()->getMysql($master);
-        }else{
+        } else {
             return getInstance()->getMysqlPool($master)->installDbBuilder();
         }
-
     }
 
     public function slave()
@@ -39,12 +37,10 @@ class MysqlProxy
         //在Swoole中如果在父进程内调用了mt_rand，不同的子进程内再调用mt_rand返回的结果会是相同的。所以必须在每个子进程内调用mt_srand重新播种。
         mt_srand();
         $n = mt_rand(0, count($slave) - 1);
-        if(getInstance()->isTaskWorker())
-        {
+        if (getInstance()->isTaskWorker()) {
             return getInstance()->getMysql($slave[$n]);
-        }else{
+        } else {
             return getInstance()->getMysqlPool($slave[$n])->installDbBuilder();
         }
-
     }
 }

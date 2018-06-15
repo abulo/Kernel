@@ -41,7 +41,7 @@ class MongoDB
      *
      * @param $conf
      */
-    public function __construct($config,$active)
+    public function __construct($config, $active)
     {
         if (!class_exists('\MongoDB\Driver\Manager')) {
             throw new \Exception('require mongodb > 1.0');

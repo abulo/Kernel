@@ -434,10 +434,10 @@ class RedisAsynPool extends AsynPool
     {
         if (getInstance()->isTaskWorker()) {//如果是task进程自动转换为同步模式
             try {
-                $value = call_user_func_array([$this->getSync(), $name], $arg);
+                $value = sd_call_user_func_array([$this->getSync(), $name], $arg);
             } catch (\RedisException $e) {
                 $this->redis_client = null;
-                $value = call_user_func_array([$this->getSync(), $name], $arg);
+                $value = sd_call_user_func_array([$this->getSync(), $name], $arg);
             }
             return $value;
         } else {

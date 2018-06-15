@@ -168,8 +168,4 @@ class FRoute implements IRoute
         $response->header('HTTP/1.1', '404 Not Found');
         $response->end($content);
     }
-    
-    
-    
-    
 }
