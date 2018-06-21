@@ -326,7 +326,7 @@ class Start
         echo "\033[2J";
         echo "\033[1A\n\033[K------------------------\033[47;30m SWOOLE_DISTRIBUTED \033[0m---------------------------\n\033[0m";
         echo 'System:', PHP_OS, "\t\t\t";
-        echo 'SwooleDistributed version:', SwooleServer::version, "\n";
+        echo 'Framework version:', SwooleServer::version, "\n";
         echo 'Swoole version: ', SWOOLE_VERSION, "\t\t";
         echo 'PHP version: ', PHP_VERSION, "\n";
         echo 'worker_num: ', $config->get('server.set.worker_num', 0), "\t\t\t";
