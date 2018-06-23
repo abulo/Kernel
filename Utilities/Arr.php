@@ -517,4 +517,32 @@ class Arr
         }
         return $bool;
     }
+
+    /**
+     * 获取 KEY
+     *
+     * @param 前缀 $prefix
+     * @param 数组获取字符串 $params
+     * @return void
+     */
+    public static function gkey($prefix,$params = null)
+    {
+        if(null === $params  || empty($params))
+        {
+            return $prefix;
+        }
+
+        if(is_array($params) && !empty($params))
+        {
+            $gkey = "";
+            foreach ($params as $pkey => $pvalue)
+            {
+                $gkey .= $pkey.'|#' . $pvalue;
+            }
+            return $prefix.'/'.md5($gkey);
+        }else{
+            return $prefix.'/'.md5($params);
+        }
+    }
+
 }
