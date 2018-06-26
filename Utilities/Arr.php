@@ -537,6 +537,10 @@ class Arr
             $gkey = "";
             foreach ($params as $pkey => $pvalue)
             {
+                if(!$pvalue)
+                {
+                    $pvalue = "";
+                }
                 $gkey .= $pkey.'|#' . $pvalue;
             }
             return $prefix.'/'.md5($gkey);
