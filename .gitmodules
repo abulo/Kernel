@@ -88,3 +88,9 @@
 [submodule "Library/overtrue/pinyin"]
 	path = Library/overtrue/pinyin
 	url = https://github.com/overtrue/pinyin.git
+[submodule "Library/symfony/process"]
+	path = Library/symfony/process
+	url = https://github.com/symfony/process.git
+[submodule "Library/spatie/image-optimizer"]
+	path = Library/spatie/image-optimizer
+	url = https://github.com/spatie/image-optimizer.git

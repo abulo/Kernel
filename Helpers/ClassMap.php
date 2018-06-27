@@ -37,6 +37,11 @@ return [
         'Symfony\Component\PropertyAccess' => dirname(__DIR__).DS.'Library'.DS.'symfony'.DS.'property-access',
         
         'Overtrue\Pinyin' =>  dirname(__DIR__).DS.'Library'.DS.'overtrue'.DS.'pinyin'.DS.'src',
+        
+        'Symfony\Component\Process' =>  dirname(__DIR__).DS.'Library'.DS.'symfony'.DS.'process',
+        'Spatie\ImageOptimizer' => dirname(__DIR__).DS.'Library'.DS.'spatie'.DS.'image-optimizer'.DS.'src',
+
+
         'Kernel'=>dirname(__DIR__),
     ],
     'files' => [
