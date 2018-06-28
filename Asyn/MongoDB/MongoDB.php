@@ -655,8 +655,23 @@ class MongoDB
             $table = $this->collection;
             $db = $this->database;
             $documents = $this->manager->$db->$table->aggregate($pipeline, $options);
+//            $this->clean();
+
+            $returns = array();
+            foreach ($documents as $document) {
+                foreach ($document as $key => $val) {
+                    if ($document->$key instanceof \MongoDB\BSON\UTCDateTime) {
+                        $document->$key = $document->$key->toDateTime()->setTimezone(new \DateTimeZone($this->tz))->format('Y-m-d H:i:s');
+                    }
+                    if ($document->$key instanceof \MongoDB\BSON\ObjectID) {
+                        $document->$key = (string)$document->$key;
+                    }
+                }
+                $bson = \MongoDB\BSON\fromPHP($document);
+                $returns[] = json_decode(\MongoDB\BSON\toJSON($bson), true);
+            }
             $this->clean();
-            return $documents;
+            return $returns;
         } catch (\Exception $e) {
             $this->showError($e);
             return false;

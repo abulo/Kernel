@@ -541,6 +541,10 @@ class Arr
                 {
                     $pvalue = "";
                 }
+                if(is_array($pvalue))
+                {
+                    $pvalue = json_encode($pvalue);
+                }
                 $gkey .= $pkey.'|#' . $pvalue;
             }
             return $prefix.'/'.md5($gkey);
