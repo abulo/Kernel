@@ -34,6 +34,7 @@ class TcpClientPool extends AsynPool
     protected $pack;
     protected $tcpClient_max_count;
     protected $package_length_type_length;
+    protected $ssl_enable;
 
     /**
      * TcpClientPool constructor.
@@ -47,6 +48,7 @@ class TcpClientPool extends AsynPool
         parent::__construct($config);
         $this->connect = $connect;
         $this->pack = PortManager::createPack($this->config->get("tcpClient.$config_name.pack_tool"));
+        $this->ssl_enable = $this->config->get("tcpClient.$config_name.ssl_enable", false);
         $this->set = $this->pack->getProbufSet();
         list($this->host, $this->port) = explode(':', $connect);
         $this->client_max_count = $this->config->get('tcpClient.asyn_max_count', 10);
@@ -122,7 +124,11 @@ class TcpClientPool extends AsynPool
     public function prepareOne()
     {
         if (parent::prepareOne()) {
-            $client = new \swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);
+            if ($this->ssl_enable) {
+                $client = new \swoole_client(SWOOLE_SOCK_TCP | SWOOLE_SSL, SWOOLE_SOCK_ASYNC);
+            } else {
+                $client = new \swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);
+            }
             $client->set($this->set);
             $client->on("connect", function ($cli) {
                 $this->pushToPool($cli);
@@ -154,6 +160,7 @@ class TcpClientPool extends AsynPool
      * 协程的发送
      * @param $send
      * @param bool $oneway
+     * @param callable|null $set
      * @return TcpClientRequestCoroutine
      */
     public function coroutineSend($send, $oneway = false, callable $set = null)

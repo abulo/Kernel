@@ -1165,4 +1165,20 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
             return $fdInfo;
         }
     }
+
+    /**
+     * 获取port
+     * @param $port_num
+     * @return mixed
+     */
+    public function getPort($port_num)
+    {
+        $ports = $this->server->ports;
+        foreach ($ports as $port) {
+            if ($port->port == $port_num) {
+                return $port;
+            }
+        }
+        return null;
+    }
 }

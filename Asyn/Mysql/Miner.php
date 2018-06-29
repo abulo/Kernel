@@ -2711,4 +2711,12 @@ class Miner extends Child
     {
         return $this->PdoConnection->lastInsertId();
     }
+
+    public function destroy()
+    {
+        parent::destroy();
+        $this->clear();
+        $this->client = null;
+        Pool::getInstance()->push($this);
+    }
 }

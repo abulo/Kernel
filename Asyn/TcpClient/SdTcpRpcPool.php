@@ -39,7 +39,7 @@ class SdTcpRpcPool extends AsynPool
      * @var IPack
      */
     protected $pack;
-
+    protected $ssl_enable;
     /**
      * SdTcpRpcPool constructor.
      * @param $config
@@ -52,6 +52,7 @@ class SdTcpRpcPool extends AsynPool
         parent::__construct($config);
         $this->connect = $connect;
         $this->pack = PortManager::createPack($this->config->get("tcpClient.$config_name.pack_tool"));
+        $this->ssl_enable = $this->config->get("tcpClient.$config_name.ssl_enable", false);
         $this->set = $this->pack->getProbufSet();
         list($this->host, $this->port) = explode(':', $connect);
     }
@@ -130,7 +131,11 @@ class SdTcpRpcPool extends AsynPool
      */
     public function prepareOne()
     {
-        $client = new \swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);
+        if ($this->ssl_enable) {
+            $client = new \swoole_client(SWOOLE_SOCK_TCP | SWOOLE_SSL, SWOOLE_SOCK_ASYNC);
+        } else {
+            $client = new \swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);
+        }
         $client->set($this->set);
         $client->on("connect", function ($cli) {
             $this->client = $cli;
