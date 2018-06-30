@@ -2417,18 +2417,53 @@ class Miner extends Child
      * 开始事务
      * @param callable $fuc
      * @param callable|null $errorFuc
+     * @return null
+     * @throws \Kernel\CoreBase\SwooleException
      */
-    // public function begin(callable $fuc, callable $errorFuc = null)
+    // public function begin($fuc, $errorFuc = null)
     // {
-    //     return $this->mysql_pool->begin($fuc, $errorFuc);
+    //     return $this->mysql_pool->begin($this, $fuc, $errorFuc);
     // }
+    /**
+     * @param callable|null $set
+     * @return MysqlSyncHelp
+     * @throws \Throwable
+     */
+    public function prepareQuery(callable $set = null)
+    {
+        $mySqlCoroutine = Pool::getInstance()->get(MySqlCoroutine::class);
+        if (getInstance()->isTaskWorker()) {//如果是task进程自动转换为同步模式
+            $this->mergeInto($this->mysql_pool->getSync());
+            $this->clear();
+            $data = $this->mysql_pool->getSync()->pdoQuery();
+            return new MysqlSyncHelp(null, $data);
+        } else {
+            $statement = $this->getStatement();
+            $holder = $this->getPlaceholderValues();
+            $sql = $this->getStatement(false);
+            $this->clear();
+            $mySqlCoroutine->setRequest($sql);
+            if ($set) {
+                $set($mySqlCoroutine);
+            }
+            $result = $this->mysql_pool->prepare($sql, $statement, $holder, $this->client, $mySqlCoroutine);
+            return $result;
+        }
+    }
+    
+    
+    
+    
+    
+    
+    
     public function begin()
     {
         if (getInstance()->isTaskWorker()) {
             $this->pdoBeginTrans();
             return $this;
         } else {
-            return $this->mysql_pool->begin();
+            return $this->mysql_pool->begin($this);
         }
     }
 
@@ -2437,7 +2472,7 @@ class Miner extends Child
         if (getInstance()->isTaskWorker()) {
             return $this->pdoCommitTrans();
         } else {
-            return $this->mysql_pool->commit($this->client);
+            return $this->mysql_pool->commit($this,$this->client);
         }
     }
 
@@ -2446,7 +2481,7 @@ class Miner extends Child
         if (getInstance()->isTaskWorker()) {
             return $this->pdoRollBackTrans();
         } else {
-            return $this->mysql_pool->rollback($this->client);
+            return $this->mysql_pool->rollback($this,$this->client);
         }
     }
 
@@ -2456,15 +2491,15 @@ class Miner extends Child
      * @param null $sql
      * @param callable|null $set
      * @return MysqlSyncHelp
+     * @throws \Throwable
      */
     public function query($sql = null, callable $set = null)
     {
         $mySqlCoroutine = Pool::getInstance()->get(MySqlCoroutine::class);
         if (getInstance()->isTaskWorker()) {//如果是task进程自动转换为同步模式
-            // secho('$ql===========',$sql);
-            // $this->mergeInto($this->getSync());
-            // $this->clear();
+            
             $data = $this->pdoQuery($sql);
+            $this->clear();
             return new MysqlSyncHelp($sql, $data);
         } else {
             if ($sql != null) {
@@ -2472,27 +2507,21 @@ class Miner extends Child
                 if ($set) {
                     $set($mySqlCoroutine);
                 }
-                $result = $this->mysql_pool->query($sql, $this->client, $mySqlCoroutine);
                 $this->clear();
+                $result = $this->mysql_pool->query($sql, $this->client, $mySqlCoroutine);
                 return $result;
             } else {
-                $statement = $this->getStatement();
-                $holder = $this->getPlaceholderValues();
                 $sql = $this->getStatement(false);
+                $this->clear();
                 $mySqlCoroutine->setRequest($sql);
                 if ($set) {
                     $set($mySqlCoroutine);
                 }
-                $result = $this->mysql_pool->prepare($sql, $statement, $holder, $this->client, $mySqlCoroutine);
-                $this->clear();
+                $result = $this->mysql_pool->query($sql, $this->client, $mySqlCoroutine);
                 return $result;
             }
         }
     }
-
-
-
-
 
     public function clear()
     {
@@ -2560,8 +2589,6 @@ class Miner extends Child
         if (!$pdoStatement) {
             $data = false;
         }
-
-
         $data['result'] = 1;
         $isSelect = false;
         if ($sql != null) {//代表手动执行的sql
@@ -2578,9 +2605,7 @@ class Miner extends Child
             $data['insert_id'] = $this->pdoInsertId();
             $data['affected_rows'] = $pdoStatement->rowCount();
         }
-        if (!$this->PdoConnection->inTransaction()) {
-            $pdoStatement->closeCursor();
-        }
+        $pdoStatement->closeCursor();
         $this->clear();
         return $data;
     }
@@ -2656,6 +2681,8 @@ class Miner extends Child
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
         $this->setPdoConnection($pdo);
+
+
     }
 
     /**

@@ -9,6 +9,8 @@
 
 namespace Kernel\CoreBase;
 
+use Kernel\Asyn\Mysql\Miner;
+use Kernel\Asyn\Mysql\MysqlAsynPool;
 use Kernel\Components\AOP\AOP;
 use Kernel\Memory\Pool;
 
@@ -21,6 +23,91 @@ class Loader implements ILoader
     {
         $this->_task_proxy = new TaskProxy();
         $this->_model_factory = ModelFactory::getInstance();
+    }
+
+
+    /**
+     * 获取一个 mongodb
+     *
+     * @param  $name
+     * @return void
+     */
+    public function mongodb($name)
+    {
+        $mongodb = getInstance()->getMongoPool($name);
+        if ($mongodb == null) {
+            return null;
+        }
+        return $mongodb;
+    }
+
+    /**
+     * 获取一个redis
+     * @param $name
+     * @return \Redis
+     */
+    public function redis($name)
+    {
+        $redisPool = getInstance()->getRedisPool($name);
+        if ($redisPool == null) {
+            return null;
+        }
+        return $redisPool->getCoroutine();
+    }
+
+
+
+
+
+        /**
+     * 获取一个代理链接
+     * @param
+     * @return mysql
+     */
+    public function getMysqlProxy($name)
+    {
+        return getInstance()->getMysqlProxy($name);
+    }
+
+    /**
+     * 获取 redis 代理
+     * @param    $name
+     * @return
+     */
+    public function getRedisProxy($name)
+    {
+        return getInstance()->getRedisProxy($name);
+    }
+
+
+    
+
+    /**
+     * 获取一个mysql
+     * @param $name
+     * @param Child $parent
+     * @return Miner
+     */
+    public function mysql($name, Child $parent)
+    {
+        if (empty($name)) {
+            return null;
+        }
+        if ($parent->root == null) {
+            $parent->root = $parent;
+        }
+        $root = $parent->root;
+        $core_name = MysqlAsynPool::AsynName .$name;
+        if ($root->hasChild($core_name)) {
+            return $root->getChild($core_name);
+        }
+        $mysql_pool = getInstance()->getMysqlPool($name);
+        if ($mysql_pool == null) {
+            return null;
+        }
+        $db = $mysql_pool->installDbBuilder();
+        $root->addChild($db);
+        return $db;
     }
 
     /**

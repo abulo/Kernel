@@ -100,8 +100,8 @@ abstract class Actor extends CoreBase
             $this->handle($event->data);
         });
         $this->saveContext->save();
-        $this->installMysqlPool($this->mysql_pool);
-        $this->db = $this->mysql_pool->dbQueryBuilder;
+        // $this->installMysqlPool($this->mysql_pool);
+        // $this->db = $this->mysql_pool->dbQueryBuilder;
         $this->execRegistHandle();
     }
 

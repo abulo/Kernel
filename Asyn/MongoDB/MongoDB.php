@@ -18,10 +18,11 @@ use MongoDB\Driver\Command;
 use MongoDB\BSON\UTCDatetime;
 use MongoDB\BSON\Timestamp;
 use MongoDB\Client;
+use Kernel\Asyn\IAsynPool;
 
-class MongoDB
+class MongoDB implements IAsynPool
 {
-    const SyncName = 'mongodb.';
+    const AsynName = 'mongodb.';
     private $config = [];
     private $active;
     private $manager;
@@ -77,6 +78,31 @@ class MongoDB
     public function getManager()
     {
         return $this->manager;
+    }
+
+
+    public function getAsynName()
+    {
+        return self::AsynName . $this->active;
+    }
+
+    public function pushToPool($client)
+    {
+        return $this->manager;
+    }
+
+    public function getSync()
+    {
+        return $this->manager;
+    }
+
+
+    /**
+     * @param $name
+     */
+    public function setName($name)
+    {
+        
     }
 
 

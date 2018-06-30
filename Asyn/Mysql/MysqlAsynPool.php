@@ -58,15 +58,16 @@ class MysqlAsynPool implements IAsynPool
      */
     public function installDbBuilder()
     {
-        $this->dbQueryBuilder = Pool::getInstance()->get(Miner::class)->setPool($this);
-        return $this->dbQueryBuilder;
+        return Pool::getInstance()->get(Miner::class)->setPool($this);
     }
 
+    
     /**
-     * 事务开启
-     * @return  返回一个Miner对象
+     * @param $db
+     * @return null
+     * @throws SwooleException
      */
-    public function begin()
+    public function begin(Miner $db)
     {
         $client = $this->pool_chan->pop();
         if (!$client->connected) {
@@ -77,21 +78,29 @@ class MysqlAsynPool implements IAsynPool
                 throw new SwooleException($client->connect_error);
             }
         }
-        $client->query("begin");
-        $this->dbQueryBuilder->setClient($client);
-        return $this->dbQueryBuilder;
+        $res = $client->query("begin");
+        if ($res === false) {
+            //如果执行错误,归还链接
+            $this->pushToPool($client);
+            throw new SwooleException($client->error);
+        }
+        $db->setClient($client);
+        return $client;
     }
+    
+    
 
     /**
      * 提交事务
      * @param   $client
      * @return
      */
-    public function commit($client)
+    public function commit(Miner $db,$client)
     {
         $client->query("commit");
-        $this->dbQueryBuilder->setClient(null);
+        $db->setClient(null);
         $this->pushToPool($client);
+        return true;
     }
 
     /**
@@ -99,47 +108,23 @@ class MysqlAsynPool implements IAsynPool
      * @param   $client
      * @return
      */
-    public function rollback($client)
+    public function rollback(Miner $db,$client)
     {
         $client->query("rollback");
-        $this->dbQueryBuilder->setClient(null);
+        $db->setClient(null);
         $this->pushToPool($client);
+        return true;
     }
 
 
-    public function begin_bak(callable $fuc, callable $errorFuc = null)
-    {
-        $client = $this->pool_chan->pop();
-        if (!$client->connected) {
-            $set = $this->config['mysql'][$this->active];
-            $result = $client->connect($set);
-            if (!$result) {
-                $this->pool_chan->push($client);
-                throw new SwooleException($client->connect_error);
-            }
-        }
-        $client->query("begin");
-        try {
-            $this->dbQueryBuilder->setClient($client);
-            $fuc($client);
-            $client->query("commit");
-        } catch (\Throwable $e) {
-            $client->query("rollback");
-            if ($errorFuc != null) {
-                $errorFuc($client);
-            }
-        } finally {
-            $this->dbQueryBuilder->setClient(null);
-        }
-        $this->pushToPool($client);
-    }
+
 
     /**
      * @param $sql
      * @param null $client
      * @param MySqlCoroutine $mysqlCoroutine
      * @return mixed
-     * @throws SwooleException
+     * @throws \Throwable
      */
     public function query($sql, $client = null, MySqlCoroutine $mysqlCoroutine)
     {
@@ -159,21 +144,17 @@ class MysqlAsynPool implements IAsynPool
             $result = $client->connect($set);
             if (!$result) {
                 $this->pushToPool($client);
-                $result = $mysqlCoroutine->getResult(new SwooleException("[err]:$client->connect_error"));
-                $mysqlCoroutine->destroy();
-                return $result;
+                $mysqlCoroutine->getResult(new SwooleException("[err]:$client->connect_error"));
             }
         }
         $res = $client->query($sql, $mysqlCoroutine->getTimeout() / 1000);
         if ($res === false) {
+            $this->pushToPool($client);
             if ($client->errno == 110) {
-                $result = $mysqlCoroutine->onTimeOut();
+                $mysqlCoroutine->onTimeOut();
             } else {
-                $result = $mysqlCoroutine->getResult(new SwooleException("[sql]:$sql,[err]:$client->error"));
+                $mysqlCoroutine->getResult(new SwooleException("[sql]:$sql,[err]:$client->error"));
             }
-            $client->close();
-            $mysqlCoroutine->destroy();
-            return $result;
         }
         $mysqlCoroutine->destroy();
         if ($delayRecv) {//延迟收包
@@ -235,14 +216,12 @@ class MysqlAsynPool implements IAsynPool
             $res = $res->execute($holder, $mysqlCoroutine->getTimeout() / 1000);
         }
         if ($res === false) {
+            $this->pushToPool($client);
             if ($client->errno == 110) {
-                $result = $mysqlCoroutine->onTimeOut();
+                $mysqlCoroutine->onTimeOut();
             } else {
-                $result = $mysqlCoroutine->getResult(new SwooleException("[sql]:$sql,[err]:$client->error"));
+                $mysqlCoroutine->getResult(new SwooleException("[sql]:$sql,[err]:$client->error"));
             }
-            $client->close();
-            $mysqlCoroutine->destroy();
-            return $result;
         }
         $mysqlCoroutine->destroy();
         if ($delayRecv) {//延迟收包

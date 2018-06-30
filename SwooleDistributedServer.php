@@ -31,6 +31,7 @@ use Kernel\Coroutine\Coroutine;
 use Kernel\Memory\Pool;
 use Kernel\Test\TestModule;
 use Kernel\Asyn\MongoDB\MongoDB;
+use Kernel\Asyn\IAsynPool;
 /**
  * Created by PhpStorm.
  * User: zhangjincheng
@@ -128,10 +129,9 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      */
     private $reloadLockMap = [];
 
-
-
     /**
      * SwooleDistributedServer constructor.
+     * @throws \Noodlehaus\Exception\EmptyDirectoryException
      */
     public function __construct()
     {
@@ -177,14 +177,13 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      */
     public function getMysql($poolKey)
     {
-
         return $this->asynPools[MysqlAsynPool::AsynName . $poolKey]->getSync();
-
     }
 
 
     /**
      * 开始前创建共享内存保存USID值
+     * @throws \Exception
      */
     public function beforeSwooleStart()
     {
@@ -320,6 +319,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * @param $data
      * @return mixed|null
      * @throws SwooleException
+     * @throws \Exception
      */
     public function onSwooleTask($serv, $task_id, $from_id, $data)
     {
@@ -598,7 +598,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * @param $pool
      * @throws SwooleException
      */
-    public function addAsynPool($name, $pool)
+    public function addAsynPool($name, IAsynPool $pool)
     {
         if (array_key_exists($name, $this->asynPools)) {
             throw  new SwooleException('pool key is exists!');
@@ -629,7 +629,6 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
         $this->initAsynPools($workerId);
         $this->initRedisProxy($workerId);
         $this->initMysqlProxy($workerId);
-        $this->initSyncPools($workerId);
         // $this->redis_pool = $this->asynPools['redisPool'] ?? null;
         // $this->mysql_pool = $this->asynPools['mysqlPool'] ?? null;
         //进程锁保证只有一个进程会执行以下的代码,reload也不会执行
@@ -656,29 +655,10 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                 }
                 Actor::recovery($workerId);
             }
-        }else{
-            //mongodb 是阻塞连接,所以将连接放在 task 进程中
-            // $this->initSyncPools($workerId);
         }
     }
 
 
-    public function initSyncPools($workerId)
-    {
-        // $asynPools = [];
-        if ($this->config->get('mongodb.enable', false)) {
-            $activePools = $this->config->get('mongodb.active');
-            if (is_string($activePools)) {
-                $activePools = explode(',', $activePools);
-            }
-
-            foreach ($activePools as $poolKey) {
-                $this->asynPools[MongoDB::SyncName . $poolKey] = new MongoDB($this->config, $poolKey);
-            }
-        }
-
-        // $this->asynPools = $asynPools;
-    }
 
     /**
      * redis 代理
@@ -753,7 +733,8 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
             }
 
             foreach ($activePools as $poolKey) {
-                $asynPools[RedisAsynPool::AsynName . $poolKey] = new RedisAsynPool($this->config, $poolKey);
+                // $asynPools[RedisAsynPool::AsynName . $poolKey] = new RedisAsynPool($this->config, $poolKey);
+                $this->addAsynPool(RedisAsynPool::AsynName . $poolKey,(new RedisAsynPool($this->config, $poolKey)));
             }
         }
 
@@ -764,23 +745,41 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                 $activePools = explode(',', $activePools);
             }
             foreach ($activePools as $poolKey) {
-                $asynPools[MysqlAsynPool::AsynName . $poolKey] = new MysqlAsynPool($this->config, $poolKey);
+                // $asynPools[MysqlAsynPool::AsynName . $poolKey] = new MysqlAsynPool($this->config, $poolKey);
+                $this->addAsynPool(MysqlAsynPool::AsynName . $poolKey,(new MysqlAsynPool($this->config, $poolKey)));
             }
         }
 
         if ($this->config->get('http_client', false)) {
             foreach ($this->config->get('http_client') as $poolKey => $url) {
-                $asynPools[$poolKey] = new HttpClientPool($this->config, $url);
+                // $asynPools[$poolKey] = new HttpClientPool($this->config, $url);
+
+                $this->addAsynPool($poolKey,new HttpClientPool($this->config, $url));
             }
         }
 
 
 
         if ($this->config->get('error.dingding_enable', false)) {
-            $asynPools['dingdingRest'] = new HttpClientPool($this->config, $this->config->get('error.dingding_url'));
+            // $asynPools['dingdingRest'] = new HttpClientPool($this->config, $this->config->get('error.dingding_url'));
+            $this->addAsynPool('dingdingRest',new HttpClientPool($this->config, $this->config->get('error.dingding_url')));
+
         }
 
-        $this->asynPools = $asynPools;
+
+        if ($this->config->get('mongodb.enable', false)) {
+            $activePools = $this->config->get('mongodb.active');
+            if (is_string($activePools)) {
+                $activePools = explode(',', $activePools);
+            }
+
+            foreach ($activePools as $poolKey) {
+                $this->addAsynPool(MongoDB::AsynName . $poolKey,(new MongoDB($this->config, $poolKey)));
+                // $this->asynPools[MongoDB::AsynName . $poolKey] = new MongoDB($this->config, $poolKey);
+            }
+        }
+
+        // $this->asynPools = $asynPools;
     }
 
 
@@ -798,7 +797,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
 
     public function getMongoPool($name)
     {
-        return $this->asynPools[MongoDB::SyncName . $name]??null;
+        return $this->asynPools[MongoDB::AsynName . $name]??null;
     }
 
     /**

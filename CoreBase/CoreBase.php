@@ -70,10 +70,10 @@ class CoreBase extends Child
      * 安装MysqlPool
      * @param MysqlAsynPool $mysqlPool
      */
-    protected function installMysqlPool(MysqlAsynPool $mysqlPool)
-    {
-        $this->dbQueryBuilders[$mysqlPool->getActveName()] = $mysqlPool->installDbBuilder();
-    }
+    // public function installMysqlPool(MysqlAsynPool $mysqlPool)
+    // {
+    //     $this->dbQueryBuilders[$mysqlPool->getActveName()] = $mysqlPool->installDbBuilder();
+    // }
 
 
     /**
@@ -93,6 +93,18 @@ class CoreBase extends Child
     public function getMysqlPool($name)
     {
         return getInstance()->getMysqlPool($name);
+    }
+
+
+    /**
+     * 获取一个 mongodb 链接
+     *
+     * @param [type] $name
+     * @return void
+     */
+    public function getMongoPool($name)
+    {
+        return getInstance()->getMongoPool($name);
     }
 
     /**
@@ -123,12 +135,6 @@ class CoreBase extends Child
     {
         parent::destroy();
         $this->is_destroy = true;
-        foreach ($this->dbQueryBuilders as $dbQueryBuilder) {
-            $dbQueryBuilder->clear();
-            $dbQueryBuilder->setClient(null);
-            Pool::getInstance()->push($dbQueryBuilder);
-        }
-        $this->dbQueryBuilders = [];
     }
 
     /**
