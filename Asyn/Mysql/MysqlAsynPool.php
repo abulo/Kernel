@@ -85,7 +85,7 @@ class MysqlAsynPool implements IAsynPool
             throw new SwooleException($client->error);
         }
         $db->setClient($client);
-        return $client;
+        return $db;
     }
     
     
