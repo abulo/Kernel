@@ -181,6 +181,23 @@ class Start
         if (!isset($argv[1])) {
             exit("Usage: php yourfile.php {start|stop|kill|reload|restart|status}\n");
         }
+
+
+
+        $current_user = trim(shell_exec('whoami'));
+
+
+        $sys_user = self::$_worker->config->get('server.set.user');
+
+        if($current_user != $sys_user)
+        {
+            secho("STA", "Please use ".$sys_user." Run script");
+            exit;
+        }
+
+        //获取运行框架的用户
+
+
         // Get command.
         $command = trim($argv[1]);
         //主进程
