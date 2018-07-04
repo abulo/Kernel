@@ -36,18 +36,26 @@ class Token
         $key = md5($key ? $key : 'weimeng');
 
 
-        $c = base64_decode($string);
-        $ivlen = openssl_cipher_iv_length($cipher = "AES-128-CBC");
-        $iv = substr($c, 0, $ivlen);
-        $hmac = substr($c, $ivlen, $sha2len = 32);
-        $ciphertext_raw = substr($c, $ivlen+$sha2len);
-        $original_plaintext = openssl_decrypt($ciphertext_raw, $cipher, $key, $options = OPENSSL_RAW_DATA, $iv);
-        $calcmac = hash_hmac('sha256', $ciphertext_raw, $key, $as_binary = true);
-        if (hash_equals($hmac, $calcmac)) {//PHP 5.6+ timing attack safe comparison
-            return $original_plaintext;
-        } else {
+
+        try {
+            $c = base64_decode($string);
+            $ivlen = openssl_cipher_iv_length($cipher = "AES-128-CBC");
+            $iv = substr($c, 0, $ivlen);
+            $hmac = substr($c, $ivlen, $sha2len = 32);
+            $ciphertext_raw = substr($c, $ivlen+$sha2len);
+            $original_plaintext = openssl_decrypt($ciphertext_raw, $cipher, $key, $options = OPENSSL_RAW_DATA, $iv);
+            $calcmac = hash_hmac('sha256', $ciphertext_raw, $key, $as_binary = true);
+            if (hash_equals($hmac, $calcmac)) {//PHP 5.6+ timing attack safe comparison
+                return $original_plaintext;
+            } else {
+                return false;
+            }
+        } catch (\Exception $e) {
             return false;
         }
+
+
+        
         // try {
         //     $string=@pack("H*", strtolower($string));
         //     $abc = @openssl_decrypt($string, 'des-ede3', $key, true);
