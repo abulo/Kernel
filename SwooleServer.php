@@ -51,7 +51,7 @@ abstract class SwooleServer extends ProcessRPC
     /**
      * 版本
      */
-    const version = "3.2.5";
+    const version = "3.3.1";
 
     /**
      * server name
@@ -431,10 +431,13 @@ abstract class SwooleServer extends ProcessRPC
      */
     public function onSwooleReceive($serv, $fd, $from_id, $data, $server_port = null)
     {
-
-        $server_port = $this->getServerPort($fd);
-        $uid = $this->getUidFromFd($fd);
-
+        if (!Start::$testUnity) {
+            $server_port = $this->getServerPort($fd);
+            $uid = $this->getUidFromFd($fd);
+        } else {
+            $fd = 'self';
+            $uid = $fd;
+        }
         $pack = $this->portManager->getPack($server_port);
         //反序列化，出现异常断开连接
         try {
@@ -733,11 +736,12 @@ abstract class SwooleServer extends ProcessRPC
      * @param $data
      * @param bool $ifPack
      * @param null $topic
+     * @return bool
      */
     public function send($fd, $data, $ifPack = false, $topic = null)
     {
         if (!$this->server->exist($fd)) {
-            return;
+            return false;
         }
         if ($ifPack) {
             $pack = $this->portManager->getPackFromFd($fd);
@@ -745,7 +749,7 @@ abstract class SwooleServer extends ProcessRPC
                 $data = $pack->pack($data, $topic);
             }
         }
-        $this->server->send($fd, $data);
+        return $this->server->send($fd, $data);
     }
 
     /**

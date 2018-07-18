@@ -141,7 +141,7 @@ abstract class ProcessRPC extends Child
      * @param $worker_id
      * @throws \Exception
      */
-    protected function sendMessage($data, $worker_id)
+    public function sendMessage($data, $worker_id)
     {
         if (getInstance()->isUserProcess($worker_id)) {
             $process = ProcessManager::getInstance()->getProcessFromID($worker_id);
@@ -151,7 +151,10 @@ abstract class ProcessRPC extends Child
             if ($worker_id == getInstance()->workerId) {
                 $process->readData($data);
             } else {
-                $process->process->write(\swoole_serialize::pack($data));
+                //封装下协议
+                $data = \swoole_serialize::pack($data);
+                $data = pack("N", strlen($data)+4).$data;
+                $process->process->write($data);
             }
         } else {
             if ($worker_id == getInstance()->workerId) {

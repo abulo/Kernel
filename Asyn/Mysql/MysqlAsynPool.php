@@ -24,10 +24,6 @@ class MysqlAsynPool implements IAsynPool
      * @var Miner
      */
     protected $mysql_client;
-    /**
-     * @var Miner
-     */
-    public $dbQueryBuilder;
     private $client_max_count;
 
     public function __construct($config, $active)
@@ -53,6 +49,7 @@ class MysqlAsynPool implements IAsynPool
     {
         return $this->active;
     }
+
     /**
      * @return Miner
      */
@@ -61,7 +58,6 @@ class MysqlAsynPool implements IAsynPool
         return Pool::getInstance()->get(Miner::class)->setPool($this);
     }
 
-    
     /**
      * @param $db
      * @return null

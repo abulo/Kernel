@@ -125,6 +125,7 @@ class ClusterProcess extends Process
      * 与Actor通讯
      * @param $actor
      * @param $data
+     * @throws \Exception
      */
     public function callActor($actor, $data)
     {
@@ -426,6 +427,7 @@ class ClusterProcess extends Process
      * @param $topic
      * @param $data
      * @param $excludeUids
+     * @throws \Exception
      */
     public function th_pub($topic, $data, $excludeUids = [])
     {

@@ -29,8 +29,14 @@ class Start
      * @var
      */
     protected static $debug;
-
-
+    /**
+     * @var
+     */
+    protected static $xdebug;
+    /**
+     * @var
+     */
+    protected static $coverage;
     /**
      * @var string
      */
@@ -46,8 +52,10 @@ class Start
      */
     protected static $leader;
 
-
-
+    /**
+     * @var
+     */
+    protected static $xdebug_table;
     /**
      * 单元测试
      * @var bool
@@ -81,7 +89,13 @@ class Start
     public static function run($daemonize = false)
     {
         self::$debug = new \swoole_atomic(0);
+        self::$xdebug = false;
+        self::$coverage = false;
         self::$leader = new \swoole_atomic(0);
+        self::$xdebug_table = new \swoole_table(1);
+        self::$xdebug_table->column('wid', \swoole_table::TYPE_INT, 8);
+        self::$xdebug_table->column('cid', \swoole_table::TYPE_INT, 8);
+        self::$xdebug_table->create();
         self::$startTime = date('Y-m-d H:i:s');
         self::$startMillisecond = getMillisecond();
         self::$daemonize = $daemonize;
@@ -166,6 +180,26 @@ class Start
             secho("SYS", "DEBUG关闭");
         }
     }
+    public static function getCoverage()
+    {
+        return self::$coverage;
+    }
+
+    public static function setCoverage($coverage)
+    {
+        self::$coverage = $coverage;
+    }
+    public static function getXDebug()
+    {
+        return self::$xdebug;
+    }
+
+    public static function setXDebug($debug)
+    {
+        self::$xdebug = $debug;
+    }
+
+    
 
     /**
      * Parse command.
@@ -480,5 +514,29 @@ class Start
     public static function getStartMillisecond()
     {
         return self::$startMillisecond;
+    }
+
+    public static function getLockXDebug()
+    {
+        $result = self::$xdebug_table->get('debug');
+        $wid = getInstance()->getWorkerId();
+        $cid = \Swoole\Coroutine::getuid();
+        if ($cid==-1) {
+            return false;
+        }
+        if ($result===false) {
+            self::$xdebug_table->set("debug", ['wid'=>$wid,'cid'=>$cid]);
+            return true;
+        } else {
+            if ($result['wid']==$wid&&$result['cid']==$cid) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+    public static function cleanXDebugLock()
+    {
+        self::$xdebug_table->del('debug');
     }
 }

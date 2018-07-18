@@ -9,6 +9,7 @@
 namespace Kernel\Asyn\AMQP;
 
 use PhpAmqpLib\Exception\AMQPRuntimeException;
+use PhpAmqpLib\Exception\AMQPTimeoutException;
 use PhpAmqpLib\Wire\AMQPWriter;
 use PhpAmqpLib\Wire\IO\AbstractIO;
 use Swoole;
@@ -144,7 +145,6 @@ class SwooleIO extends AbstractIO
     public function read($len)
     {
         $this->check_heartbeat();
-
         do {
             if ($len <= strlen($this->buffer)) {
                 $data = substr($this->buffer, 0, $len);
@@ -160,7 +160,7 @@ class SwooleIO extends AbstractIO
 
             $read_buffer = $this->sock->recv($this->read_write_timeout ? $this->read_write_timeout : -1);
             if ($read_buffer === false) {
-                throw new AMQPRuntimeException('Error receiving data, errno=' . $this->sock->errCode);
+                throw new AMQPTimeoutException('Error receiving data, errno=' . $this->sock->errCode);
             }
 
             if ($read_buffer === '') {
@@ -200,6 +200,10 @@ class SwooleIO extends AbstractIO
      */
     public function check_heartbeat()
     {
+        if (!$this->sock->connected) {
+            $this->reconnect();
+            return;
+        }
         // ignore unless heartbeat interval is set
         if ($this->heartbeat !== 0 && $this->last_read && $this->last_write) {
             $t = microtime(true);

@@ -9,6 +9,7 @@
 namespace Kernel\Components\Process;
 
 use Kernel\Components\Event\EventDispatcher;
+use Kernel\Start;
 use Kernel\SwooleMarco;
 
 abstract class Process extends ProcessRPC
@@ -19,6 +20,7 @@ abstract class Process extends ProcessRPC
     protected $log;
     protected $token = 0;
     protected $params;
+    protected $socketBuff = "";
 
     /**
      * Process constructor.
@@ -36,7 +38,7 @@ abstract class Process extends ProcessRPC
         $this->log = getInstance()->log;
         $this->params = $params;
         if (getInstance()->server != null) {
-            $this->process = new \swoole_process([$this, '__start'], false, 2);
+            $this->process = new \swoole_process([$this, '__start'], false, 1);
             getInstance()->server->addProcess($this->process);
         }
     }
@@ -54,8 +56,27 @@ abstract class Process extends ProcessRPC
         go(function () use ($process) {
             $this->start($process);
         });
+        //Code coverage
+        register_tick_function([$this, 'onPhpTick']);
     }
 
+    /**
+     * Code coverage onPhpTick
+     */
+    public function onPhpTick()
+    {
+        if (!Start::getCoverage()) {
+            return;
+        }
+        $redis_pool = getInstance()->getAsynPool("redisPool");
+        if ($redis_pool != null) {
+            $dump = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+            $file = explode("app-debug", $dump[0]['file'])[1]??null;
+            if (!empty($file)) {
+                $redis_pool->getSync()->zIncrBy(SwooleMarco::CodeCoverage, 1, $file . ":" . $dump[0]['line']);
+            }
+        }
+    }
 
     /**
      * @param $process
@@ -79,8 +100,25 @@ abstract class Process extends ProcessRPC
      */
     public function onRead()
     {
-        $recv = \swoole_serialize::unpack($this->process->read(64 * 1024));
-        $this->readData($recv);
+        while (true) {
+            try {
+                $recv = $this->process->read();
+            } catch (\Throwable $e) {
+                return;
+            }
+            $this->socketBuff .= $recv;
+            while (strlen($this->socketBuff) > 4) {
+                $len = unpack("N", $this->socketBuff)[1];
+                if (strlen($this->socketBuff) >= $len) {//满足完整一个包
+                    $data = substr($this->socketBuff, 4, $len-4);
+                    $recv_data = \swoole_serialize::unpack($data);
+                    $this->readData($recv_data);
+                    $this->socketBuff = substr($this->socketBuff, $len);
+                } else {
+                    break;
+                }
+            }
+        }
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace Kernel\CoreBase;
 
+use Kernel\Asyn\Mysql\Miner;
 use Kernel\Components\AOP\Proxy;
 use Kernel\Coroutine\CoroutineNull;
 use Kernel\Memory\Pool;

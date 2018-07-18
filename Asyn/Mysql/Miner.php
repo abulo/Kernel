@@ -1614,8 +1614,13 @@ class Miner extends Child
 
             if ($usePlaceholders && $autoQuote) {
                 $statement .= "`".$set['column'] . "` " . self::EQUALS . " ?, ";
-
-                $this->setPlaceholderValues[] = $set['value'];
+                if ($set['value']===false) {
+                    $this->setPlaceholderValues[] = 0;
+                } elseif ($set['value']===true) {
+                    $this->setPlaceholderValues[] = 1;
+                } else {
+                    $this->setPlaceholderValues[] = $set['value'];
+                }
             } else {
                 $statement .= "`".$set['column'] . "` " . self::EQUALS . " " . $this->autoQuote($set['value'], $autoQuote) . ", ";
             }
@@ -2629,7 +2634,6 @@ class Miner extends Child
         } else {
             $statement = $sql;
         }
-
         // Only execute if a statement is set.
         if ($statement) {
             try {
@@ -2655,8 +2659,18 @@ class Miner extends Child
                     $this->pdoRollBackTrans();
                     throw $e;
                 }
+            } catch (\Throwable $e) {
+                $this->setPdoConnection(null);
+                $this->pdoConnect($this->activeConfig);
+                try {
+                    $PdoConnection = $this->getPdoConnection();
+                    $PdoStatement = $PdoConnection->prepare($statement);
+                    $PdoStatement->execute($this->getPlaceholderValues());
+                } catch (\PDOException $ex) {
+                    $this->pdoRollBackTrans();
+                    throw $ex;
+                }
             }
-
             return $PdoStatement;
         } else {
             return false;
@@ -2672,14 +2686,26 @@ class Miner extends Child
         $this->activeConfig = $activeConfig;
         $dsn = 'mysql:dbname=' . $activeConfig["database"] . ';host=' .
             $activeConfig["host"] . ';port=' . $activeConfig['port'] ?? 3306;
+        
+        
+        $option = [
+
+            \PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES ' . $activeConfig['charset'] ?? 'utf8',
+            \PDO::ATTR_ERRMODE =>  \PDO::ERRMODE_EXCEPTION,
+            \PDO::ATTR_EMULATE_PREPARES =>  false,
+            \PDO::ATTR_TIMEOUT =>  3,
+            \PDO::ATTR_PERSISTENT =>  false,
+        ];
         $pdo = new \PDO(
             $dsn,
             $activeConfig["user"],
             $activeConfig["password"],
-            [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES ' . $activeConfig['charset'] ?? 'utf8']
+            $option
+            // [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES ' . $activeConfig['charset'] ?? 'utf8']
         );
-        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+        // $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        // $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+        // $pdo->setAttribute(\PDO::ATTR_TIMEOUT, 3);
         $this->setPdoConnection($pdo);
 
 
@@ -2692,11 +2718,12 @@ class Miner extends Child
      */
     public function getPlaceholderValues()
     {
-        return array_merge(
+        $array = array_merge(
             $this->getSetPlaceholderValues(),
             $this->getWherePlaceholderValues(),
             $this->getHavingPlaceholderValues()
         );
+        return $array;
     }
 
     /**
