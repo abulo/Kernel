@@ -127,11 +127,9 @@ abstract class CoroutineBase implements ICoroutineBase
         } else {
             $this->chan = new \chan();
         }
-        $readArr = [$this->chan];
-        $writeArr = null;
-        $type = \chan::select($readArr, $writeArr, $this->MAX_TIMERS / 1000);
-        if ($type) {
-            $result = $this->chan->pop();
+        $result = $this->chan->pop($this->MAX_TIMERS/1000);
+        //没有错误码就是正常的
+        if ($this->chan->errCode==0) {
             $result = $this->getResult($result);
         } else {//超时
             //有降级函数则访问降级函数
