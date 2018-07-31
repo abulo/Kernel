@@ -45,10 +45,20 @@ class ChildProxy extends Proxy
     {
         $run_index = array_pop($this->run_index_arr);
         $time = " -> " . ((microtime(true) - $this->run_start_time)*1000)." ms";
-        $this->own->getContext()['RunStack'][$run_index] = $this->own->getContext()['RunStack'][$run_index] . $time;
-        $count = count($this->own->getContext()['RunStack']);
-        for ($i = $run_index + 1; $i < $count; $i++) {
-            $this->own->getContext()['RunStack'][$i] = "─" . $this->own->getContext()['RunStack'][$i];
+
+        if(is_array($this->own->getContext())&& !empty($this->own->getContext()))
+        {
+            if(array_key_exists('RunStack',$this->own->getContext()))
+            {
+                if(array_key_exists($run_index,$this->own->getContext()['RunStack']))
+                {
+                    $this->own->getContext()['RunStack'][$run_index] = $this->own->getContext()['RunStack'][$run_index] . $time;
+                    $count = count($this->own->getContext()['RunStack']);
+                    for ($i = $run_index + 1; $i < $count; $i++) {
+                        $this->own->getContext()['RunStack'][$i] = "─" . $this->own->getContext()['RunStack'][$i];
+                    }
+                }
+            }
         }
     }
 }
