@@ -1,19 +1,24 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 18-3-19
  * Time: 上午10:07
  */
 
 namespace Kernel\Controllers;
 
-use Kernel\Components\Event\EventDispatcher;
 use Kernel\CoreBase\Actor;
+use Kernel\CoreBase\ChildProxy;
 use Kernel\CoreBase\Controller;
 
 class Test extends Controller
 {
+    public function __construct(string $proxy = ChildProxy::class)
+    {
+        parent::__construct($proxy);
+    }
+
     public function http_error()
     {
         throw new \Exception("test");
@@ -21,7 +26,7 @@ class Test extends Controller
 
     public function http_redis()
     {
-        $this->redis_pool->getCoroutine()->incr("test");
+        $this->redis->incr("test");
     }
 
     public function http_createActor()

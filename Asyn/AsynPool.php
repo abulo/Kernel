@@ -2,7 +2,7 @@
 /**
  * 异步连接池基类
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 16-7-25
  * Time: 上午11:40
  */

@@ -46,7 +46,7 @@ class Error extends Model
     {
         $id = session_create_id();
         $key = $this->redis_prefix . $id;
-        $this->redis_pool->getCoroutine()->set($key, $data, ["NX", "EX" => $this->redis_timeOut]);
+        $this->redis->set($key, $data, ["NX", "EX" => $this->redis_timeOut]);
         $url = $this->url . "?id=" . $id;
         secho("Error", "访问：$url 查看");
         if ($this->dingding_enable) {
@@ -86,13 +86,13 @@ class Error extends Model
     {
         $json = json_encode([
             'msgtype' => 'markdown',
-            'markdown'=> [
+            'markdown' => [
                 'title' => $title,
                 "text" => $text
             ]
         ]);
         $result = $this->client->httpClient->setData($json)
-            ->setHeaders(['Content-type'=>'application/json'])->setMethod('POST')->coroutineExecute($this->robot);
+            ->setHeaders(['Content-type' => 'application/json'])->setMethod('POST')->coroutineExecute($this->robot);
         return $result;
     }
 }

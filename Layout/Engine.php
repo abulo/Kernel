@@ -29,7 +29,7 @@ class Engine
      * @param   $data
      * @return
      */
-    public function render(array $data = array())
+    public function render($data = array())
     {
         extract($data);
         $level = ob_get_level();

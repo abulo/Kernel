@@ -20,7 +20,7 @@ class Session
     public function __construct($sessionId)
     {
         $this->sessionId = $sessionId;
-        $this->sessionHandler = getInstance()->getRedisProxy('session');
+        $this->sessionHandler = getInstance()->getAsynPool('redisPool');
     }
 
     /**

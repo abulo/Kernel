@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 17-2-23
  * Time: 下午5:32
  */
@@ -38,7 +38,11 @@ class Lock
     public function __construct($lock_id, $redisPoolName = null)
     {
         $this->lock_id = $lock_id;
-        $this->redis_pool = getInstance()->getAsynPool($redisPoolName);
+        if (empty($redisPoolName)) {
+            $this->redis_pool = getInstance()->redis_pool;
+        } else {
+            $this->redis_pool = getInstance()->getAsynPool($redisPoolName);
+        }
     }
 
     /**

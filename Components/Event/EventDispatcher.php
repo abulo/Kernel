@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 17-8-4
  * Time: 上午11:23
  */
@@ -63,10 +63,10 @@ class EventDispatcher
             if ($index !== null) {
                 unset($this->_eventListeners [$type] [$index]);
             }
-        }
-        $numListeners = count($this->_eventListeners [$type]);
-        if ($numListeners == 0) {
-            unset($this->_eventListeners [$type]);
+            $numListeners = count($this->_eventListeners [$type]);
+            if ($numListeners == 0) {
+                unset($this->_eventListeners [$type]);
+            }
         }
     }
 

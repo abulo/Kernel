@@ -1,13 +1,14 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 16-12-30
  * Time: 上午11:49
  */
 
 namespace Kernel\Test;
 
+use Kernel\Asyn\Mysql\Miner;
 use Kernel\CoreBase\CoreBase;
 use Kernel\Memory\Pool;
 
@@ -22,19 +23,20 @@ use Kernel\Memory\Pool;
 abstract class TestCase extends CoreBase
 {
     /**
-     * @var \Kernel\Asyn\Redis\RedisAsynPool
+     * @var Miner
      */
-    public $redis_pool;
+    public $db;
+
     /**
-     * @var \Kernel\Asyn\Mysql\MysqlAsynPool
+     * @var \Redis
      */
-    public $mysql_pool;
+    protected $redis;
 
     public function __construct()
     {
         parent::__construct();
-        $this->redis_pool = getInstance()->redis_pool;
-        $this->mysql_pool = getInstance()->mysql_pool;
+        $this->redis = $this->loader->redis("redisPool");
+        $this->db = $this->loader->mysql("mysqlPool", $this);
     }
 
     /**

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 16-9-1
  * Time: 下午4:25
  */
@@ -10,6 +10,7 @@ namespace Kernel\Asyn\Mysql;
 
 use Kernel\CoreBase\SwooleException;
 use Kernel\Coroutine\CoroutineBase;
+use Kernel\Memory\Pool;
 use Kernel\Start;
 
 class MySqlCoroutine extends CoroutineBase
@@ -42,5 +43,14 @@ class MySqlCoroutine extends CoroutineBase
         }
         $result = $this->getResult($result);
         return $result;
+    }
+
+    /**
+     * @throws SwooleException
+     */
+    public function destroy()
+    {
+        parent::destroy();
+        Pool::getInstance()->push($this);
     }
 }

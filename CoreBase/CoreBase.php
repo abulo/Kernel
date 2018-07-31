@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 16-7-15
  * Time: 下午1:24
  */
@@ -38,16 +38,6 @@ class CoreBase extends Child
      * @var Config
      */
     public $config;
-    /**
-     * @var RedisRoute
-     */
-    // public $redis_pool;
-    /**
-     * @var MysqlAsynPool
-     */
-    // public $mysql_pool;
-
-    protected $dbQueryBuilders = [];
 
     /**
      * Task constructor.
@@ -61,72 +51,8 @@ class CoreBase extends Child
             $this->logger = getInstance()->log;
             $this->server = getInstance()->server;
             $this->config = getInstance()->config;
-            // $this->redis_pool = RedisRoute::getInstance();
-            // $this->mysql_pool = getInstance()->getAsynPool('mysqlPool');
         }
     }
-
-    /**
-     * 安装MysqlPool
-     * @param MysqlAsynPool $mysqlPool
-     */
-    // public function installMysqlPool(MysqlAsynPool $mysqlPool)
-    // {
-    //     $this->dbQueryBuilders[$mysqlPool->getActveName()] = $mysqlPool->installDbBuilder();
-    // }
-
-
-    /**
-     * 获取一个 redis 连接池
-     * @param
-     * @return
-     */
-    public function getRedisPool($name)
-    {
-        return getInstance()->getRedisPool($name);
-    }
-    /**
-     * 获取 mysql pool
-     * @param   $name
-     * @return
-     */
-    public function getMysqlPool($name)
-    {
-        return getInstance()->getMysqlPool($name);
-    }
-
-
-    /**
-     * 获取一个 mongodb 链接
-     *
-     * @param [type] $name
-     * @return void
-     */
-    public function getMongoPool($name)
-    {
-        return getInstance()->getMongoPool($name);
-    }
-
-    /**
-     * 获取一个代理链接
-     * @param
-     * @return mysql
-     */
-    public function getMysqlProxy($name)
-    {
-        return getInstance()->getMysqlProxy($name);
-    }
-
-    /**
-     * 获取 redis 代理
-     * @param    $name
-     * @return
-     */
-    public function getRedisProxy($name)
-    {
-        return getInstance()->getRedisProxy($name);
-    }
-
 
     /**
      * 销毁，解除引用

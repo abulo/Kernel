@@ -3,13 +3,12 @@
 namespace Kernel;
 
 use Kernel\Asyn\HttpClient\HttpClientPool;
+use Kernel\Asyn\IAsynPool;
 use Kernel\Asyn\MQTT\Utility;
 use Kernel\Asyn\Mysql\Miner;
 use Kernel\Asyn\Mysql\MysqlAsynPool;
-use Kernel\Asyn\Mysql\MysqlProxy;
 use Kernel\Asyn\Redis\RedisAsynPool;
-use Kernel\Asyn\Redis\RedisProxy;
-// use Kernel\Asyn\Redis\RedisLuaManager;
+use Kernel\Asyn\Redis\RedisLuaManager;
 use Kernel\Components\Backstage\BackstageProcess;
 use Kernel\Components\CatCache\CatCacheProcess;
 use Kernel\Components\CatCache\TimerCallBack;
@@ -27,21 +26,19 @@ use Kernel\CoreBase\Actor;
 use Kernel\CoreBase\ControllerFactory;
 use Kernel\CoreBase\ModelFactory;
 use Kernel\CoreBase\SwooleException;
-use Kernel\Coroutine\Coroutine;
 use Kernel\Memory\Pool;
 use Kernel\Test\TestModule;
 use Kernel\Asyn\MongoDB\MongoDB;
-use Kernel\Asyn\IAsynPool;
+
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 16-7-14
  * Time: 上午9:18
  */
 abstract class SwooleDistributedServer extends SwooleWebSocketServer
 {
     const SERVER_NAME = "SERVER";
-
     /**
      * 实例
      * @var SwooleServer
@@ -50,11 +47,11 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     /**
      * @var RedisAsynPool
      */
-    // public $redis_pool;
+    public $redis_pool;
     /**
      * @var MysqlAsynPool
      */
-    // public $mysql_pool;
+    public $mysql_pool;
     /**
      * 404缓存
      * @var string
@@ -108,22 +105,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      */
     private $bind_ip;
 
-
-
     /**
-     * @var array Redis代理管理器
-     */
-    protected $redisProxyManager = [];
-
-    /**
-     * @var array Mysql代理管理器
-     */
-    protected $mysqlProxyManager = [];
-
-
-
-
-        /**
      * 重载锁
      * @var array
      */
@@ -173,13 +155,11 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     /**
      * 获取同步mysql
      * @return Miner
-     * @throws SwooleException
      */
-    public function getMysql($poolKey)
+    public function getMysql()
     {
-        return $this->asynPools[MysqlAsynPool::AsynName . $poolKey]->getSync();
+        return $this->mysql_pool->getSync();
     }
-
 
     /**
      * 开始前创建共享内存保存USID值
@@ -200,6 +180,8 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
         $this->task_lock = new \swoole_lock(SWOOLE_MUTEX);
         //开启用户进程
         $this->startProcess();
+        //开启一个UDP用于发graylog
+        GrayLogHelp::init();
         //开启Cluster端口
         ClusterHelp::getInstance()->buildPort();
         //Timer
@@ -377,12 +359,10 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * @return \Redis
      * @throws SwooleException
      */
-    public function getRedis($poolKey)
+    public function getRedis()
     {
-        // return $this->redis_pool->getSync();
-        return $this->asynPools[RedisAsynPool::AsynName . $poolKey]->getSync();
+        return $this->redis_pool->getSync();
     }
-
 
     /**
      * 广播(全部FD)
@@ -646,10 +626,6 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     {
         parent::onSwooleWorkerStart($serv, $workerId);
         $this->initAsynPools($workerId);
-        $this->initRedisProxy($workerId);
-        $this->initMysqlProxy($workerId);
-        // $this->redis_pool = $this->asynPools['redisPool'] ?? null;
-        // $this->mysql_pool = $this->asynPools['mysqlPool'] ?? null;
         //进程锁保证只有一个进程会执行以下的代码,reload也不会执行
         if (!$this->isTaskWorker() && $this->initLock->trylock()) {
             //进程启动后进行开服的初始化
@@ -679,69 +655,52 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                 Actor::recovery($workerId);
             }
         }
+        //Code coverage
+        register_tick_function([$this, 'onPhpTick']);
     }
 
-
-
     /**
-     * redis 代理
-     * @return
+     * 初始化各种连接池
+     * @param $workerId
+     * @throws SwooleException
      */
-    public function initRedisProxy($workerId)
+    public function initAsynPools($workerId)
     {
-        if ($this->config->get('redis_proxy.active')) {
-            $activeProxies = $this->config->get('redis_proxy.active');
-            if (is_string($activeProxies)) {
-                $activeProxies = explode(',', $activeProxies);
+        $this->asynPools = [];
+        if ($this->config->get('redis.enable', true)) {
+            $this->addAsynPool('redisPool', new RedisAsynPool($this->config, $this->config->get('redis.active')));
+        }
+        if ($this->config->get('mysql.enable', true)) {
+            $this->addAsynPool('mysqlPool', new MysqlAsynPool($this->config, $this->config->get('mysql.active')));
+        }
+        if ($this->config->get('error.dingding_enable', false)) {
+            $this->addAsynPool('dingdingRest', new HttpClientPool($this->config, $this->config->get('error.dingding_url')));
+        }
+
+
+        if ($this->config->get('mongodb.enable', false)) {
+            $activePools = $this->config->get('mongodb.active');
+            if (is_string($activePools)) {
+                $activePools = explode(',', $activePools);
             }
-            foreach ($activeProxies as $activeProxy) {
-                $this->redisProxyManager[$activeProxy] = new RedisProxy($this->config['redis_proxy'][$activeProxy]);
+            foreach ($activePools as $poolKey) {
+                $this->addAsynPool($poolKey,(new MongoDB($this->config, $poolKey)));
             }
         }
+        $this->redis_pool = $this->asynPools['redisPool'] ?? null;
+        $this->mysql_pool = $this->asynPools['mysqlPool'] ?? null;
     }
 
     /**
-     * 获取 redis 代理
-     * @param    $name
-     * @return boolean
+     * 开服初始化(支持协程)
+     * @return mixed
      */
-    public function getRedisProxy($name)
+    public function onOpenServiceInitialization()
     {
-        return $this->redisProxyManager[$name]??null;
-    }
-
-    /**
-     * mysql 代理
-     * @param   $name
-     * @return
-     */
-    public function getMysqlProxy($name)
-    {
-        return $this->mysqlProxyManager[$name]??null;
-    }
-
-    /**
-     * 代理 mysql
-     * @return
-     */
-    public function initMysqlProxy($workerId)
-    {
-        if ($this->config->get('mysql_proxy.active')) {
-            $activeProxies = $this->config->get('mysql_proxy.active');
-            if (is_string($activeProxies)) {
-                $activeProxies = explode(',', $activeProxies);
-            }
-
-            foreach ($activeProxies as $activeProxy) {
-                $this->mysqlProxyManager[$activeProxy] = new MysqlProxy(
-                    $this->config['mysql_proxy'][$activeProxy]
-                );
-            }
+        if ($this->mysql_pool != null) {
+            $this->mysql_pool->installDbBuilder();
         }
     }
-
-
-
 
     /**
      * Code coverage onPhpTick
@@ -779,116 +738,6 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                 }
             }
         }
-    }
-
-    /**
-     * 初始化各种连接池
-     * @param $workerId
-     */
-    public function initAsynPools($workerId)
-    {
-
-
-        $asynPools = [];
-        if ($this->config->get('redis.enable', false)) {
-            $activePools = $this->config->get('redis.active');
-            if (is_string($activePools)) {
-                $activePools = explode(',', $activePools);
-            }
-
-            foreach ($activePools as $poolKey) {
-                // $asynPools[RedisAsynPool::AsynName . $poolKey] = new RedisAsynPool($this->config, $poolKey);
-                $this->addAsynPool(RedisAsynPool::AsynName . $poolKey,(new RedisAsynPool($this->config, $poolKey)));
-            }
-        }
-
-
-        if ($this->config->get('mysql.enable', false)) {
-            $activePools = $this->config->get('mysql.active');
-            if (is_string($activePools)) {
-                $activePools = explode(',', $activePools);
-            }
-            foreach ($activePools as $poolKey) {
-                // $asynPools[MysqlAsynPool::AsynName . $poolKey] = new MysqlAsynPool($this->config, $poolKey);
-                $this->addAsynPool(MysqlAsynPool::AsynName . $poolKey,(new MysqlAsynPool($this->config, $poolKey)));
-            }
-        }
-
-        if ($this->config->get('http_client', false)) {
-            foreach ($this->config->get('http_client') as $poolKey => $url) {
-                // $asynPools[$poolKey] = new HttpClientPool($this->config, $url);
-
-                $this->addAsynPool($poolKey,new HttpClientPool($this->config, $url));
-            }
-        }
-
-
-
-        if ($this->config->get('error.dingding_enable', false)) {
-            // $asynPools['dingdingRest'] = new HttpClientPool($this->config, $this->config->get('error.dingding_url'));
-            $this->addAsynPool('dingdingRest',new HttpClientPool($this->config, $this->config->get('error.dingding_url')));
-
-        }
-
-
-        if ($this->config->get('mongodb.enable', false)) {
-            $activePools = $this->config->get('mongodb.active');
-            if (is_string($activePools)) {
-                $activePools = explode(',', $activePools);
-            }
-
-            foreach ($activePools as $poolKey) {
-                $this->addAsynPool(MongoDB::AsynName . $poolKey,(new MongoDB($this->config, $poolKey)));
-                // $this->asynPools[MongoDB::AsynName . $poolKey] = new MongoDB($this->config, $poolKey);
-            }
-        }
-
-        // $this->asynPools = $asynPools;
-    }
-
-
-    public function getRedisPool($name)
-    {
-        return $this->asynPools[RedisAsynPool::AsynName . $name]??null;
-    }
-
-
-    public function getMysqlPool($name)
-    {
-        return $this->asynPools[MysqlAsynPool::AsynName . $name]??null;
-    }
-
-
-    public function getMongoPool($name)
-    {
-        return $this->asynPools[MongoDB::AsynName . $name]??null;
-    }
-
-
-
-    /**
-     * 开服初始化(支持协程)
-     * @return mixed
-     */
-    public function onOpenServiceInitialization()
-    {
-
-        // if ($this->config->get('mysql.enable', false)) {
-        //     $activePools = $this->config->get('mysql.active');
-        //     if (is_string($activePools)) {
-        //         $activePools = explode(',', $activePools);
-        //     }
-        //     foreach ($activePools as $poolKey) {
-        //         if(!$this->isTaskWorker())
-        //         {
-        //             $this->asynPools[MysqlAsynPool::AsynName . $poolKey] = $this->asynPools[MysqlAsynPool::AsynName . $poolKey]->installDbBuilder();
-        //         }
-        //     }
-        // }
-
-        // if ($this->mysql_pool != null) {
-        //     $this->mysql_pool->installDbBuilder();
-        // }
     }
 
     /**

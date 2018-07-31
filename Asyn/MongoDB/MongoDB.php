@@ -22,7 +22,7 @@ use Kernel\Asyn\IAsynPool;
 
 class MongoDB implements IAsynPool
 {
-    const AsynName = 'mongodb.';
+    const AsynName = 'mongodb';
     private $config = [];
     private $active;
     private $manager;
@@ -83,7 +83,7 @@ class MongoDB implements IAsynPool
 
     public function getAsynName()
     {
-        return self::AsynName . $this->active;
+        return self::AsynName .':'. $this->active;
     }
 
     public function pushToPool($client)
@@ -102,7 +102,7 @@ class MongoDB implements IAsynPool
      */
     public function setName($name)
     {
-        
+
     }
 
 

@@ -11,7 +11,7 @@ use Kernel\Memory\Pool;
  * Controller 控制器
  * 对象池模式，实例会被反复使用，成员变量缓存数据记得在销毁时清理
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 16-7-15
  * Time: 上午11:59
  */

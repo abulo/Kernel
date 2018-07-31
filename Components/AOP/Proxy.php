@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 17-10-12
  * Time: 下午7:17
  */
@@ -28,11 +28,11 @@ abstract class Proxy implements IProxy
     {
         $this->beforeCall($name, $arguments);
         try {
-        	$result = sd_call_user_func_array([$this->own, $name], $arguments);
+            $result = sd_call_user_func_array([$this->own, $name], $arguments);
             return $result;
         } catch (\Throwable $e) {
             throw  $e;
-        }finally {
+        } finally {
             $this->afterCall($name, $arguments);
         }
     }

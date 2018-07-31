@@ -2,7 +2,7 @@
 /**
  * redis 异步客户端连接池
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 16-7-22
  * Time: 上午10:19
  */
@@ -15,7 +15,7 @@ use Kernel\Memory\Pool;
 
 class RedisAsynPool extends AsynPool
 {
-    const AsynName = 'redis.';
+    const AsynName = 'redis';
     /**
      * 连接
      * @var array
@@ -25,6 +25,7 @@ class RedisAsynPool extends AsynPool
     private $coroutineRedisHelp;
     private $redis_client;
     protected $name;
+
     public function __construct($config, $active)
     {
         parent::__construct($config);
@@ -317,6 +318,7 @@ class RedisAsynPool extends AsynPool
         }
         return array_values($arguments);
     }
+
     /**
      * 执行redis命令
      * @param $data
@@ -544,7 +546,7 @@ class RedisAsynPool extends AsynPool
      */
     public function getAsynName()
     {
-        return self::AsynName . $this->active;
+        return self::AsynName . ":" . $this->name;
     }
 
     /**
