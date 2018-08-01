@@ -212,7 +212,7 @@ class Controller extends CoreBase
         if ($destroy) {
             $this->destroy();
         }
-        
+
         return $result;
     }
 
@@ -284,7 +284,9 @@ class Controller extends CoreBase
             print_context($this->getContext());
             secho("EX", "--------------------------------------------------------------");
         }
-        $this->context['error_message'] = $e->getMessage();
+
+
+        $this->context['error_message'] = $e->getMessage(). var_export(debug_backtrace(),true);
         //如果是HTTP传递request过去
         if ($this->request_type == SwooleMarco::HTTP_REQUEST) {
             $e->request = $this->request;
