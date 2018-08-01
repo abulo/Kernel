@@ -4,7 +4,7 @@ namespace Kernel\CoreBase;
 /**
  * Model工厂模式
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 16-7-15
  * Time: 下午12:03
  */
@@ -48,6 +48,7 @@ class ModelFactory
         $model = str_replace('/', '\\', $old_model);
         if (!array_key_exists($old_model, $this->pool)) {
             $this->pool[$old_model] = new \SplStack();
+            ;
         }
         if (!$this->pool[$old_model]->isEmpty()) {
             $model_instance = $this->pool[$old_model]->shift();

@@ -12,7 +12,7 @@ use Kernel\Memory\Pool;
  * 在worker中的Task会被构建成TaskProxy。这个实例是单例的，
  * 所以发起task请求时每次都要使用loader给TaskProxy赋值，不能缓存重复使用，以免数据错乱。
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 16-7-15
  * Time: 下午12:00
  */
@@ -20,7 +20,15 @@ class Task extends TaskProxy
 {
     protected $start_run_time;
     protected static $efficiency_monitor_enable;
+    /**
+     * @var Miner
+     */
+    public $db;
 
+    /**
+     * @var \Redis
+     */
+    protected $redis;
     public function __construct()
     {
         parent::__construct(TheTaskProxy::class);
@@ -45,9 +53,8 @@ class Task extends TaskProxy
         $this->setContext($context);
         $this->start_run_time = microtime(true);
         $this->context['task_name'] = "$task_name:$method_name";
-        // if ($this->mysql_pool != null) {
-            // $this->installMysqlPool($this->mysql_pool);
-        // }
+        $this->redis = $this->loader->redis("redisPool");
+        $this->db = $this->loader->mysql("mysqlPool", $this);
     }
 
     public function destroy()

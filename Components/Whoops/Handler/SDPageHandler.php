@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 18-3-9
  * Time: 下午4:58
  */
@@ -307,8 +307,7 @@ class SDPageHandler extends Handler
      * @param  callable $callback Callable returning an associative array
      */
     public function addDataTableCallback(
-        $label,
-        /* callable */
+        $label, /* callable */
         $callback
     ) {
         if (!is_callable($callback)) {

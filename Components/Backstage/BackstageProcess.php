@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 17-8-14
  * Time: 下午2:55
  */
@@ -15,11 +15,9 @@ class BackstageProcess extends Process
 {
     /**
      * @param $process
-     * @throws SwooleException
      */
     public function start($process)
     {
-        return ;
         $path = $this->config->get("backstage.bin_path", false);
 
         if (!is_file($path)) {

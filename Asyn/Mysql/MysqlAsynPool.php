@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 18-3-8
  * Time: 下午2:36
  */
@@ -14,7 +14,7 @@ use Kernel\Memory\Pool;
 
 class MysqlAsynPool implements IAsynPool
 {
-    const AsynName = 'mysql.';
+    const AsynName = 'mysql';
     protected $pool_chan;
     protected $mysql_arr;
     private $active;
@@ -32,7 +32,7 @@ class MysqlAsynPool implements IAsynPool
         $this->config = getInstance()->config;
         $this->client_max_count = $this->config->get('mysql.asyn_max_count', 10);
         if (getInstance()->isTaskWorker()) {
-            return ;
+            return;
         }
         $this->pool_chan = new \chan($this->client_max_count);
         for ($i = 0; $i < $this->client_max_count; $i++) {
@@ -52,6 +52,7 @@ class MysqlAsynPool implements IAsynPool
 
     /**
      * @return Miner
+     * @throws SwooleException
      */
     public function installDbBuilder()
     {
@@ -60,10 +61,12 @@ class MysqlAsynPool implements IAsynPool
 
     /**
      * @param $db
+     * @param $fuc
+     * @param $errorFuc
      * @return null
      * @throws SwooleException
      */
-    public function begin(Miner $db)
+    public function begin(Miner $db, $fuc, $errorFuc)
     {
         $client = $this->pool_chan->pop();
         if (!$client->connected) {
@@ -76,44 +79,24 @@ class MysqlAsynPool implements IAsynPool
         }
         $res = $client->query("begin");
         if ($res === false) {
-            //如果执行错误,归还链接
-            $this->pushToPool($client);
             throw new SwooleException($client->error);
         }
-        $db->setClient($client);
-        return $db;
-    }
-    
-    
-
-    /**
-     * 提交事务
-     * @param   $client
-     * @return
-     */
-    public function commit(Miner $db,$client)
-    {
-        $client->query("commit");
-        $db->setClient(null);
+        $result = null;
+        try {
+            $db->setClient($client);
+            $result = $fuc($client);
+            $client->query("commit");
+        } catch (\Throwable $e) {
+            $client->query("rollback");
+            if ($errorFuc != null) {
+                $result = $errorFuc($client);
+            }
+        } finally {
+            $db->setClient(null);
+        }
         $this->pushToPool($client);
-        return true;
+        return $result;
     }
-
-    /**
-     * 回滚事务
-     * @param   $client
-     * @return
-     */
-    public function rollback(Miner $db,$client)
-    {
-        $client->query("rollback");
-        $db->setClient(null);
-        $this->pushToPool($client);
-        return true;
-    }
-
-
-
 
     /**
      * @param $sql
@@ -244,7 +227,7 @@ class MysqlAsynPool implements IAsynPool
 
     public function getAsynName()
     {
-        return self::AsynName . $this->active;
+        return self::AsynName . ":" . $this->name;
     }
 
     public function pushToPool($client)

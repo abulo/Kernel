@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 16-9-2
  * Time: 下午1:44
  */
@@ -2425,10 +2425,10 @@ class Miner extends Child
      * @return null
      * @throws \Kernel\CoreBase\SwooleException
      */
-    // public function begin($fuc, $errorFuc = null)
-    // {
-    //     return $this->mysql_pool->begin($this, $fuc, $errorFuc);
-    // }
+    public function begin($fuc, $errorFuc = null)
+    {
+        return $this->mysql_pool->begin($this, $fuc, $errorFuc);
+    }
     /**
      * @param callable|null $set
      * @return MysqlSyncHelp
@@ -2455,43 +2455,6 @@ class Miner extends Child
             return $result;
         }
     }
-    
-    
-    
-    
-    
-    
-    
-    public function begin()
-    {
-        if (getInstance()->isTaskWorker()) {
-            $this->pdoBeginTrans();
-            return $this;
-        } else {
-            return $this->mysql_pool->begin($this);
-        }
-    }
-
-    public function commit()
-    {
-        if (getInstance()->isTaskWorker()) {
-            return $this->pdoCommitTrans();
-        } else {
-            return $this->mysql_pool->commit($this,$this->client);
-        }
-    }
-
-    public function rollback()
-    {
-        if (getInstance()->isTaskWorker()) {
-            return $this->pdoRollBackTrans();
-        } else {
-            return $this->mysql_pool->rollback($this,$this->client);
-        }
-    }
-
-
-
     /**
      * @param null $sql
      * @param callable|null $set
@@ -2502,9 +2465,9 @@ class Miner extends Child
     {
         $mySqlCoroutine = Pool::getInstance()->get(MySqlCoroutine::class);
         if (getInstance()->isTaskWorker()) {//如果是task进程自动转换为同步模式
-            
-            $data = $this->pdoQuery($sql);
+            $this->mergeInto($this->mysql_pool->getSync());
             $this->clear();
+            $data = $this->mysql_pool->getSync()->pdoQuery($sql);
             return new MysqlSyncHelp($sql, $data);
         } else {
             if ($sql != null) {
@@ -2686,29 +2649,15 @@ class Miner extends Child
         $this->activeConfig = $activeConfig;
         $dsn = 'mysql:dbname=' . $activeConfig["database"] . ';host=' .
             $activeConfig["host"] . ';port=' . $activeConfig['port'] ?? 3306;
-        
-        
-        $option = [
-
-            \PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES ' . $activeConfig['charset'] ?? 'utf8',
-            \PDO::ATTR_ERRMODE =>  \PDO::ERRMODE_EXCEPTION,
-            \PDO::ATTR_EMULATE_PREPARES =>  false,
-            \PDO::ATTR_TIMEOUT =>  3,
-            \PDO::ATTR_PERSISTENT =>  false,
-        ];
         $pdo = new \PDO(
             $dsn,
             $activeConfig["user"],
             $activeConfig["password"],
-            $option
-            // [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES ' . $activeConfig['charset'] ?? 'utf8']
+            [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES ' . $activeConfig['charset'] ?? 'utf8']
         );
-        // $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        // $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
-        // $pdo->setAttribute(\PDO::ATTR_TIMEOUT, 3);
+        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
         $this->setPdoConnection($pdo);
-
-
     }
 
     /**

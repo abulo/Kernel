@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 17-7-26
  * Time: 下午2:30
  */
@@ -41,14 +41,6 @@ class PortManager
 
     public function __construct($portConfig)
     {
-
-        $tmp = [];
-        foreach ($portConfig as $key => $value) {
-            $tmp[$value['weight']] = $value;
-        }
-        $portConfig = $tmp;
-        ksort($portConfig);
-        unset($tmp, $key, $value);
         foreach ($portConfig as $key => $value) {
             $this->portConfig[$value['socket_port']] = $value;
             if ($value['socket_type'] == self::SOCK_WS) {
@@ -319,13 +311,17 @@ class PortManager
      */
     public function getMethodPrefix($server_port)
     {
-        $config = $this->portConfig[$server_port];
+        $config = $this->portConfig[$server_port] ?? null;
+        if ($config == null) {
+            return '';
+        }
         $method_name = $config['method_prefix'] ?? '';
         return $method_name;
     }
 
     /**
      * @param $fd
+     * @throws \Throwable
      */
     public function eventClose($fd)
     {
@@ -339,7 +335,10 @@ class PortManager
         if ($type == self::SOCK_HTTP) {
             return;
         }
-        $config = $this->portConfig[$server_port];
+        $config = $this->portConfig[$server_port] ?? null;
+        if ($config == null) {
+            return;
+        }
         $controller_name = $config['event_controller_name'] ?? getInstance()->getEventControllerName();
         $method_name = ($config['method_prefix'] ?? '') . ($config['close_method_name'] ?? getInstance()->getCloseMethodName());
         $controller_instance = ControllerFactory::getInstance()->getController($controller_name);
@@ -352,11 +351,15 @@ class PortManager
     /**
      * @param $fd
      * @param null $request
+     * @throws \Throwable
      */
     public function eventConnect($fd, $request = null)
     {
         $server_port = getInstance()->getServerPort($fd);
-        $config = $this->portConfig[$server_port];
+        $config = $this->portConfig[$server_port] ?? null;
+        if ($config == null) {
+            return;
+        }
         $controller_name = $config['event_controller_name'] ?? getInstance()->getEventControllerName();
         $method_name = ($config['method_prefix'] ?? '') . ($config['connect_method_name'] ?? getInstance()->getConnectMethodName());
         $controller_instance = ControllerFactory::getInstance()->getController($controller_name);

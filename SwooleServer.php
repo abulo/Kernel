@@ -37,7 +37,7 @@ use Kernel\Container\Container;
 
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 16-6-28
  * Time: 上午11:37
  */
@@ -51,7 +51,7 @@ abstract class SwooleServer extends ProcessRPC
     /**
      * 版本
      */
-    const version = "3.3.1";
+    const version = "3.4.2";
 
     /**
      * server name
@@ -289,10 +289,7 @@ abstract class SwooleServer extends ProcessRPC
         $this->server->set($set);
 
         swoole_async_set([
-            'aio_mode' => SWOOLE_AIO_BASE,
-            'thread_num' => 100,
-            'socket_buffer_size' => 1024 * 1024 * 1024,
-            'dns_server' => '114.114.114.114',
+            'socket_buffer_size' => 1024 * 1024 * 1024
         ]);
     }
 
@@ -653,14 +650,6 @@ abstract class SwooleServer extends ProcessRPC
         return sd_call_user_func_array(array($this->server, $name), $arguments);
     }
 
-    /**
-     * @param \Exception $exception
-     * @throws ErrorException
-     */
-    //public function displayExceptionHandler(\Exception $exception)
-    //{
-    //   throw new ErrorException($exception->getMessage(), $exception->getCode(), 1, $exception->getFile(), $exception->getLine());
-    //}
 
     /**
      * @param $error

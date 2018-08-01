@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 16-12-30
  * Time: 下午1:00
  */
@@ -24,6 +24,11 @@ class TestModule
     private $asyn = false;
     private $dir = '';
 
+    /**
+     * TestModule constructor.
+     * @param $dir
+     * @throws \ReflectionException
+     */
     public function __construct($dir)
     {
         $this->dir = $dir;
@@ -114,18 +119,27 @@ class TestModule
                 if ($e->getCode() == SwooleTestException::ERROR) {
                     $this->printFail($e->getMessage());
                     $this->failCount += $count - 1;
-                    $classInstance->tearDownAfterClass();
+                    try {
+                        $classInstance->tearDownAfterClass();
+                    } catch (\Throwable $e) {
+                    }
                     continue;
                 } elseif ($e->getCode() == SwooleTestException::SKIP) {
                     $this->printIgnore($e->getMessage());
                     $this->ignoreCount += $count - 1;
-                    $classInstance->tearDownAfterClass();
+                    try {
+                        $classInstance->tearDownAfterClass();
+                    } catch (\Throwable $e) {
+                    }
                     continue;
                 }
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $this->printFail($e->getMessage());
                 $this->failCount += $count - 1;
-                $classInstance->tearDownAfterClass();
+                try {
+                    $classInstance->tearDownAfterClass();
+                } catch (\Throwable $e) {
+                }
                 continue;
             }
 
@@ -143,7 +157,7 @@ class TestModule
                 $dataProviderValues = [];
                 $dataProviderValueKeys = [];
                 if (array_key_exists('dataProvider', $methodInfo)) {//有数据供给器
-                    $dataProviderValues = call_user_func([$classInstance, $methodInfo['dataProvider']]);
+                    $dataProviderValues = sd_call_user_func([$classInstance, $methodInfo['dataProvider']]);
                     $dataProviderValueKeys = array_keys($dataProviderValues);
                 }
                 if (count($dataProviderValues) > 0) {
@@ -156,16 +170,25 @@ class TestModule
                     } catch (SwooleTestException $e) {
                         if ($e->getCode() == SwooleTestException::ERROR) {
                             $this->printFail($e->getMessage());
-                            $classInstance->tearDown();
+                            try {
+                                $classInstance->tearDown();
+                            } catch (\Throwable $e) {
+                            }
                             continue;
                         } elseif ($e->getCode() == SwooleTestException::SKIP) {
                             $this->printIgnore($e->getMessage());
-                            $classInstance->tearDown();
+                            try {
+                                $classInstance->tearDown();
+                            } catch (\Throwable $e) {
+                            }
                             continue;
                         }
-                    } catch (\Exception $e) {
+                    } catch (\Throwable $e) {
                         $this->printFail($e->getMessage());
-                        $classInstance->tearDown();
+                        try {
+                            $classInstance->tearDown();
+                        } catch (\Throwable $e) {
+                        }
                         continue;
                     }
                     //合并参数
@@ -215,13 +238,19 @@ class TestModule
                         } elseif ($e->getCode() == SwooleTestException::SKIP) {
                             $this->printIgnore($e->getMessage());
                         }
-                    } catch (\Exception $e) {
+                    } catch (\Throwable $e) {
                         $this->printFail($e->getMessage());
                     }
-                    $classInstance->tearDown();
+                    try {
+                        $classInstance->tearDown();
+                    } catch (\Throwable $e) {
+                    }
                 } while (count($dataProviderValues) != 0);
             }
-            $classInstance->tearDownAfterClass();
+            try {
+                $classInstance->tearDownAfterClass();
+            } catch (\Throwable $e) {
+            }
             unset($this->tests[$className]);
         }
         print_r("└───总共$this->totalCount,忽略$this->ignoreCount,成功$this->successCount,失败$this->failCount\n");

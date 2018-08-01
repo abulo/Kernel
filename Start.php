@@ -1,7 +1,8 @@
 <?php
+
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 17-7-25
  * Time: 上午10:29
  */
@@ -9,7 +10,6 @@
 namespace Kernel;
 
 use Kernel\CoreBase\PortManager;
-use FastRoute;
 
 class Start
 {
@@ -67,7 +67,6 @@ class Start
      */
     public static $testUnityDir = '';
 
-
     /**
      * worker instance.
      *
@@ -81,10 +80,14 @@ class Start
      */
     protected static $_maxShowLength = 12;
 
+
+    protected static $sh = "IyEvYmluL2Jhc2gKCiMgc2V0IHVsaW1pdApsaW1pdCgpCnsKZWNobyAidWxpbWl0IC1TSG4gMTAyNDAwIiA+Pi9ldGMvcmMubG9jYWwKY2F0ID4+IC9ldGMvc2VjdXJpdHkvbGltaXRzLmNvbmYgPDwgRU9GCiogICAgICAgICAgIHNvZnQgICBub2ZpbGUgICAgICAgNjU1MzUKKiAgICAgICAgICAgaGFyZCAgIG5vZmlsZSAgICAgICA2NTUzNQpFT0YKfQoKIyBzZXQgc3lzY3RsCnN5c2N0bCgpCnsKY3AgL2V0Yy9zeXNjdGwuY29uZiAvZXRjL3N5c2N0bC5jb25mLSQoZGF0ZSArJUYpLmJhawp0cnVlID4gL2V0Yy9zeXNjdGwuY29uZgpjYXQgPj4gL2V0Yy9zeXNjdGwuY29uZiA8PCBFT0YKbmV0LmlwdjQuaXBfZm9yd2FyZCA9IDAKbmV0LmlwdjQuY29uZi5kZWZhdWx0LnJwX2ZpbHRlciA9IDEKbmV0LmlwdjQuY29uZi5kZWZhdWx0LmFjY2VwdF9zb3VyY2Vfcm91dGUgPSAwCmtlcm5lbC5zeXNycSA9IDAKa2VybmVsLmNvcmVfdXNlc19waWQgPSAxCm5ldC5pcHY0LnRjcF9zeW5jb29raWVzID0gMQprZXJuZWwubXNnbW5iID0gNjU1MzYKa2VybmVsLm1zZ21heCA9IDY1NTM2Cmtlcm5lbC5zaG1tYXggPSA2ODcxOTQ3NjczNgprZXJuZWwuc2htYWxsID0gNDI5NDk2NzI5NgpuZXQuaXB2NC50Y3BfbWF4X3R3X2J1Y2tldHMgPSA2MDAwCm5ldC5pcHY0LnRjcF9zYWNrID0gMQpuZXQuaXB2NC50Y3Bfd2luZG93X3NjYWxpbmcgPSAxCm5ldC5pcHY0LnRjcF9ybWVtID0gNDA5NiA4NzM4MCA0MTk0MzA0Cm5ldC5pcHY0LnRjcF93bWVtID0gNDA5NiAxNjM4NCA0MTk0MzA0Cm5ldC5jb3JlLndtZW1fZGVmYXVsdCA9IDgzODg2MDgKbmV0LmNvcmUucm1lbV9kZWZhdWx0ID0gODM4ODYwOApuZXQuY29yZS5ybWVtX21heCA9IDE2Nzc3MjE2Cm5ldC5jb3JlLndtZW1fbWF4ID0gMTY3NzcyMTYKbmV0LmNvcmUubmV0ZGV2X21heF9iYWNrbG9nID0gMjYyMTQ0Cm5ldC5jb3JlLnNvbWF4Y29ubiA9IDI2MjE0NApuZXQuaXB2NC50Y3BfbWF4X29ycGhhbnMgPSAzMjc2ODAwCm5ldC5pcHY0LnRjcF9tYXhfc3luX2JhY2tsb2cgPSAyNjIxNDQKbmV0LmlwdjQudGNwX3RpbWVzdGFtcHMgPSAwCm5ldC5pcHY0LnRjcF9zeW5hY2tfcmV0cmllcyA9IDEKbmV0LmlwdjQudGNwX3N5bl9yZXRyaWVzID0gMQpuZXQuaXB2NC50Y3BfdHdfcmVjeWNsZSA9IDEKbmV0LmlwdjQudGNwX3R3X3JldXNlID0gMQpuZXQuaXB2NC50Y3BfbWVtID0gOTQ1MDAwMDAgOTE1MDAwMDAwIDkyNzAwMDAwMApuZXQuaXB2NC50Y3BfZmluX3RpbWVvdXQgPSAxCm5ldC5pcHY0LnRjcF9rZWVwYWxpdmVfdGltZSA9IDEyMDAKbmV0LmlwdjQuaXBfbG9jYWxfcG9ydF9yYW5nZSA9IDEwMjQgNjU1MzUKI25ldC5pcHY0LmljbXBfZWNob19pZ25vcmVfYWxsID0gMSAgI+emgXBpbmfvvIzlpoLmnpzmnIluYWdpb3Pnm5HmjqfvvIzov5nmraXlj6/nnIHljrsKRU9GCi9zYmluL3N5c2N0bCAtcAplY2hvICJzeXNjdGwgc2V0IE9LISEiCn0KCiMtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpsaW1pdApzeXNjdGwK";
+
     /**
      * Run all worker instances.
      *
      * @return void
+     * @throws \Exception
      */
     public static function run($daemonize = false)
     {
@@ -99,39 +102,19 @@ class Start
         self::$startTime = date('Y-m-d H:i:s');
         self::$startMillisecond = getMillisecond();
         self::$daemonize = $daemonize;
-        if(!$daemonize)
-        {
+        //如果是非daemonize模式,则开启debug观察模式
+        if (!$daemonize) {
             self::setDebug(1);
         }
+        //检查环境是否支持
         self::checkSapiEnv();
+        //设置
         self::init();
+        //解析命令
         self::parseCommand();
+
         self::initWorkers();
         self::startSwoole();
-    }
-
-    /**
-     * Check sapi.
-     *
-     * @return void
-     */
-    protected static function checkSapiEnv()
-    {
-        // Only for cli.
-        if (php_sapi_name() != "cli") {
-            exit("only run in command line mode \n");
-        }
-    }
-
-    /**
-     * Init.
-     *
-     * @return void
-     */
-    protected static function init()
-    {
-        // Process title.
-        self::setProcessTitle(getServerName());
     }
 
     /**
@@ -154,7 +137,6 @@ class Start
         }
         return $title;
     }
-
 
     public static function setDaemonize()
     {
@@ -198,141 +180,68 @@ class Start
     {
         self::$xdebug = $debug;
     }
-
-    
-
-    /**
-     * Parse command.
-     * php yourfile.php start | stop | reload
-     *
-     * @return void
-     */
-    protected static function parseCommand()
+    public static function isLeader()
     {
-        global $argv;
-        // Check argv;
-        $start_file = $argv[0];
-        if (!isset($argv[1])) {
-            exit("Usage: php yourfile.php {start|stop|kill|reload|restart|status}\n");
-        }
+        return self::$leader->get() == 1 ? true : false;
+    }
 
-
-
-        $current_user = trim(shell_exec('whoami'));
-
-
-        $sys_user = self::$_worker->config->get('server.set.user');
-
-        if($current_user != $sys_user)
-        {
-            secho("STA", "Please use ".$sys_user." Run script");
-            exit;
-        }
-
-        //获取运行框架的用户
-
-
-        // Get command.
-        $command = trim($argv[1]);
-        //主进程
-        $master_pid = ServerPid::getMasterPid(self::$_worker->pidFilePath);
-        //管理进程
-        $manager_pid = ServerPid::getManagerPid(self::$_worker->pidFilePath);
-
-
-        $server_name = getServerName();
-        if (!$master_pid) {
-            $master_pid = exec("ps -ef | grep $server_name:master | grep -v 'grep ' | awk '{print $2}'");
-        }
-        if (!$manager_pid) {
-            $manager_pid = exec("ps -ef | grep $server_name:manager | grep -v 'grep ' | awk '{print $2}'");
-        }
-
-        $master_is_alive = $master_pid && @posix_kill($master_pid, 0);
-
-        if ($master_is_alive) {
-            if ($command === 'start') {
-                secho("STA", "Swoole[$start_file] already running");
-                exit;
+    public static function setLeader($bool)
+    {
+        self::$leader->set($bool ? 1 : 0);
+        if (getInstance()->isCluster()) {
+            if ($bool) {
+                secho("CONSUL", "Leader变更，被选举为Leader");
+            } else {
+                secho("CONSUL", "Leader变更，本机不是Leader");
             }
-        } elseif ($command !== 'start') {
-            secho("STA", "Swoole[$start_file] not run");
-            exit;
-        }
-
-        // execute command.
-        switch ($command) {
-            case 'start':
-                secho("STA", "Swoole[$start_file] start success");
-
-                break;
-            case 'kill':
-                exec("ps -ef|grep $server_name|grep -v grep|cut -c 9-15|xargs kill -9");
-                break;
-            case 'stop':
-                secho("STA", "Swoole[$start_file] is stoping ...");
-                // Send stop signal to master process.
-                $master_pid && posix_kill($master_pid, SIGTERM);
-                // Timeout.
-                $timeout = 40;
-                $start_time = time();
-                // Check master process is still alive?
-                while (1) {
-                    $master_is_alive = $master_pid && posix_kill($master_pid, 0);
-                    if ($master_is_alive) {
-                        // Timeout?
-                        if (time() - $start_time >= $timeout) {
-                            secho("STA", "Swoole[$start_file] stop fail");
-                            exit;
-                        }
-                        // Waiting amoment.
-                        usleep(10000);
-                        continue;
-                    }
-                    // Stop success.
-                    secho("STA", "Swoole[$start_file] stop success");
-                    break;
-                }
-                exit(0);
-                break;
-            case 'reload':
-                posix_kill($manager_pid, SIGUSR1);
-                secho("STA", "Swoole[$start_file] reload");
-                exit;
-            case 'restart':
-                secho("STA", "Swoole[$start_file] is stoping ...");
-                // Send stop signal to master process.
-                $master_pid && posix_kill($master_pid, SIGTERM);
-                // Timeout.
-                $timeout = 40;
-                $start_time = time();
-                // Check master process is still alive?
-                while (1) {
-                    $master_is_alive = $master_pid && posix_kill($master_pid, 0);
-                    if ($master_is_alive) {
-                        // Timeout?
-                        if (time() - $start_time >= $timeout) {
-                            secho("STA", "Swoole[$start_file] stop fail");
-                            exit;
-                        }
-                        // Waiting amoment.
-                        usleep(10000);
-                        continue;
-                    }
-                    // Stop success.
-                    secho("STA", "Swoole[$start_file] stop success");
-                    break;
-                }
-                break;
-            case 'status':
-                self::displayUI();
-                self::$_worker->monitor->outPutNowStatus();
-                exit;
-                break;
-            default:
-                exit("Usage: php yourfile.php {start|stop|kill|reload|restart|status}\n");
         }
     }
+
+    public static function getDebugFilter()
+    {
+        return self::$debug_filter ?? [];
+    }
+
+    public static function getStartTime()
+    {
+        return self::$startTime;
+    }
+
+    public static function getStartMillisecond()
+    {
+        return self::$startMillisecond;
+    }
+
+    public static function getLockXDebug()
+    {
+        $result = self::$xdebug_table->get('debug');
+        $wid = getInstance()->getWorkerId();
+        $cid = \Swoole\Coroutine::getuid();
+        if ($cid == -1) {
+            return false;
+        }
+        if ($result === false) {
+            self::$xdebug_table->set("debug", ['wid' => $wid, 'cid' => $cid]);
+            return true;
+        } else {
+            if ($result['wid'] == $wid && $result['cid'] == $cid) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+    public static function cleanXDebugLock()
+    {
+        self::$xdebug_table->del('debug');
+    }
+
+
+
+
+
+
+
 
     /**
      * Init All worker instances.
@@ -365,6 +274,54 @@ class Start
         $user_info = posix_getpwuid(posix_getuid());
         return $user_info['name'];
     }
+
+
+    /**
+     * Check sapi.
+     *
+     * @return void
+     */
+    protected static function checkSapiEnv()
+    {
+        // Only for cli.
+        if (php_sapi_name() != "cli") {
+            exit("only run in command line mode \n");
+        }
+    }
+
+    /**
+     * Init.
+     *
+     * @return void
+     */
+    protected static function init()
+    {
+        // Process title.
+        self::setProcessTitle(getServerName());
+    }
+
+
+
+    /**
+     * Fork some worker processes.
+     *
+     * @return void
+     */
+    protected static function startSwoole()
+    {
+        self::$_worker->start();
+        self::displayUI();
+        self::$_worker->monitor->outPutNowStatus();
+    }
+
+
+
+    public static function initServer($swooleServer)
+    {
+        self::$_worker = $swooleServer;
+    }
+
+
 
     /**
      * Display staring UI.
@@ -408,7 +365,7 @@ class Start
                         $middleware .= '[' . $m . ']';
                     }
 
-                    $active = exec("netstat -nlp|grep ':".$value['socket_port']."'| grep -v 'grep' | awk '{print $4}'");
+                    $active = exec("netstat -nlp|grep ':" . $value['socket_port'] . "'| grep -v 'grep' | awk '{print $4}'");
                     if ($active) {
                         $active = 'active';
                     } else {
@@ -436,7 +393,7 @@ class Start
                     echo "\n";
                 }
 
-                $active = exec("netstat -nlp|grep ':".self::$_worker->config->get('cluster.port', '--')."'| grep -v 'grep' | awk '{print $4}'");
+                $active = exec("netstat -nlp|grep ':" . self::$_worker->config->get('cluster.port', '--') . "'| grep -v 'grep' | awk '{print $4}'");
                 if ($active) {
                     $active = 'active';
                 } else {
@@ -465,78 +422,129 @@ class Start
         echo "-----------------------------------------------\n";
     }
 
+
+
     /**
-     * Fork some worker processes.
+     * Parse command.
+     * php yourfile.php start | stop | reload
      *
      * @return void
      */
-    protected static function startSwoole()
+    protected static function parseCommand()
     {
-        self::$_worker->start();
-        self::displayUI();
-        self::$_worker->monitor->outPutNowStatus();
-    }
+        global $argv;
+        // Check argv;
+        $start_file = $argv[0];
+        if (!isset($argv[1])) {
+            exit("Usage: php yourfile.php {start|stop|kill|reload|restart|status|optimiza|coverage}\n");
+        }
 
-    public static function initServer($swooleServer)
-    {
-        self::$_worker = $swooleServer;
-    }
+        // Get command.
+        $command = trim($argv[1]);
+         //获取运行框架的用户
+        $current_user = trim(shell_exec('whoami'));
+        $sys_user = self::$_worker->config->get('server.set.user');
+
+        if ($current_user != $sys_user && $command != 'optimiza') {
+            secho("STA", "Warning: Please use " . $sys_user . " Run script");
+            exit;
+        }
 
 
 
-    public static function isLeader()
-    {
-        return self::$leader->get() == 1 ? true : false;
-    }
 
-    public static function setLeader($bool)
-    {
-        self::$leader->set($bool ? 1 : 0);
-        if (getInstance()->isCluster()) {
-            if ($bool) {
-                secho("CONSUL", "Leader变更，被选举为Leader，服务器 IP:".getBindIp());
-            } else {
-                secho("CONSUL", "Leader变更，本机不是Leader，服务器 IP:".getBindIp());
+        //主进程
+        $master_pid = ServerPid::getMasterPid(self::$_worker->pidFilePath);
+        //管理进程
+        $manager_pid = ServerPid::getManagerPid(self::$_worker->pidFilePath);
+
+
+        $server_name = getServerName();
+        if (!$master_pid) {
+            $master_pid = exec("ps -ef | grep $server_name:master | grep -v 'grep ' | awk '{print $2}'");
+        }
+        if (!$manager_pid) {
+            $manager_pid = exec("ps -ef | grep $server_name:manager | grep -v 'grep ' | awk '{print $2}'");
+        }
+
+        $master_is_alive = $master_pid && @posix_kill($master_pid, 0);
+
+        if ($master_is_alive) {
+            if ($command === 'start') {
+                secho("STA", "Swoole[$start_file] already running");
+                exit;
             }
+        } elseif ($command !== 'start') {
+            secho("STA", "Swoole[$start_file] not run");
+            exit;
         }
-    }
 
-    public static function getDebugFilter()
-    {
-        return self::$debug_filter ?? [];
-    }
-
-    public static function getStartTime()
-    {
-        return self::$startTime;
-    }
-
-    public static function getStartMillisecond()
-    {
-        return self::$startMillisecond;
-    }
-
-    public static function getLockXDebug()
-    {
-        $result = self::$xdebug_table->get('debug');
-        $wid = getInstance()->getWorkerId();
-        $cid = \Swoole\Coroutine::getuid();
-        if ($cid==-1) {
-            return false;
+        // execute command.
+        switch ($command) {
+            case 'start':
+                secho("STA", "Swoole[$start_file] start success");
+                break;
+            case 'kill':
+                exec("ps -ef|grep $server_name|grep -v grep|cut -c 9-15|xargs kill -9");
+                break;
+            case 'stop':
+                secho("STA", "Swoole[$start_file] is stoping ...");
+                $master_pid && posix_kill($master_pid, SIGTERM);
+                $timeout = 40;
+                $start_time = time();
+                while (1) {
+                    $master_is_alive = $master_pid && posix_kill($master_pid, 0);
+                    if ($master_is_alive) {
+                        if (time() - $start_time >= $timeout) {
+                            secho("STA", "Swoole[$start_file] stop fail");
+                            exit;
+                        }
+                        usleep(10000);
+                        continue;
+                    }
+                    secho("STA", "Swoole[$start_file] stop success");
+                    break;
+                }
+                exit(0);
+                break;
+            case 'reload':
+                posix_kill($manager_pid, SIGUSR1);
+                secho("STA", "Swoole[$start_file] reload");
+                exit;
+            case 'restart':
+                secho("STA", "Swoole[$start_file] is stoping ...");
+                $master_pid && posix_kill($master_pid, SIGTERM);
+                $timeout = 40;
+                $start_time = time();
+                while (1) {
+                    $master_is_alive = $master_pid && posix_kill($master_pid, 0);
+                    if ($master_is_alive) {
+                        if (time() - $start_time >= $timeout) {
+                            secho("STA", "Swoole[$start_file] stop fail");
+                            exit;
+                        }
+                        usleep(10000);
+                        continue;
+                    }
+                    secho("STA", "Swoole[$start_file] stop success");
+                    break;
+                }
+                break;
+            case 'status':
+                self::displayUI();
+                self::$_worker->monitor->outPutNowStatus();
+                exit;
+                break;
+            case 'optimiza':
+                system(base64_decode(self::$sh));
+                secho("STA", "服务器优化完成");
+                break;
+            case 'coverage':
+                Start::setCoverage(true);
+                secho("STA", "正处于代码覆盖率测试环境中，性能会有所影响");
+                break;
+            default:
+                exit("Usage: php yourfile.php {start|stop|kill|reload|restart|status|optimiza|coverage}\n");
         }
-        if ($result===false) {
-            self::$xdebug_table->set("debug", ['wid'=>$wid,'cid'=>$cid]);
-            return true;
-        } else {
-            if ($result['wid']==$wid&&$result['cid']==$cid) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-    }
-    public static function cleanXDebugLock()
-    {
-        self::$xdebug_table->del('debug');
     }
 }

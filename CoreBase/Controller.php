@@ -12,7 +12,7 @@ use Throwable;
  * Controller 控制器
  * 对象池模式，实例会被反复使用，成员变量缓存数据记得在销毁时清理
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 16-7-15
  * Time: 上午11:59
  */
@@ -177,6 +177,7 @@ class Controller extends CoreBase
         return $this->execute($controller_name, $method_name, $params, $destroy);
     }
 
+    
     /**
      * @param $controller_name
      * @param $method_name
@@ -195,6 +196,7 @@ class Controller extends CoreBase
         try {
             $this->initialization($controller_name, $method_name);
         } catch (Throwable $e) {
+            getInstance()->onPhpTick($e);
             $this->getProxy()->onExceptionHandle($e);
             $this->destroy();
             return $result;
@@ -207,12 +209,13 @@ class Controller extends CoreBase
                 $this->getProxy()->$method_name(...$params);
             }
         } catch (Throwable $e) {
+            getInstance()->onPhpTick($e);
             $this->getProxy()->onExceptionHandle($e);
         }
         if ($destroy) {
             $this->destroy();
         }
-
+        
         return $result;
     }
 
@@ -238,13 +241,8 @@ class Controller extends CoreBase
         if (!empty($this->uid)) {
             $this->context['uid'] = $this->uid;
         }
-        //if ($this->mysql_pool != null) {
-        //    $this->installMysqlPool($this->mysql_pool);
-        //    $this->db = $this->mysql_pool->dbQueryBuilder;
-        //}
-        //if ($this->redis_pool != null) {
-        //    $this->redis = $this->redis_pool->getCoroutine();
-        //}
+        $this->db = $this->loader->mysql("mysqlPool", $this);
+        $this->redis = $this->loader->redis("redisPool");
         if ($this->isEnableError) {
             $this->Error = $this->loader->model(Error::class, $this);
         }
@@ -284,9 +282,7 @@ class Controller extends CoreBase
             print_context($this->getContext());
             secho("EX", "--------------------------------------------------------------");
         }
-
-
-        $this->context['error_message'] = $e->getMessage(). var_export(debug_backtrace(),true);
+        $this->context['error_message'] = $e->getMessage();
         //如果是HTTP传递request过去
         if ($this->request_type == SwooleMarco::HTTP_REQUEST) {
             $e->request = $this->request;

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 17-11-7
  * Time: 下午3:18
  */
@@ -29,14 +29,13 @@ class BackstageHelp
             'socket_type' => PortManager::SOCK_WS,
             'socket_name' => $name,
             'socket_port' => $port,
-            'route_tool' => 'BackstageRoute',
+            'route_tool' => 'BackstageRoute',//ConsoleRoute
             'pack_tool' => 'ConsolePack',
             'opcode' => PortManager::WEBSOCKET_OPCODE_TEXT,
             'event_controller_name' => Console::class,
             'connect_method_name' => "onConnect",
             'close_method_name' => "onClose",
             'method_prefix' => 'back_',
-            'weight'=>100,
             'middlewares' => ['MonitorMiddleware', 'NormalHttpMiddleware']
         ];
         getInstance()->config->set("ports", $ports);

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 17-8-15
  * Time: 上午10:52
  */
@@ -87,10 +87,10 @@ abstract class AMQPTaskProcess extends Process
     protected function initAsynPools()
     {
         if ($this->config->get('redis.enable', true)) {
-            //getInstance()->addAsynPool('redisPool', new RedisAsynPool($this->config, $this->config->get('redis.active')));
+            getInstance()->addAsynPool('redisPool', new RedisAsynPool($this->config, $this->config->get('redis.active')));
         }
         if ($this->config->get('mysql.enable', true)) {
-            //getInstance()->addAsynPool('mysqlPool', new MysqlAsynPool($this->config, $this->config->get('mysql.active')));
+            getInstance()->addAsynPool('mysqlPool', new MysqlAsynPool($this->config, $this->config->get('mysql.active')));
         }
     }
 

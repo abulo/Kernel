@@ -2,7 +2,7 @@
 /**
  * Loader 加载器
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 16-7-15
  * Time: 下午12:21
  */
@@ -24,7 +24,6 @@ class Loader implements ILoader
         $this->_task_proxy = new TaskProxy();
         $this->_model_factory = ModelFactory::getInstance();
     }
-
 
     /**
      * 获取一个 mongodb
@@ -48,39 +47,12 @@ class Loader implements ILoader
      */
     public function redis($name)
     {
-        $redisPool = getInstance()->getRedisPool($name);
+        $redisPool = getInstance()->getAsynPool($name);
         if ($redisPool == null) {
             return null;
         }
         return $redisPool->getCoroutine();
     }
-
-
-
-
-
-        /**
-     * 获取一个代理链接
-     * @param
-     * @return mysql
-     */
-    public function getMysqlProxy($name)
-    {
-        return getInstance()->getMysqlProxy($name);
-    }
-
-    /**
-     * 获取 redis 代理
-     * @param    $name
-     * @return
-     */
-    public function getRedisProxy($name)
-    {
-        return getInstance()->getRedisProxy($name);
-    }
-
-
-    
 
     /**
      * 获取一个mysql
@@ -97,11 +69,11 @@ class Loader implements ILoader
             $parent->root = $parent;
         }
         $root = $parent->root;
-        $core_name = MysqlAsynPool::AsynName .$name;
+        $core_name = MysqlAsynPool::AsynName . ":" .$name;
         if ($root->hasChild($core_name)) {
             return $root->getChild($core_name);
         }
-        $mysql_pool = getInstance()->getMysqlPool($name);
+        $mysql_pool = getInstance()->getAsynPool($name);
         if ($mysql_pool == null) {
             return null;
         }
@@ -165,6 +137,19 @@ class Loader implements ILoader
         return $task_instance;
     }
 
+    // /**
+    //  * view 返回一个模板
+    //  * @param $template
+    //  * @param array $data
+    //  * @param array $mergeData
+    //  * @return string
+    //  */
+    // public function view($template, $data = [], $mergeData = [])
+    // {
+    //     $template = getInstance()->templateEngine->render($template, $data, $mergeData);
+    //     return $template;
+    // }
+
     /**
      * view 返回一个模板
      * @param $template
@@ -175,7 +160,6 @@ class Loader implements ILoader
         $template = getInstance()->templateEngine->make($template);
         return $template;
     }
-
     public function tpl($template)
     {
         return $this->view(TPL_PATH.DS.$template);

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 16-7-15
  * Time: 上午11:38
  */
@@ -304,9 +304,17 @@ function secho($tile, $message)
     print_r($message);
     $content = ob_get_contents();
     ob_end_clean();
-
-    $could = true;
-
+    $could = false;
+    if (empty(\Kernel\Start::getDebugFilter())) {
+        $could = true;
+    } else {
+        foreach (\Kernel\Start::getDebugFilter() as $filter) {
+            if (strpos($tile, $filter) !== false || strpos($content, $filter) !== false) {
+                $could = true;
+                break;
+            }
+        }
+    }
 
     $content = explode("\n", $content);
     $send = "";
@@ -353,4 +361,41 @@ function sd_call_user_func_array($function, $parameter)
     if (is_callable($function)) {
         return $function(...$parameter);
     }
+}
+
+/**
+ * @param $arr
+ * @throws \Kernel\Asyn\MQTT\Exception
+ */
+function sd_debug($arr)
+{
+    Server\Components\SDDebug\SDDebug::debug($arr);
+}
+
+function read_dir_queue($dir)
+{
+    $files = array();
+    $queue = array($dir);
+    while ($data = each($queue)) {
+        $path = $data['value'];
+        if (is_dir($path) && $handle = opendir($path)) {
+            while ($file = readdir($handle)) {
+                if ($file == '.' || $file == '..') {
+                    continue;
+                }
+                $files[] = $real_path = realpath($path . '/' . $file);
+                if (is_dir($real_path)) {
+                    $queue[] = $real_path;
+                }
+            }
+        }
+        closedir($handle);
+    }
+    $result = [];
+    foreach ($files as $file) {
+        if (pathinfo($file, PATHINFO_EXTENSION) == "php") {
+            $result[] = $file;
+        }
+    }
+    return $result;
 }

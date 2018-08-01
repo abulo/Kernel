@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 18-3-12
  * Time: 下午3:05
  */
@@ -24,7 +24,7 @@ class Error extends Controller
     public function defaultMethod()
     {
         $id = $this->http_input->get("id");
-        $result = $this->redis_pool->getCoroutine()->get($this->redis_prefix . $id);
+        $result = $this->redis->get($this->redis_prefix . $id);
         $this->http_output->end($result);
     }
 }

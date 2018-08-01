@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 17-10-12
  * Time: 下午7:17
  */
@@ -43,9 +43,9 @@ class ChildProxy extends Proxy
 
     public function afterCall($name, $arguments = null)
     {
-
         $run_index = array_pop($this->run_index_arr);
         $time = " -> " . ((microtime(true) - $this->run_start_time)*1000)." ms";
+
         if(is_array($this->own->getContext())&& !empty($this->own->getContext()))
         {
             if(array_key_exists('RunStack',$this->own->getContext()))

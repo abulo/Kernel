@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: zhangjincheng
+ * User: abulo
  * Date: 18-1-2
  * Time: 下午1:47
  */
@@ -100,8 +100,8 @@ abstract class Actor extends CoreBase
             $this->handle($event->data);
         });
         $this->saveContext->save();
-        // $this->installMysqlPool($this->mysql_pool);
-        // $this->db = $this->mysql_pool->dbQueryBuilder;
+        $this->db = $this->loader->mysql("mysqlPool", $this);
+        $this->redis = $this->loader->redis("redisPool");
         $this->execRegistHandle();
     }
 
@@ -334,13 +334,11 @@ abstract class Actor extends CoreBase
     public function after($ms, $callback, $user_param = null)
     {
         $id = \swoole_timer_after($ms, function ($user_param_one) use ($callback) {
-            go(function () use ($callback, $user_param_one) {
-                try {
-                    $callback($user_param_one);
-                } catch (\Throwable $e) {
-                    displayExceptionHandler($e);
-                }
-            });
+            try {
+                $callback($user_param_one);
+            } catch (\Throwable $e) {
+                displayExceptionHandler($e);
+            }
         }, $user_param);
         $this->timerIdArr[$id] = $id;
         return $id;
@@ -359,6 +357,7 @@ abstract class Actor extends CoreBase
     /**
      * @param $actorName
      * @return ActorRpc
+     * @throws SwooleException
      */
     public static function getRpc($actorName)
     {
@@ -391,7 +390,7 @@ abstract class Actor extends CoreBase
         $data['node'] = getNodeName();
         $data['worker_id'] = getInstance()->getWorkerId();
         self::$RPCtoken++;
-        $data['token'] = '[Actor]'."[$actorName::$call]"."[".getInstance()->getWorkerId()."]" . "[".self::$RPCtoken."]";
+        $data['token'] = '[Actor]' . "[$actorName::$call]" . "[" . getInstance()->getWorkerId() . "]" . "[" . self::$RPCtoken . "]";
         $result = null;
         if (!$oneWay) {
             $result = Pool::getInstance()->get(EventCoroutine::class)->init($data['token'], function (EventCoroutine $eventCoroutine) use ($set) {
@@ -465,6 +464,7 @@ abstract class Actor extends CoreBase
      * 恢复Actor
      * @param $worker_id
      * @return void
+     * @throws SwooleException
      */
     public static function recovery($worker_id)
     {
