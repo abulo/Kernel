@@ -263,6 +263,18 @@ class HttpInput
 
     public function getIp()
     {
-        return $this->getRequestHeader('x-real-ip', '0.0.0.0');
+
+
+
+        if($this->getRequestHeader('x-forwarded-for'))
+        {
+            $tmp = explode(',',$this->getRequestHeader('x-forwarded-for'));
+            return $tmp[0];
+        }elseif($this->getRequestHeader('x-real-ip'))
+        {
+            return $this->getRequestHeader('x-real-ip');
+        }
+
+        // return $this->getRequestHeader('x-real-ip', '0.0.0.0');
     }
 }

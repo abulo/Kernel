@@ -177,7 +177,7 @@ class Controller extends CoreBase
         return $this->execute($controller_name, $method_name, $params, $destroy);
     }
 
-    
+
     /**
      * @param $controller_name
      * @param $method_name
@@ -215,7 +215,7 @@ class Controller extends CoreBase
         if ($destroy) {
             $this->destroy();
         }
-        
+
         return $result;
     }
 
@@ -236,7 +236,8 @@ class Controller extends CoreBase
         $this->context['controller_name'] = $controller_name;
         $this->context['method_name'] = "$controller_name::$method_name";
         $this->context['ip'] = $this->getFdInfo()['remote_ip'];
-        $this->context['x-real-ip'] = $this->http_input->getRequestHeader('x-real-ip', 0);
+        $this->context['x-real-ip'] = $this->http_input->getIp();
+
 
         if (!empty($this->uid)) {
             $this->context['uid'] = $this->uid;
