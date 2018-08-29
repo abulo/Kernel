@@ -177,6 +177,7 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer
      * websocket连接上时
      * @param $server
      * @param $request
+     * @throws \Throwable
      */
     public function onSwooleWSOpen($server, $request)
     {
@@ -248,11 +249,13 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer
             } catch (\Throwable $e) {
                 $route->errorHandle($e, $fd);
             }
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
+            //被中断
         }
         try {
             $this->middlewareManager->after($middlewares, $path);
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
+            //被中断
         }
         $this->middlewareManager->destory($middlewares);
         if (Start::getDebug()) {
@@ -265,6 +268,7 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer
      * websocket断开连接
      * @param $serv
      * @param $fd
+     * @throws \Throwable
      */
     public function onSwooleWSClose($serv, $fd)
     {

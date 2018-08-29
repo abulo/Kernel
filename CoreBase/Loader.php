@@ -11,6 +11,7 @@ namespace Kernel\CoreBase;
 
 use Kernel\Asyn\Mysql\Miner;
 use Kernel\Asyn\Mysql\MysqlAsynPool;
+use Kernel\Asyn\Redis\RedisAsynPool;
 use Kernel\Components\AOP\AOP;
 use Kernel\Memory\Pool;
 
@@ -43,15 +44,30 @@ class Loader implements ILoader
     /**
      * 获取一个redis
      * @param $name
+     * @param Child $parent
      * @return \Redis
      */
-    public function redis($name)
+    public function redis($name, Child $parent)
     {
+        if (empty($name)) {
+            return null;
+        }
+        if ($parent->root == null) {
+            $parent->root = $parent;
+        }
+        $root = $parent->root;
+        $core_name = RedisAsynPool::AsynName . ":" .$name;
+        if ($root->hasChild($core_name)) {
+            return AOP::getAOP($root->getChild($core_name));
+        }
         $redisPool = getInstance()->getAsynPool($name);
         if ($redisPool == null) {
             return null;
         }
-        return $redisPool->getCoroutine();
+        $redis = $redisPool->getCoroutine();
+        $redis->setContext($root->getContext());
+        $root->addChild($redis);
+        return AOP::getAOP($redis);
     }
 
     /**
@@ -78,6 +94,7 @@ class Loader implements ILoader
             return null;
         }
         $db = $mysql_pool->installDbBuilder();
+        $db->setContext($root->getContext());
         $root->addChild($db);
         return $db;
     }

@@ -298,6 +298,7 @@ class Miner extends Child
      */
     public function __construct($mysql_pool = null)
     {
+        parent::__construct();
         $this->option = array();
         $this->select = array();
         $this->delete = array();
@@ -1613,16 +1614,16 @@ class Miner extends Child
             $autoQuote = $this->getAutoQuote($set['quote']);
 
             if ($usePlaceholders && $autoQuote) {
-                $statement .= "`".$set['column'] . "` " . self::EQUALS . " ?, ";
-                if ($set['value']===false) {
+                $statement .= "`" . $set['column'] . "` " . self::EQUALS . " ?, ";
+                if ($set['value'] === false) {
                     $this->setPlaceholderValues[] = 0;
-                } elseif ($set['value']===true) {
+                } elseif ($set['value'] === true) {
                     $this->setPlaceholderValues[] = 1;
                 } else {
                     $this->setPlaceholderValues[] = $set['value'];
                 }
             } else {
-                $statement .= "`".$set['column'] . "` " . self::EQUALS . " " . $this->autoQuote($set['value'], $autoQuote) . ", ";
+                $statement .= "`" . $set['column'] . "` " . self::EQUALS . " " . $this->autoQuote($set['value'], $autoQuote) . ", ";
             }
         }
 
@@ -2427,7 +2428,6 @@ class Miner extends Child
      */
     public function begin($fuc, $errorFuc = null)
     {
-
         if (getInstance()->isTaskWorker()) {//如果是task进程自动转换为同步模式
             $result = null;
             $this->mysql_pool->getSync()->pdoBeginTrans();
@@ -2436,8 +2436,7 @@ class Miner extends Child
                 $this->mysql_pool->getSync()->pdoCommitTrans();
             } catch (\Throwable $e) {
                 $this->mysql_pool->getSync()->pdoRollBackTrans();
-                if ($errorFuc != null)
-                {
+                if ($errorFuc != null) {
                     $result = $errorFuc(null, $e);
                 }
             }
@@ -2445,14 +2444,26 @@ class Miner extends Child
         } else {
             return $this->mysql_pool->begin($this, $fuc, $errorFuc);
         }
-
     }
+
+    /**
+     * @param null $sql
+     * @param callable|null $set
+     * @return MysqlSyncHelp
+     * @throws \Server\CoreBase\SwooleException
+     * @throws \Throwable
+     */
+    public function prepareQuery($sql = null, callable $set = null)
+    {
+        return $this->getProxy()->_prepareQuery($sql, $set);
+    }
+
     /**
      * @param callable|null $set
      * @return MysqlSyncHelp
      * @throws \Throwable
      */
-    public function prepareQuery(callable $set = null)
+    public function _prepareQuery(callable $set = null)
     {
         $mySqlCoroutine = Pool::getInstance()->get(MySqlCoroutine::class);
         if (getInstance()->isTaskWorker()) {//如果是task进程自动转换为同步模式
@@ -2473,13 +2484,26 @@ class Miner extends Child
             return $result;
         }
     }
+
+    /**
+     * @param null $sql
+     * @param callable|null $set
+     * @return MysqlSyncHelp
+     * @throws \Kernel\CoreBase\SwooleException
+     * @throws \Throwable
+     */
+    public function query($sql = null, callable $set = null)
+    {
+        return $this->getProxy()->_query($sql, $set);
+    }
+
     /**
      * @param null $sql
      * @param callable|null $set
      * @return MysqlSyncHelp
      * @throws \Throwable
      */
-    public function query($sql = null, callable $set = null)
+    public function _query($sql = null, callable $set = null)
     {
         $mySqlCoroutine = Pool::getInstance()->get(MySqlCoroutine::class);
         if (getInstance()->isTaskWorker()) {//如果是task进程自动转换为同步模式

@@ -101,7 +101,7 @@ abstract class Actor extends CoreBase
         });
         $this->saveContext->save();
         $this->db = $this->loader->mysql("mysqlPool", $this);
-        $this->redis = $this->loader->redis("redisPool");
+        $this->redis = $this->loader->redis("redisPool", $this);
         $this->execRegistHandle();
     }
 

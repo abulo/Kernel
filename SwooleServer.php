@@ -357,7 +357,7 @@ abstract class SwooleServer extends ProcessRPC
         $this->uid_fd_table->create();
 
         $this->fd_uid_table = new \swoole_table($this->max_connection);
-        $this->fd_uid_table->column('uid', \swoole_table::TYPE_STRING, 32);
+        $this->fd_uid_table->column('uid', \swoole_table::TYPE_STRING, 50);
         $this->fd_uid_table->create();
     }
 
@@ -411,6 +411,7 @@ abstract class SwooleServer extends ProcessRPC
      * onSwooleConnect
      * @param $serv
      * @param $fd
+     * @throws \Throwable
      */
     public function onSwooleConnect($serv, $fd)
     {
@@ -475,11 +476,13 @@ abstract class SwooleServer extends ProcessRPC
             } catch (\Throwable $e) {
                 $route->errorHandle($e, $fd);
             }
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
+            //被中断
         }
         try {
             $this->middlewareManager->after($middlewares, $path);
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
+            //被中断
         }
         $this->middlewareManager->destory($middlewares);
         if (Start::getDebug()) {
@@ -507,6 +510,7 @@ abstract class SwooleServer extends ProcessRPC
      * onSwooleClose
      * @param $serv
      * @param $fd
+     * @throws \Throwable
      */
     public function onSwooleClose($serv, $fd)
     {

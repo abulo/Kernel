@@ -9,6 +9,7 @@ use Kernel\Asyn\Mysql\Miner;
 use Kernel\Asyn\Mysql\MysqlAsynPool;
 use Kernel\Asyn\Redis\RedisAsynPool;
 use Kernel\Asyn\Redis\RedisLuaManager;
+use Kernel\Components\AOP\AOPManager;
 use Kernel\Components\Backstage\BackstageProcess;
 use Kernel\Components\CatCache\CatCacheProcess;
 use Kernel\Components\CatCache\TimerCallBack;
