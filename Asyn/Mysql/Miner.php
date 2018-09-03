@@ -2450,7 +2450,7 @@ class Miner extends Child
      * @param null $sql
      * @param callable|null $set
      * @return MysqlSyncHelp
-     * @throws \Server\CoreBase\SwooleException
+     * @throws \Kernel\CoreBase\SwooleException
      * @throws \Throwable
      */
     public function prepareQuery($sql = null, callable $set = null)

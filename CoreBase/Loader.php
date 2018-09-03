@@ -154,18 +154,7 @@ class Loader implements ILoader
         return $task_instance;
     }
 
-    // /**
-    //  * view 返回一个模板
-    //  * @param $template
-    //  * @param array $data
-    //  * @param array $mergeData
-    //  * @return string
-    //  */
-    // public function view($template, $data = [], $mergeData = [])
-    // {
-    //     $template = getInstance()->templateEngine->render($template, $data, $mergeData);
-    //     return $template;
-    // }
+
 
     /**
      * view 返回一个模板
