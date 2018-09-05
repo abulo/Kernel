@@ -7,12 +7,12 @@ use Monolog\Formatter\MongoDBFormatter;
 
 class SDMongodbFormatter extends MongoDBFormatter
 {
-	/**
+    /**
      * {@inheritdoc}
      */
     public function format(array $record)
     {
-		// $context = $record['context'];
+        // $context = $record['context'];
         // $RunStack = $context['RunStack']??[];
         // $count = count($RunStack);
         // if ($count) {
@@ -28,11 +28,11 @@ class SDMongodbFormatter extends MongoDBFormatter
         // foreach ($extra as $key => $value) {
         //     $record['ex_' . $key] = $value;
         // }
-		//
-		// unset($record['datetime']);
+        //
+        // unset($record['datetime']);
         // unset($record['context']);
         // unset($record['extra']);
 
-		return $this->formatArray($record);
-	}
+        return $this->formatArray($record);
+    }
 }

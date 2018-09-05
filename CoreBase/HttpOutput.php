@@ -287,7 +287,7 @@ class HttpOutput
     {
         $client = $this->request->cookie['client_id'] ?? 0;
         if ($client) {
-            $this->setCookie('client_id', $client, time()+86400, '/', '', false, true);
+            $this->setCookie('client_id', $client, time()+86400, '/', '', true, true);
         }
     }
 }
