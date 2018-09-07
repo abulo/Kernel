@@ -239,7 +239,7 @@ abstract class SwooleServer extends ProcessRPC
         $this->masterPid = ServerPid::getMasterPid($this->pidFilePath);
         $this->managerPid = ServerPid::getManagerPid($this->pidFilePath);
         ServerPid::init($this->pidFilePath);
-        $this->monitor = new Monitor(getServerName().":", $this->pidFilePath);
+        $this->monitor = new Monitor(getServerName()."-", $this->pidFilePath);
 
         $this->container = new Container;
 
@@ -368,7 +368,7 @@ abstract class SwooleServer extends ProcessRPC
     public function onSwooleStart($serv)
     {
         setTimezone();
-        $processName = Start::setProcessTitle(getServerName() . ':master');
+        $processName = Start::setProcessTitle(getServerName() . '-master');
         //刷新进程文件
         $pidList = ServerPid::makePidList('master', $serv->master_pid, $processName);
         $this->putPidList($pidList);
@@ -394,12 +394,12 @@ abstract class SwooleServer extends ProcessRPC
         $this->config = $this->config->load(getConfigDir());
         $this->container = new Container;
         if (!$serv->taskworker) {//worker进程
-            $workerProcessName = ":work-num-:{$serv->worker_id}";
+            $workerProcessName = "-work-num-:{$serv->worker_id}";
             $processName = Start::setProcessTitle(getServerName() . $workerProcessName);
             $pidList = ServerPid::makePidList('work', $serv->worker_pid, $processName);
         } else {
             $taskId = $serv->worker_id - $this->worker_num;
-            $taskProcessName = ":task-num-:{$taskId}";
+            $taskProcessName = "-task-num-:{$taskId}";
 
             $processName = Start::setProcessTitle(getServerName() . $taskProcessName);
             $pidList = ServerPid::makePidList('task', $serv->worker_pid, $processName);
@@ -605,7 +605,7 @@ abstract class SwooleServer extends ProcessRPC
     public function onSwooleManagerStart($serv)
     {
         setTimezone();
-        $processName = Start::setProcessTitle(getServerName() . ':manager');
+        $processName = Start::setProcessTitle(getServerName() . '-manager');
         $pidList = ServerPid::makePidList('manager', $serv->manager_pid, $processName);
         $this->putPidList($pidList);
     }
