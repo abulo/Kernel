@@ -78,7 +78,6 @@ class XmlToArray
                 continue;
             }
             if ($node instanceof DOMElement) {
-
                 if ($sameNames) {
                     $result[$node->nodeName][$key] = $this->convertDomElement($node);
                 } else {

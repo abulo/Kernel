@@ -219,7 +219,6 @@ function getServerIp($dev = 'eth0')
 {
     // return exec("ip -4 addr show $dev | grep inet | awk '{print $2}' | cut -d / -f 1");
     return exec("ifconfig $dev | grep \"inet addr:\" | awk '{print $2}' | cut -c 6-");
-
 }
 
 /**

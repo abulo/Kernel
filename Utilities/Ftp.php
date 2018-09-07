@@ -6,7 +6,6 @@
  */
 namespace Kernel\Utilities;
 
-
 class Ftp
 {
 
@@ -25,14 +24,15 @@ class Ftp
     {
         $port = (isset($config['port'])) ? (int) $config['port'] : 21; //端口号
         $this->linkid = ftp_connect($config['service'], $port);
-        if (!$this->linkid) return false;
+        if (!$this->linkid) {
+            return false;
+        }
         $this->pasv = $config['pasv'];
         @ftp_set_option($this->linkid, FTP_TIMEOUT_SEC, $this->timeout);
         if (@!ftp_login($this->linkid, $config['username'], $config['password'])) {
             return false;
         }
-        if($this->pasv)
-        {
+        if ($this->pasv) {
             ftp_pasv($this->linkid, true);
         }
 
@@ -49,22 +49,25 @@ class Ftp
      */
     public function upload($local_file, $ftp_file)
     {
-        if (empty($local_file) || empty($ftp_file)) return false;
+        if (empty($local_file) || empty($ftp_file)) {
+            return false;
+        }
         $ftppath = dirname($ftp_file);
         if (!empty($ftppath)) { //创建目录
             $this->makeDir($ftppath);
             @ftp_chdir($this->linkid, $ftppath);
             $ftp_file = basename($ftp_file);
         }
-        if($this->pasv)
-        {
+        if ($this->pasv) {
             ftp_pasv($this->linkid, true);
         }
         $ret = ftp_nb_put($this->linkid, $ftp_file, $local_file, FTP_BINARY);
         while ($ret == FTP_MOREDATA) {
             $ret = ftp_nb_continue($this->linkid);
         }
-        if ($ret != FTP_FINISHED) return false;
+        if ($ret != FTP_FINISHED) {
+            return false;
+        }
         return true;
     }
 
@@ -78,12 +81,16 @@ class Ftp
      */
     public function download($local_file, $ftp_file)
     {
-        if (empty($local_file) || empty($ftp_file)) return false;
+        if (empty($local_file) || empty($ftp_file)) {
+            return false;
+        }
         $ret = ftp_nb_get($this->linkid, $local_file, $ftp_file, FTP_BINARY);
         while ($ret == FTP_MOREDATA) {
-            $ret = ftp_nb_continue ($this->linkid);
+            $ret = ftp_nb_continue($this->linkid);
         }
-        if ($ret != FTP_FINISHED) return false;
+        if ($ret != FTP_FINISHED) {
+            return false;
+        }
         return true;
     }
 
@@ -96,7 +103,9 @@ class Ftp
      */
     public function makeDir($path)
     {
-        if (empty($path)) return false;
+        if (empty($path)) {
+            return false;
+        }
         $dir = explode("/", $path);
         $path = ftp_pwd($this->linkid) . '/';
         $ret = true;
@@ -110,7 +119,9 @@ class Ftp
             }
             @ftp_chdir($this->linkid, $path);
         }
-        if (!$ret) return false;
+        if (!$ret) {
+            return false;
+        }
         return true;
     }
 
@@ -209,7 +220,7 @@ class Ftp
      */
     public function changename($oldname, $newname)
     {
-        return ftp_rename ($this->linkid, $oldname, $newname);
+        return ftp_rename($this->linkid, $oldname, $newname);
     }
 
     /**
@@ -242,5 +253,4 @@ class Ftp
     {
         return ftp_chdir($this->linkid, $path);
     }
-
 }

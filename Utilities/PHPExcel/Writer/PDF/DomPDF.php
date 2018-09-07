@@ -59,7 +59,7 @@ class PHPExcel_Writer_PDF_DomPDF extends PHPExcel_Writer_PDF_Core implements PHP
      *  @param   string     $pFilename   Name of the file to save as
      *  @throws  PHPExcel_Writer_Exception
      */
-    public function save($pFilename = NULL)
+    public function save($pFilename = null)
     {
         $fileHandle = parent::prepareForSave($pFilename);
 
@@ -107,7 +107,7 @@ class PHPExcel_Writer_PDF_DomPDF extends PHPExcel_Writer_PDF_Core implements PHP
         $pdf->set_paper(strtolower($paperSize), $orientation);
 
         $pdf->load_html(
-            $this->generateHTMLHeader(FALSE) .
+            $this->generateHTMLHeader(false) .
             $this->generateSheetData() .
             $this->generateHTMLFooter()
         );
@@ -116,7 +116,6 @@ class PHPExcel_Writer_PDF_DomPDF extends PHPExcel_Writer_PDF_Core implements PHP
         //  Write to file
         fwrite($fileHandle, $pdf->output());
 
-		parent::restoreStateAfterSave($fileHandle);
+        parent::restoreStateAfterSave($fileHandle);
     }
-
 }

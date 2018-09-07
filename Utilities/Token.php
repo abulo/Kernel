@@ -1,6 +1,7 @@
 <?php
 
 namespace Kernel\Utilities;
+
 use Kernel\Utilities\JWT\JWT;
 
 class Token
@@ -17,12 +18,11 @@ class Token
 
 
 
-        try{
-            return JWT::encode($string,$key,'HS256');
-        }catch (\Exception $e) {
+        try {
+            return JWT::encode($string, $key, 'HS256');
+        } catch (\Exception $e) {
             return false;
         }
-
     }
     /**
      * 解密
@@ -35,14 +35,10 @@ class Token
         $key = md5($key ? $key : 'weimeng');
 
 
-        try{
-            return JWT::decode($string,$key,['HS256']);
-        }catch (\Exception $e) {
+        try {
+            return JWT::decode($string, $key, ['HS256']);
+        } catch (\Exception $e) {
             return false;
         }
-       
-
-
-        
     }
 }

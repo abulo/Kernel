@@ -36,12 +36,9 @@ class RunAspect extends Aspect
         }
         $time = " -> " . ((microtime(true) - $this->run_start_time) * 1000) . " ms";
 
-        if(is_array($this->context)&& !empty($this->context))
-        {
-            if(array_key_exists('RunStack',$this->context))
-            {
-                if(array_key_exists($run_index,$this->context['RunStack']))
-                {
+        if (is_array($this->context)&& !empty($this->context)) {
+            if (array_key_exists('RunStack', $this->context)) {
+                if (array_key_exists($run_index, $this->context['RunStack'])) {
                     $this->context['RunStack'][$run_index] = $this->context['RunStack'][$run_index] . $time;
                     $count = count($this->context['RunStack']);
                     for ($i = $run_index + 1; $i < $count; $i++) {

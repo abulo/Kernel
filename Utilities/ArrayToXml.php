@@ -10,9 +10,11 @@
  */
 
 namespace Kernel\Utilities;
+
 use DOMElement;
 use DOMDocument;
 use DOMException;
+
 class ArrayToXml
 {
     /**

@@ -21,7 +21,7 @@
  * @category   PHPExcel
  * @package    PHPExcel_Writer_OpenDocument
  * @copyright  Copyright (c) 2006 - 2014 PHPExcel (http://www.codeplex.com/PHPExcel)
- * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt	LGPL
+ * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
  * @version    ##VERSION##, ##DATE##
  */
 
@@ -78,9 +78,9 @@ class PHPExcel_Writer_OpenDocument_Meta extends PHPExcel_Writer_OpenDocument_Wri
                 $objWriter->writeElement('dc:description', $pPHPExcel->getProperties()->getDescription());
                 $objWriter->writeElement('dc:subject', $pPHPExcel->getProperties()->getSubject());
                 $keywords = explode(' ', $pPHPExcel->getProperties()->getKeywords());
-                foreach ($keywords as $keyword) {
-                    $objWriter->writeElement('meta:keyword', $keyword);
-                }
+        foreach ($keywords as $keyword) {
+            $objWriter->writeElement('meta:keyword', $keyword);
+        }
                 //<meta:document-statistic meta:table-count="XXX" meta:cell-count="XXX" meta:object-count="XXX"/>
                 $objWriter->startElement('meta:user-defined');
                     $objWriter->writeAttribute('meta:name', 'Company');

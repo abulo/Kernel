@@ -71,7 +71,7 @@ abstract class Process extends ProcessRPC
         $redis_pool = getInstance()->getAsynPool("redisPool");
         if ($redis_pool != null) {
             $dump = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-            $file = explode("app-debug", $dump[0]['file'])[1]??null;
+            $file = explode("app-debug", $dump[0]['file'])[1] ?? null;
             if (!empty($file)) {
                 $redis_pool->getSync()->zIncrBy(SwooleMarco::CodeCoverage, 1, $file . ":" . $dump[0]['line']);
             }
@@ -110,7 +110,7 @@ abstract class Process extends ProcessRPC
             while (strlen($this->socketBuff) > 4) {
                 $len = unpack("N", $this->socketBuff)[1];
                 if (strlen($this->socketBuff) >= $len) {//满足完整一个包
-                    $data = substr($this->socketBuff, 4, $len-4);
+                    $data = substr($this->socketBuff, 4, $len - 4);
                     $recv_data = \swoole_serialize::unpack($data);
                     $this->readData($recv_data);
                     $this->socketBuff = substr($this->socketBuff, $len);

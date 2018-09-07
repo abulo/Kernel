@@ -266,12 +266,10 @@ class HttpInput
 
 
 
-        if($this->getRequestHeader('x-forwarded-for'))
-        {
-            $tmp = explode(',',$this->getRequestHeader('x-forwarded-for'));
+        if ($this->getRequestHeader('x-forwarded-for')) {
+            $tmp = explode(',', $this->getRequestHeader('x-forwarded-for'));
             return $tmp[0];
-        }elseif($this->getRequestHeader('x-real-ip'))
-        {
+        } elseif ($this->getRequestHeader('x-real-ip')) {
             return $this->getRequestHeader('x-real-ip');
         }
 

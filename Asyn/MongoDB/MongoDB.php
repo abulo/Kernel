@@ -102,7 +102,6 @@ class MongoDB implements IAsynPool
      */
     public function setName($name)
     {
-
     }
 
 

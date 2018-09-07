@@ -492,12 +492,10 @@ class Arr
     {
         $arr = [];
         $arr_tmp = explode(';', $string);
-        if($arr_tmp)
-        {
+        if ($arr_tmp) {
             foreach ($arr_tmp as $key => $value) {
                 $tmp = explode('=', $value);
-                if(is_array($tmp) && !empty($tmp)  && isset($tmp[0])  && isset($tmp[1]))
-                {
+                if (is_array($tmp) && !empty($tmp)  && isset($tmp[0])  && isset($tmp[1])) {
                     $arr[$tmp[0]] = $tmp[1];
                 }
             }
@@ -525,32 +523,26 @@ class Arr
      * @param 数组获取字符串 $params
      * @return void
      */
-    public static function gkey($prefix,$params = null)
+    public static function gkey($prefix, $params = null)
     {
-        if(null === $params  || empty($params))
-        {
+        if (null === $params  || empty($params)) {
             return $prefix;
         }
 
-        if(is_array($params) && !empty($params))
-        {
+        if (is_array($params) && !empty($params)) {
             $gkey = "";
-            foreach ($params as $pkey => $pvalue)
-            {
-                if(!$pvalue)
-                {
+            foreach ($params as $pkey => $pvalue) {
+                if (!$pvalue) {
                     $pvalue = "";
                 }
-                if(is_array($pvalue))
-                {
+                if (is_array($pvalue)) {
                     $pvalue = json_encode($pvalue);
                 }
                 $gkey .= $pkey.'|#' . $pvalue;
             }
             return $prefix.'/'.md5($gkey);
-        }else{
+        } else {
             return $prefix.'/'.md5($params);
         }
     }
-
 }

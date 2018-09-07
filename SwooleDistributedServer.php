@@ -685,7 +685,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                 $activePools = explode(',', $activePools);
             }
             foreach ($activePools as $poolKey) {
-                $this->addAsynPool($poolKey,(new MongoDB($this->config, $poolKey)));
+                $this->addAsynPool($poolKey, (new MongoDB($this->config, $poolKey)));
             }
         }
         $this->redis_pool = $this->asynPools['redisPool'] ?? null;

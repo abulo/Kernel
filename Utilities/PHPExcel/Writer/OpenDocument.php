@@ -21,7 +21,7 @@
  * @category   PHPExcel
  * @package    PHPExcel_Writer_OpenDocument
  * @copyright  Copyright (c) 2006 - 2014 PHPExcel (http://www.codeplex.com/PHPExcel)
- * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt	LGPL
+ * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
  * @version    ##VERSION##, ##DATE##
  */
 
@@ -96,7 +96,7 @@ class PHPExcel_Writer_OpenDocument extends PHPExcel_Writer_Abstract implements P
      * @param  string  $pFilename
      * @throws PHPExcel_Writer_Exception
      */
-    public function save($pFilename = NULL)
+    public function save($pFilename = null)
     {
         if (!$this->_spreadSheet) {
             throw new PHPExcel_Writer_Exception('PHPExcel object unassigned.');
@@ -118,11 +118,11 @@ class PHPExcel_Writer_OpenDocument extends PHPExcel_Writer_Abstract implements P
 
         $objZip->addFromString('META-INF/manifest.xml', $this->getWriterPart('meta_inf')->writeManifest());
         $objZip->addFromString('Thumbnails/thumbnail.png', $this->getWriterPart('thumbnails')->writeThumbnail());
-        $objZip->addFromString('content.xml',  $this->getWriterPart('content')->write());
-        $objZip->addFromString('meta.xml',     $this->getWriterPart('meta')->write());
-        $objZip->addFromString('mimetype',     $this->getWriterPart('mimetype')->write());
+        $objZip->addFromString('content.xml', $this->getWriterPart('content')->write());
+        $objZip->addFromString('meta.xml', $this->getWriterPart('meta')->write());
+        $objZip->addFromString('mimetype', $this->getWriterPart('mimetype')->write());
         $objZip->addFromString('settings.xml', $this->getWriterPart('settings')->write());
-        $objZip->addFromString('styles.xml',   $this->getWriterPart('styles')->write());
+        $objZip->addFromString('styles.xml', $this->getWriterPart('styles')->write());
 
         // Close file
         if ($objZip->close() === false) {
