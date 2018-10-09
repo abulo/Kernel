@@ -35,6 +35,7 @@ namespace Kernel\Asyn\Es\Processors;
 
 use Kernel\Asyn\Es\Utils\ExpressionType;
 use Kernel\Asyn\Es\Utils\ExpressionToken;
+use Kernel\Asyn\Es\Utils\PHPSQLParserConstants;
 
 /**
  *
