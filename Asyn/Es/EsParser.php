@@ -143,7 +143,7 @@ class EsParser
             $this->table($this->parsed['FROM']);
         }
         //insert
-        if(isset($this->parsed['INSERT']) && !empty($this->parsed['INSERT'])){
+        if (isset($this->parsed['INSERT']) && !empty($this->parsed['INSERT'])) {
             $this->insert($this->parsed['INSERT']);
         }
 
@@ -249,34 +249,36 @@ class EsParser
         }
     }
 
-    private function insert($arr){
+    private function insert($arr)
+    {
         $this->url .="/".$this->index_es."/".$this->type_es."?pretty";
-        foreach ($arr as $k=>$v) {
-            if(count($v['columns'])>0){
-                $this->Builderarr=$this->resdata($v['columns'],$this->parsed['VALUES'][$k]['data']);
+        foreach ($arr as $k => $v) {
+            if (count($v['columns'])>0) {
+                $this->Builderarr=$this->resdata($v['columns'], $this->parsed['VALUES'][$k]['data']);
             }
         }
-
     }
 
-    private function resdata($data,$value){
+    private function resdata($data, $value)
+    {
         foreach ($data as $v) {
-            if($v['base_expr']){
-                $fielddata=str_replace('`','',$v['base_expr']);
+            if ($v['base_expr']) {
+                $fielddata=str_replace('`', '', $v['base_expr']);
                 $fieldarr[]=$fielddata;
             }
         }
         foreach ($value as $vv) {
-            if($vv['base_expr']){
-                $fielddata=str_replace("'",'',$vv['base_expr']);
-                $fielddata=str_replace('"','',$fielddata);
+            if ($vv['base_expr']) {
+                $fielddata=str_replace("'", '', $vv['base_expr']);
+                $fielddata=str_replace('"', '', $fielddata);
                 $valuearr[]=$fielddata;
             }
         }
-        return array_combine($fieldarr,$valuearr);
+        return array_combine($fieldarr, $valuearr);
     }
 
-    private function update($arr){
+    private function update($arr)
+    {
         foreach ($arr as $v) {
             if ($v['table']) {
                 $this->table=$v['table'];
@@ -285,10 +287,12 @@ class EsParser
         }
     }
 
-    private function delete($arr){
+    private function delete($arr)
+    {
     }
 
-    private function getEsData($url){
+    private function getEsData($url)
+    {
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1) ;
             curl_setopt($ch, CURLOPT_TIMEOUT, 60);
@@ -361,10 +365,10 @@ class EsParser
             $delete_arr['total']=$output['total'];
             $delete_arr['deleted']=$output['deleted'];
             $delete_arr['successfull']=$output['deleted'];
-            $this->result=json_encode($delete_arr,true);
-        }else if(isset($this->parsed['INSERT']) && !empty($this->parsed['INSERT'])){
-            $this->result=json_encode($output,true);
-        }else{
+            $this->result=json_encode($delete_arr, true);
+        } elseif (isset($this->parsed['INSERT']) && !empty($this->parsed['INSERT'])) {
+            $this->result=json_encode($output, true);
+        } else {
             $total_str=$output['hits']['total'];
             if (isset($this->parsed['GROUP']) && !empty($this->parsed['GROUP'])) {
                 if ($output['hits']['hits'] && empty($output['aggregations'][$this->fistgroup]['buckets'])) {
