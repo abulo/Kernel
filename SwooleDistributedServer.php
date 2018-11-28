@@ -851,8 +851,19 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     public function unBindUid($uid, $fd)
     {
         //更新共享内存
-        $this->uid_fd_table->del($uid);
-        $this->fd_uid_table->del($fd);
+        // $this->uid_fd_table->del($uid);
+        // $this->fd_uid_table->del($fd);
+        $in_table_uid = $this->uid_fd_table->get($uid);
+        $in_table_fd = $this->fd_uid_table->get($fd);
+        //判断共享内存中存储的uid与fd配对是否为当前要删除的配对，如果确认是，再进行删除
+        if (!empty($in_table_uid) && $in_table_uid['fd'] == $fd) {
+            $this->uid_fd_table->del($uid);
+        }
+        if (!empty($in_table_fd) && $in_table_fd['uid'] == $uid) {
+            // echo "\n 【当前共享内存中存储的fd与uid配对成功，进行删除】";
+            $this->fd_uid_table->del($fd);
+        }
+
         //这里无论是不是集群都需要调用
         ProcessManager::getInstance()->getRpcCall(ClusterProcess::class, true)->my_removeUid($uid);
         if (!$this->isCluster()) {

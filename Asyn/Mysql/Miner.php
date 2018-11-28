@@ -1574,7 +1574,15 @@ class Miner extends Child
         $this->setPlaceholderValues = array();
 
         foreach ($this->intoColums as $colum) {
-            $statement .= "`$colum`" . ", ";
+            if (strpos($colum, '.') !== false) {
+                $colum = explode(".", $colum);
+                foreach ($colum as $key => $value) {
+                    $colum[$key] = "`$value`";
+                }
+                $statement .= implode(".", $colum);
+            } else {
+                $statement .= "`$colum`" . ", ";
+            }
         }
         $statement = substr($statement, 0, -2);
         $statement .= ') VALUES ';
@@ -1614,7 +1622,16 @@ class Miner extends Child
             $autoQuote = $this->getAutoQuote($set['quote']);
 
             if ($usePlaceholders && $autoQuote) {
-                $statement .= "`" . $set['column'] . "` " . self::EQUALS . " ?, ";
+                if (strpos($set['column'], '.') !== false) {
+                    $colum = explode(".", $set['column']);
+                    foreach ($colum as $key => $value) {
+                        $colum[$key] = "`$value`";
+                    }
+                    $statement .= implode(".", $colum) . " " . self::EQUALS . " ?, ";
+                } else {
+                    $statement .= "`" . $set['column'] . "` " . self::EQUALS . " ?, ";
+                }
+
                 if ($set['value'] === false) {
                     $this->setPlaceholderValues[] = 0;
                 } elseif ($set['value'] === true) {
@@ -1623,7 +1640,15 @@ class Miner extends Child
                     $this->setPlaceholderValues[] = $set['value'];
                 }
             } else {
-                $statement .= "`" . $set['column'] . "` " . self::EQUALS . " " . $this->autoQuote($set['value'], $autoQuote) . ", ";
+                if (strpos($set['column'], '.') !== false) {
+                    $colum = explode(".", $set['column']);
+                    foreach ($colum as $key => $value) {
+                        $colum[$key] = "`$value`";
+                    }
+                    $statement .= implode(".", $colum) . " " . self::EQUALS . " " . $this->autoQuote($set['value'], $autoQuote) . ", ";
+                } else {
+                    $statement .= "`" . $set['column'] . "` " . self::EQUALS . " " . $this->autoQuote($set['value'], $autoQuote) . ", ";
+                }
             }
         }
 
@@ -1900,9 +1925,13 @@ class Miner extends Child
         } elseif ($this->isInsert()) {
             $this->mergeInsertInto($Miner);
             $this->mergeSetInto($Miner);
+            $this->mergeIntoColumns($Miner);
+            $this->mergeIntoValues($Miner);
         } elseif ($this->isReplace()) {
             $this->mergeReplaceInto($Miner);
             $this->mergeSetInto($Miner);
+            $this->mergeIntoColumns($Miner);
+            $this->mergeIntoValues($Miner);
         } elseif ($this->isUpdate()) {
             $this->mergeUpdateInto($Miner);
             $this->mergeJoinInto($Miner);
@@ -2296,6 +2325,36 @@ class Miner extends Child
     }
 
     /**
+     * Merge this Miner's INTOCOLUMS into the given Miner.
+     *
+     * @param  Miner $Miner to merge into
+     * @return Miner
+     */
+    public function mergeIntoColumns(Miner $Miner)
+    {
+        if ($this->intoColums) {
+            $Miner->intoColumns($this->intoColums);
+        }
+
+        return $Miner;
+    }
+
+    /**
+     * Merge this Miner's INTOVALUES into the given Miner.
+     *
+     * @param  Miner $Miner to merge into
+     * @return Miner
+     */
+    public function mergeIntoValues(Miner $Miner)
+    {
+        if ($this->intoValues) {
+            $Miner->intoValues($this->intoValues);
+        }
+
+        return $Miner;
+    }
+
+    /**
      * Merge this Miner's INSERT into the given Miner.
      *
      * @param  Miner $Miner to merge into
@@ -2306,7 +2365,11 @@ class Miner extends Child
         $this->mergeOptionsInto($Miner);
 
         if ($this->insert) {
-            $Miner->insert($this->getInsert());
+            if ($this->isInto) {
+                $Miner->insertInto($this->getInsert());
+            } else {
+                $Miner->insert($this->getInsert());
+            }
         }
 
         return $Miner;
@@ -2338,7 +2401,11 @@ class Miner extends Child
         $this->mergeOptionsInto($Miner);
 
         if ($this->replace) {
-            $Miner->replace($this->getReplace());
+            if ($this->isInto) {
+                $Miner->replaceInto($this->getReplace());
+            } else {
+                $Miner->replace($this->getReplace());
+            }
         }
 
         return $Miner;
