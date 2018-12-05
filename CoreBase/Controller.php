@@ -207,7 +207,7 @@ class Controller extends CoreBase
                 $result = $this->getProxy()->$method_name();
             } else {
                 $params = array_values($params);
-                $this->getProxy()->$method_name(...$params);
+                $result = $this->getProxy()->$method_name(...$params);
             }
         } catch (Throwable $e) {
             getInstance()->onPhpTick($e);

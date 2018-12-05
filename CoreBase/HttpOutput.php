@@ -145,6 +145,34 @@ class HttpOutput
     {
         $this->setHeader('Content-Type', 'application/json; charset=UTF-8');
         // $this->clientId();
+        array_walk_recursive($output, function (&$item, $key) {
+            switch (gettype($item)) {
+                case 'array':
+                    $item = (array) $item;
+                    break;
+                case 'object':
+                    $item = (object) $item;
+                    break;
+                case 'boolean':
+                    $item = (boolean) $item;
+                    break;
+                case 'integer':
+                    $item = (string) $item;
+                    break;
+                case 'double':
+                    $item = (string) $item;
+                    break;
+                case 'NULL':
+                case 'resource':
+                case 'unknown':
+                    $item = '';
+                    break;
+                default:
+                    $item = (string) $item;
+                    break;
+            }
+        });
+
         $this->end(json_encode($output), $gzip);
         return;
     }
@@ -162,6 +190,35 @@ class HttpOutput
         if (null == $output) {
             return $output;
         }
+
+        array_walk_recursive($output, function (&$item, $key) {
+            switch (gettype($item)) {
+                case 'array':
+                    $item = (array) $item;
+                    break;
+                case 'object':
+                    $item = (object) $item;
+                    break;
+                case 'boolean':
+                    $item = (boolean) $item;
+                    break;
+                case 'integer':
+                    $item = (string) $item;
+                    break;
+                case 'double':
+                    $item = (string) $item;
+                    break;
+                case 'NULL':
+                case 'resource':
+                case 'unknown':
+                    $item = '';
+                    break;
+                default:
+                    $item = (string) $item;
+                    break;
+            }
+        });
+
         $response = [
             'status' => $code,
             'header' => ['Content-Type','application/json; charset=UTF-8'],
