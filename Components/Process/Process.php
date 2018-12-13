@@ -90,7 +90,8 @@ abstract class Process extends ProcessRPC
     {
         $this->onShutDown();
         secho("Process:$this->worker_id", get_class($this) . "关闭成功");
-        exit();
+        // 更新退出方式为swoole的exit，防止报错以及内存释放不净
+        $this->process->exit(0);
     }
 
     abstract protected function onShutDown();
