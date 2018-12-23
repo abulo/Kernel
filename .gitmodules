@@ -94,3 +94,12 @@
 [submodule "Library/spatie/image-optimizer"]
 	path = Library/spatie/image-optimizer
 	url = https://github.com/spatie/image-optimizer.git
+[submodule "Library/php-fig/simple-cache"]
+	path = Library/php-fig/simple-cache
+	url = https://github.com/php-fig/simple-cache.git
+[submodule "Library/MarkBaker/PHPComplex"]
+	path = Library/MarkBaker/PHPComplex
+	url = https://github.com/MarkBaker/PHPComplex.git
+[submodule "Library/PHPOffice/PhpSpreadsheet"]
+	path = Library/PHPOffice/PhpSpreadsheet
+	url = https://github.com/PHPOffice/PhpSpreadsheet.git

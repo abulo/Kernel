@@ -35,12 +35,17 @@ return [
         'Symfony\Component\Inflector' => dirname(__DIR__).DS.'Library'.DS.'symfony'.DS.'inflector',
         'Symfony\Component\OptionsResolver' => dirname(__DIR__).DS.'Library'.DS.'symfony'.DS.'options-resolver',
         'Symfony\Component\PropertyAccess' => dirname(__DIR__).DS.'Library'.DS.'symfony'.DS.'property-access',
-        
+
         'Overtrue\Pinyin' =>  dirname(__DIR__).DS.'Library'.DS.'overtrue'.DS.'pinyin'.DS.'src',
-        
+
         'Symfony\Component\Process' =>  dirname(__DIR__).DS.'Library'.DS.'symfony'.DS.'process',
         'Spatie\ImageOptimizer' => dirname(__DIR__).DS.'Library'.DS.'spatie'.DS.'image-optimizer'.DS.'src',
 
+        'Psr\SimpleCache' => dirname(__DIR__).DS.'Library'.DS.'php-fig'.DS.'simple-cache'.DS.'src',
+
+        'Complex' => dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src',
+
+        'PhpOffice\PhpSpreadsheet'=> dirname(__DIR__).DS.'Library'.DS.'PHPOffice'.DS.'PhpSpreadsheet'.DS.'src'.DS.'PhpSpreadsheet',
 
         'Kernel'=>dirname(__DIR__),
     ],
@@ -49,10 +54,60 @@ return [
         dirname(__DIR__).DS.'Library'.DS.'mongodb'.DS.'mongo-php-library'.DS.'src'.DS.'functions.php',
         dirname(__DIR__).DS.'Library'.DS.'reactphp'.DS.'promise'.DS.'src'.DS.'functions_include.php',
         dirname(__DIR__).DS.'Library'.DS.'guzzle'.DS.'psr7'.DS.'src'.DS.'functions_include.php',
-        dirname(__DIR__).DS.'Library'.DS.'aliyun-php-sdk'.DS.'aliyun-php-sdk-core'.DS.'Config.php',
         dirname(__DIR__).DS.'Library'.DS.'khanamiryan'.DS.'php-qrcode-detector-decoder'.DS.'lib'.'Common'.DS.'customFunctions.php',
         dirname(__DIR__).DS.'Library'.DS.'khanamiryan'.DS.'php-qrcode-detector-decoder'.DS.'lib'.DS.'QrReader.php',
         dirname(__DIR__).DS.'Utilities'.DS.'PHPExcel.php',
         dirname(__DIR__).DS.'Helpers'.DS.'Common.php',
+
+
+
+        //Complex
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'abs.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'acos.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'acosh.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'acot.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'acoth.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'acsc.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'acsch.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'argument.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'asec.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'asech.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'asin.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'asinh.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'atan.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'atanh.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'conjugate.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'cos.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'cosh.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'cot.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'coth.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'csc.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'csch.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'exp.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'inverse.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'ln.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'log2.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'log10.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'negative.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'pow.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'rho.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'sec.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'sech.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'sin.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'sinh.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'sqrt.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'tan.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'tanh.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'theta.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'add.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'subtract.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'multiply.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'divideby.php',
+        dirname(__DIR__).DS.'Library'.DS.'MarkBaker'.DS.'PHPComplex'.DS.'classes'.DS.'src'.DS.functions.DS.'divideinto.php'
+
+
+
+
+
     ],
 ];
