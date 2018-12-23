@@ -27,7 +27,7 @@ class Ftp
         if (!$this->linkid) {
             return false;
         }
-        $this->pasv = $config['pasv'];
+        $this->pasv = isset($config['pasv']) ? $config['pasv'] : false;
         @ftp_set_option($this->linkid, FTP_TIMEOUT_SEC, $this->timeout);
         if (@!ftp_login($this->linkid, $config['username'], $config['password'])) {
             return false;
