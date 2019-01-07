@@ -150,8 +150,7 @@ class HttpOutput
     {
         $this->setHeader('Content-Type', 'application/json; charset=UTF-8');
         // $this->clientId();
-        if($recursive)
-        {
+        if ($recursive) {
             array_walk_recursive($output, function (&$item, $key) {
                 switch (gettype($item)) {
                     case 'array':
