@@ -2,6 +2,8 @@
 
 namespace Kernel\Utilities\Aria2;
 
+use \Curl\Curl;
+
 class SimpleJsonRpcClient
 {
     protected $url = '';

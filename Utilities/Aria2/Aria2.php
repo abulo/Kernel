@@ -204,8 +204,7 @@ class Aria2
      */
     public function forcePause(string $gid)
     {
-        $response = json_decode($this->aria2->forcePause($gid), true);
-        $this->handleError($response);
+        $response = $this->aria2->forcePause($gid);
         return $response;
     }
     /**
