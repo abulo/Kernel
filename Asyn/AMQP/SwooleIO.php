@@ -238,8 +238,7 @@ class SwooleIO extends AbstractIO
     public function close()
     {
 
-        if($this->sock != null)
-        {
+        if ($this->sock != null) {
             $this->sock->close();
         }
         $this->sock = null;
