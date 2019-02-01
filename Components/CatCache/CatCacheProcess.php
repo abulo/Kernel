@@ -138,7 +138,7 @@ class CatCacheProcess extends Process
         }
         $one[0] = $method;
         $one[1] = $params;
-        $buffer = \swoole_serialize::pack($one);
+        $buffer = msgpack_pack($one);
         $total_length = 4 + strlen($buffer);
         $data = pack('N', $total_length) . $buffer;
         swoole_async_write($this->save_log_file, $data);
@@ -156,7 +156,7 @@ class CatCacheProcess extends Process
         foreach ($this->map->getContainer() as $key => $value) {
             $one = [];
             $one[$key] = $value;
-            $buffer = \swoole_serialize::pack($one);
+            $buffer = msgpack_pack($one);
             $total_length = 4 + strlen($buffer);
             $data = pack('N', $total_length) . $buffer;
             file_put_contents($this->save_temp_file, $data, FILE_APPEND);
@@ -270,7 +270,7 @@ class CatCacheProcess extends Process
             if (strlen($this->read_buffer) >= $head_len) {//有完整结果
                 $data = substr($this->read_buffer, 4, $head_len - 4);
                 $this->read_buffer = substr($this->read_buffer, $head_len);
-                $one = \swoole_serialize::unpack($data);
+                $one = msgpack_unpack($data);
                 $func($one);
             } else {
                 break;

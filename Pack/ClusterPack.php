@@ -48,13 +48,13 @@ class ClusterPack implements IPack
             return $this->last_data_result;
         }
         $this->last_data = $data;
-        $this->last_data_result = $this->encode(\swoole_serialize::pack($data, JSON_UNESCAPED_UNICODE));
+        $this->last_data_result = $this->encode(msgpack_pack($data));
         return $this->last_data_result;
     }
 
     public function unPack($data)
     {
-        $value = \swoole_serialize::unpack($this->decode($data));
+        $value = msgpack_unpack($this->decode($data));
         if ($value == ClusterPack::PING) {
             throw new \Exception('心跳');
         }
