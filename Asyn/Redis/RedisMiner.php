@@ -161,7 +161,7 @@ class RedisMiner extends Child
     public function redisExecute($param)
     {
         //查看服务器是否链接,没有链接,则重新链接
-        if (!$this->RedisConnection->ping()) {
+        if (!$this->RedisConnection->isConnected()) {
             $this->redisConnect($this->activeConfig);
         }
         $name = strtolower($param[0]);
@@ -170,6 +170,7 @@ class RedisMiner extends Child
         $data['insert_id'] = 0;
         $data['affected_rows'] = 0;
         $result = $this->RedisConnection->$name(...$arguments);
+        $this->RedisConnection->close();
         if (!$result) {
             $data['result'] = false;
         } else {
