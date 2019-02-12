@@ -1,70 +1,56 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: abulo
- * Date: 16-9-1
- * Time: 下午4:25
- */
+
 
 namespace Kernel\Asyn\Redis;
 
+use Kernel\CoreBase\SwooleException;
 use Kernel\Coroutine\CoroutineBase;
 use Kernel\Memory\Pool;
 use Kernel\Start;
 
 class RedisCoroutine extends CoroutineBase
 {
-    /**
-     * @var RedisAsynPool
-     */
-    public $redisAsynPool;
-    public $name;
-    public $arguments;
-    /**
-     * 对象池模式用来代替__construct
-     * @param $redisAsynPool
-     * @param $name
-     * @param $arguments
-     * @param $set
-     * @return $this
-     */
-    public function init($redisAsynPool, $name, $arguments, $set)
+
+    public function __construct()
     {
-        $this->redisAsynPool = $redisAsynPool;
-        $this->name = $name;
-        $this->arguments = $arguments;
-        $this->set($set);
-        $data = $this->send(function ($result) {
-            $this->coPush($result);
-        });
-        $this->token = $data['token'];
-        $d = "[$name ".implode(" ", $data['arguments'])."]";
-        $this->request = "[redis]$d";
-        if (Start::getDebug()) {
-            secho("REDIS", $d);
-        }
-        return $this->returnInit();
+        parent::__construct();
     }
 
     public function send($callback)
     {
-        return $this->redisAsynPool->call($this->name, $this->arguments, $callback);
+        // TODO: Implement send() method.
     }
 
+    public function setRequest($data)
+    {
+        // secho('$data',$data);
+        $name = $data[0];
+        // unset($data[0]);
+        $arguments = $data[1];
+        $d = "[$name ".implode(" ", $arguments)."]";
+        $this->request = "[redis]$d";
+        if (Start::getDebug()) {
+            secho("REDIS", $d);
+        }
+    }
+
+    public function onTimeOut()
+    {
+        if (empty($this->downgrade)) {
+            $result = new SwooleException("[CoroutineTask]: Time Out!, [Request]: $this->request");
+        } else {
+            $result = sd_call_user_func($this->downgrade);
+        }
+        $result = $this->getResult($result);
+        return $result;
+    }
+
+    /**
+     * @throws SwooleException
+     */
     public function destroy()
     {
         parent::destroy();
-        $this->redisAsynPool->removeTokenCallback($this->token);
-        $this->token = null;
-        $this->redisAsynPool = null;
-        $this->name = null;
-        $this->arguments = null;
         Pool::getInstance()->push($this);
-    }
-
-    protected function onTimerOutHandle()
-    {
-        parent::onTimerOutHandle();
-        $this->redisAsynPool->destoryGarbage($this->token);
     }
 }

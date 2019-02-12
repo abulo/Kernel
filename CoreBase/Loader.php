@@ -58,7 +58,8 @@ class Loader implements ILoader
         $root = $parent->root;
         $core_name = RedisAsynPool::AsynName . ":" .$name;
         if ($root->hasChild($core_name)) {
-            return AOP::getAOP($root->getChild($core_name));
+            return $root->getChild($core_name);
+            // return AOP::getAOP($root->getChild($core_name));
         }
         $redisPool = getInstance()->getAsynPool($name);
         if ($redisPool == null) {
@@ -67,7 +68,8 @@ class Loader implements ILoader
         $redis = $redisPool->getCoroutine();
         $redis->setContext($root->getContext());
         $root->addChild($redis);
-        return AOP::getAOP($redis);
+        return $redis;
+        // return AOP::getAOP($redis);
     }
 
     /**
