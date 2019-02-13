@@ -108,7 +108,7 @@ class RedisAsynPool implements IAsynPool
         }
         $activeConfig = $this->config['redis'][$this->active];
         $this->redis_client = new RedisMiner();
-        $this->redis_client->pdoConnect($activeConfig);
+        $this->redis_client->redisConnect($activeConfig);
         return $this->redis_client;
     }
 
