@@ -304,8 +304,10 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
      * @throws SwooleException
      * @throws \Exception
      */
-    public function onSwooleTask($serv, $task_id, $from_id, $data)
+    public function onSwooleTask($serv, $task_id, $from_id=null, $data=null)
     {
+
+
         $type = $data['type'] ?? '';
         $message = $data['message'] ?? '';
         switch ($type) {

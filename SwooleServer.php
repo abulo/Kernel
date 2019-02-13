@@ -14,6 +14,7 @@ use Monolog\Processor\PsrLogMessageProcessor;
 use Monolog\Processor\IntrospectionProcessor;
 use Monolog\Processor\MemoryUsageProcessor;
 use Monolog\Processor\MemoryPeakUsageProcessor;
+use Kernel\Components\Log\IPaddressProcessor;
 use DateTimeZone;
 use MongoDB\Client;
 use Monolog\Handler\RotatingFileHandler;
@@ -130,8 +131,8 @@ abstract class SwooleServer extends ProcessRPC
      * @var int
      */
     protected $max_connection;
-    
-    
+
+
     /**
      * @var bool
      */
@@ -190,7 +191,7 @@ abstract class SwooleServer extends ProcessRPC
                 $logHandle->pushProcessor(new IntrospectionProcessor());
                 $logHandle->pushProcessor(new MemoryUsageProcessor());
                 $logHandle->pushProcessor(new MemoryPeakUsageProcessor());
-
+                $logHandle->pushProcessor(new IPaddressProcessor());
                 break;
             case 'mongodb':
                 $uri = 'mongodb://'.implode($this->config->get('log.mongodb.host'), ',').'/';
@@ -212,6 +213,7 @@ abstract class SwooleServer extends ProcessRPC
                 $logHandle->pushProcessor(new IntrospectionProcessor());
                 $logHandle->pushProcessor(new MemoryUsageProcessor());
                 $logHandle->pushProcessor(new MemoryPeakUsageProcessor());
+                $logHandle->pushProcessor(new IPaddressProcessor());
                 break;
         }
         ErrorHandler::register($logHandle);
