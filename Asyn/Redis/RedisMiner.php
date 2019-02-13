@@ -167,8 +167,8 @@ class RedisMiner extends Child
         $name = strtolower($param[0]);
         $arguments = $param[1];
         $data = [];
-        $data['insert_id'] = 0;
-        $data['affected_rows'] = 0;
+        // $data['insert_id'] = 0;
+        // $data['affected_rows'] = 0;
         $result = $this->RedisConnection->$name(...$arguments);
         $this->RedisConnection->close();
         if (!$result) {
@@ -197,5 +197,16 @@ class RedisMiner extends Child
             $result = $this->redis_pool->execute($redisdata, $redisCoroutine);
             return $result;
         }
+    }
+
+
+
+
+    public function destroy()
+    {
+        parent::destroy();
+        $this->clear();
+        $this->client = null;
+        Pool::getInstance()->push($this);
     }
 }

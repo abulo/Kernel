@@ -3,7 +3,6 @@
 
 namespace Kernel\Components\Log;
 
-
 class IPaddressProcessor
 {
     public function __invoke(array $record): array

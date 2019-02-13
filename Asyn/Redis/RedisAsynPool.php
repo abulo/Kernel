@@ -174,8 +174,8 @@ class RedisAsynPool implements IAsynPool
             $data['delay_recv_fuc'] = function () use ($client) {
                 $res = $client->recv();
                 $data['result'] = $res;
-                $data['affected_rows'] = 0;
-                $data['insert_id'] = 0;
+                // $data['affected_rows'] = 0;
+                // $data['insert_id'] = 0;
                 $data['client_id'] = $client->id;
                 $this->pushToPool($client);
                 return $data;
@@ -183,8 +183,8 @@ class RedisAsynPool implements IAsynPool
             return (new RedisSyncHelp($param, $data))->getRedisResult();
         }
         $data['result'] = $res;
-        $data['affected_rows'] = 0;
-        $data['insert_id'] = 0;
+        // $data['affected_rows'] = 0;
+        // $data['insert_id'] = 0;
         $data['client_id'] = $client->id;
         if (!$notPush) {
             $this->pushToPool($client);
