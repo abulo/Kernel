@@ -538,13 +538,12 @@ abstract class SwooleServer extends ProcessRPC
     /**
      * onSwooleTask
      * @param $serv
-     * @param $task_id
-     * @param $from_id
-     * @param $data
+     * @param $task_server_data
      * @return mixed
      */
-    public function onSwooleTask($serv, $task_id, $from_id, $data)
+    public function onSwooleTask($serv, $task_server_data)
     {
+        $task_server_data->finish();
     }
 
     /**
