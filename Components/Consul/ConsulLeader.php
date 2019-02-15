@@ -99,6 +99,7 @@ class ConsulLeader
             $data = ['ip' => getBindIp()];
             $this->consul_leader->setQuery(['acquire' => $id])
                 ->setData(json_encode($data))->setMethod('PUT')->execute("/v1/kv/servers/$this->leader_name/leader", function ($data) use ($index) {
+
                     $leader = $data['body'];
                     if ($leader == 'true') {//是leader
                         $leader = true;
@@ -122,6 +123,7 @@ class ConsulLeader
         $this->consul_leader->setMethod('GET')
             ->setQuery(['index' => $index])
             ->execute("/v1/kv/servers/$this->leader_name/leader", function ($data) use ($index) {
+
                 if ($data['statusCode'] < 0) {
                     $this->checkLeader($index);
                     return;

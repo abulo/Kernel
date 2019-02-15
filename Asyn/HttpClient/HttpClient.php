@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: abulo
@@ -141,14 +142,14 @@ class HttpClient
             $port = $arr['port'];
         }
         if ($this->client == null) {
-            swoole_async_dns_lookup($host, function ($host1, $ip) use ($path, $port, $ssl, $data, $callBack) {
-                $this->client = new \swoole_http_client($ip, $port, $ssl);
+            // swoole_async_dns_lookup($host, function ($host1, $ip) use ($path, $port, $ssl, $data, $callBack) {
+                $this->client = new \Swoole\Coroutine\Http\Client($host, $port, $ssl);
                 $this->client->set(['timeout' => -1]);
                 $this->client->setMethod($data['method']);
                 if (!empty($data['query'])) {
                     $path = $path . '?' . $data['query'];
                 }
-                $data['headers']['Host'] = $host1;
+                $data['headers']['Host'] = $host;
                 $this->client->setHeaders($data['headers']);
                 $this->client->setCookies($data['cookies']);
 
@@ -158,13 +159,21 @@ class HttpClient
                 foreach ($data['addFiles'] as $addFile) {
                     $this->client->addFile(...$addFile);
                 }
-                $this->client->execute($path, function ($client) use ($callBack) {
-                    $data['headers'] = $client->headers;
-                    $data['body'] = $client->body;
-                    $data['statusCode'] = $client->statusCode;
-                    sd_call_user_func($callBack, $data);
-                });
-            });
+                // $this->client->execute($path, function ($client) use ($callBack) {
+                //     $data['headers'] = $client->headers;
+                //     $data['body'] = $client->body;
+                //     $data['statusCode'] = $client->statusCode;
+                //     sd_call_user_func($callBack, $data);
+                // });
+
+                $this->client->execute($path);
+
+                $data['headers'] = $this->client->headers;
+                $data['body'] = $this->client->body;
+                $data['statusCode'] = $this->client->statusCode;
+                sd_call_user_func($callBack, $data);
+
+            // });
         } else {
             $this->client->setMethod($data['method']);
             if (!empty($data['query'])) {
@@ -182,12 +191,18 @@ class HttpClient
             foreach ($data['addFiles'] as $addFile) {
                 $this->client->addFile(...$addFile);
             }
-            $this->client->execute($path, function ($client) use ($callBack) {
-                $data['headers'] = $client->headers;
-                $data['body'] = $client->body;
-                $data['statusCode'] = $client->statusCode;
-                sd_call_user_func($callBack, $data);
-            });
+            $this->client->execute($path);
+
+            $data['headers'] = $this->client->headers;
+            $data['body'] = $this->client->body;
+            $data['statusCode'] = $this->client->statusCode;
+            sd_call_user_func($callBack, $data);
+            // $this->client->execute($path, function ($client) use ($callBack) {
+            //     $data['headers'] = $client->headers;
+            //     $data['body'] = $client->body;
+            //     $data['statusCode'] = $client->statusCode;
+            //     sd_call_user_func($callBack, $data);
+            // });
         }
     }
 
@@ -205,7 +220,7 @@ class HttpClient
         }
         $data = $this->toArray();
         $data['path'] = $path;
-        $data['callMethod'] = 'execute';
+        $data['method'] = 'GET';
         $this->reset();
         return Pool::getInstance()->get(HttpClientRequestCoroutine::class)->init($this->pool, $data, $set);
     }
@@ -242,6 +257,7 @@ class HttpClient
         $data['filename'] = $filename;
         $data['offset'] = $offset;
         $data['callMethod'] = 'download';
+        $data['method'] = 'GET';
         return Pool::getInstance()->get(HttpClientRequestCoroutine::class)->init($this->pool, $data, $set);
     }
 }
