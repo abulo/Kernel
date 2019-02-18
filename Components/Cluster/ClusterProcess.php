@@ -517,6 +517,10 @@ class ClusterProcess extends Process
                     return;
                 }
                 $body = json_decode($data['body'], true);
+                if(!is_array($body))
+                {
+                    return ;
+                }
                 //寻找增加的
                 $index = 0;
                 foreach ($body as $value) {
