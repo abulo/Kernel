@@ -146,19 +146,19 @@ class HttpClient
                 $this->client = new \Swoole\Coroutine\Http\Client($host, $port, $ssl);
                 $this->client->set(['timeout' => -1]);
                 $this->client->setMethod($data['method']);
-                if (!empty($data['query'])) {
-                    $path = $path . '?' . $data['query'];
-                }
+            if (!empty($data['query'])) {
+                $path = $path . '?' . $data['query'];
+            }
                 $data['headers']['Host'] = $host;
                 $this->client->setHeaders($data['headers']);
                 $this->client->setCookies($data['cookies']);
 
-                if ($data['data'] != null) {
-                    $this->client->setData($data['data']);
-                }
-                foreach ($data['addFiles'] as $addFile) {
-                    $this->client->addFile(...$addFile);
-                }
+            if ($data['data'] != null) {
+                $this->client->setData($data['data']);
+            }
+            foreach ($data['addFiles'] as $addFile) {
+                $this->client->addFile(...$addFile);
+            }
                 // $this->client->execute($path, function ($client) use ($callBack) {
                 //     $data['headers'] = $client->headers;
                 //     $data['body'] = $client->body;

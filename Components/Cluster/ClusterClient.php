@@ -82,7 +82,6 @@ class ClusterClient
         } catch (\Throwable $th) {
             //throw $th;
         }
-
     }
     public function recv()
     {
@@ -93,7 +92,6 @@ class ClusterClient
             $this->receive_call[$token]($data['r']);
             unset($this->receive_call[$token]);
         }
-
     }
 
     /**
@@ -110,7 +108,6 @@ class ClusterClient
      */
     public function BufferEmpty()
     {
-
     }
     /**
      * 当缓存区达到最高水位时触发此事件
@@ -119,7 +116,6 @@ class ClusterClient
      */
     public function BufferFull()
     {
-
     }
     /**
      * 重连

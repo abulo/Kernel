@@ -160,8 +160,7 @@ class TimerTask extends CoreBase
                     return;
                 }
                 $body = json_decode($data['body'], true);
-                if(!is_array($body))
-                {
+                if (!is_array($body)) {
                     return ;
                 }
                 $consulTask = [];
