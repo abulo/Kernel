@@ -297,17 +297,15 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     /**
      * task异步任务
      * @param $serv
-     * @param $task_server_data
+     * @param $task_id
+     * @param $from_id
+     * @param $data
      * @return mixed|null
      * @throws SwooleException
      * @throws \Exception
      */
-    public function onSwooleTask($serv, $task_server_data)
+    public function onSwooleTask($serv, $task_id, $from_id, $data)
     {
-        $data = $task_server_data->data;
-        $task_id = $task_server_data->id;
-        $from_id = $task_server_data->worker_id;
-
         $type = $data['type'] ?? '';
         $message = $data['message'] ?? '';
         switch ($type) {
@@ -341,10 +339,9 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
                     throw new SwooleException("method $task_fuc_name not exist in $task_name");
                 }
                 $task->destroy();
-                $task_server_data->finish($result);
                 return $result;
             default:
-                return parent::onSwooleTask($serv, $task_server_data);
+                return parent::onSwooleTask($serv, $task_id, $from_id, $data);
         }
     }
 
@@ -379,12 +376,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     {
         $send_data = $this->packServerMessageBody(SwooleMarco::MSG_TYPE_SEND_ALL_FD, ['data' => $data]);
         if ($this->isTaskWorker()) {
-            $task_server_data = new \Swoole\Server\Task();
-            $task_server_data->data = $send_data;
-            $task_server_data->id = 0;
-            $task_server_data->worker_id = 0;
-            $task_server_data->flags = 'task';
-            $this->onSwooleTask($this->server, 0, 0, $task_server_data);
+            $this->onSwooleTask($this->server, 0, 0, $send_data);
         } else {
             if ($this->task_num > 0) {
                 $this->server->task($send_data);
@@ -413,12 +405,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
     {
         $send_data = $this->packServerMessageBody(SwooleMarco::MSG_TYPE_SEND_ALL, ['data' => $data]);
         if ($this->isTaskWorker()) {
-            $task_server_data = new \Swoole\Server\Task();
-            $task_server_data->data = $send_data;
-            $task_server_data->id = 0;
-            $task_server_data->worker_id = 0;
-            $task_server_data->flags = 'task';
-            $this->onSwooleTask($this->server, 0, 0, $task_server_data);
+            $this->onSwooleTask($this->server, 0, 0, $send_data);
         } else {
             if ($this->task_num > 0) {
                 $this->server->task($send_data);
@@ -510,12 +497,7 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
         if (count($current_fds) > $this->send_use_task_num && $this->task_num > 0) {//过多人就通过task
             $task_data = $this->packServerMessageBody(SwooleMarco::MSG_TYPE_SEND_BATCH, ['data' => $data, 'fd' => $current_fds]);
             if ($this->isTaskWorker()) {
-                $task_server_data = new \Swoole\Server\Task();
-                $task_server_data->data = $task_data;
-                $task_server_data->id = 0;
-                $task_server_data->worker_id = 0;
-                $task_server_data->flags = 'task';
-                $this->onSwooleTask($this->server, 0, 0, $task_server_data);
+                $this->onSwooleTask($this->server, 0, 0, $task_data);
             } elseif ($this->isWorker()) {
                 $this->server->task($task_data);
             } else {

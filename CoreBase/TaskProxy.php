@@ -78,8 +78,7 @@ class TaskProxy extends CoreBase
     public function startTask($name, $arguments, $dst_worker_id = -1, $callback = null)
     {
         $this->help_call($name, $arguments);
-        // getInstance()->server->task($this->task_proxy_data, $dst_worker_id, $callback);
-        getInstance()->server->task($this->task_proxy_data, $dst_worker_id);
+        getInstance()->server->task($this->task_proxy_data, $dst_worker_id, $callback);
     }
 
     /**

@@ -41,7 +41,6 @@ class TaskCoroutine extends CoroutineBase
     public function send($callback)
     {
         $this->task_id = getInstance()->server->worker_id . getInstance()->server->task($this->task_proxy_data, $this->id, $callback);
-        // $this->task_id = getInstance()->server->worker_id . getInstance()->server->task($this->task_proxy_data, $this->id);
     }
 
     public function destroy()
