@@ -443,8 +443,9 @@ abstract class SwooleHttpServer extends SwooleServer
         $swooleHttpRequest->server['request_uri'] = $request_uri;
         $swooleHttpRequest->server['path_info'] = $path_info;
         //记录客户端的 ID
-        $client_id = $swooleHttpRequest->cookie['client_id']??create_uuid(getServerName());
-        $swooleHttpRequest->cookie['client_id'] = $client_id;
+        $client_key = getServerName();
+        $client_id = $swooleHttpRequest->cookie[$client_key]??create_uuid(getServerName());
+        $swooleHttpRequest->cookie[$client_key] = $client_id;
         return $swooleHttpRequest;
     }
 }

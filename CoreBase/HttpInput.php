@@ -26,7 +26,8 @@ class HttpInput
     public function set($request)
     {
         $this->request = $request;
-        $this->session = new Session($this->request->cookie['client_id']);
+        $client_key = getServerName();
+        $this->session = new Session($this->request->cookie[$client_key]);
     }
 
     public function getRoute()

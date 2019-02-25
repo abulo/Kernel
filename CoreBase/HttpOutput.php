@@ -154,19 +154,19 @@ class HttpOutput
             array_walk_recursive($output, function (&$item, $key) {
                 switch (gettype($item)) {
                     case 'array':
-                        $item = (array) $item;
+                        $item = (array)$item;
                         break;
                     case 'object':
-                        $item = (object) $item;
+                        $item = (object)$item;
                         break;
                     case 'boolean':
-                        $item = (boolean) $item;
+                        $item = (boolean)$item;
                         break;
                     case 'integer':
-                        $item = (string) $item;
+                        $item = (string)$item;
                         break;
                     case 'double':
-                        $item = (string) $item;
+                        $item = (string)$item;
                         break;
                     case 'NULL':
                     case 'resource':
@@ -174,7 +174,7 @@ class HttpOutput
                         $item = '';
                         break;
                     default:
-                        $item = (string) $item;
+                        $item = (string)$item;
                         break;
                 }
             });
@@ -201,19 +201,19 @@ class HttpOutput
         array_walk_recursive($output, function (&$item, $key) {
             switch (gettype($item)) {
                 case 'array':
-                    $item = (array) $item;
+                    $item = (array)$item;
                     break;
                 case 'object':
-                    $item = (object) $item;
+                    $item = (object)$item;
                     break;
                 case 'boolean':
-                    $item = (boolean) $item;
+                    $item = (boolean)$item;
                     break;
                 case 'integer':
-                    $item = (string) $item;
+                    $item = (string)$item;
                     break;
                 case 'double':
-                    $item = (string) $item;
+                    $item = (string)$item;
                     break;
                 case 'NULL':
                 case 'resource':
@@ -221,15 +221,15 @@ class HttpOutput
                     $item = '';
                     break;
                 default:
-                    $item = (string) $item;
+                    $item = (string)$item;
                     break;
             }
         });
 
         $response = [
             'status' => $code,
-            'header' => ['Content-Type','application/json; charset=UTF-8'],
-            'content'=> json_encode($output),
+            'header' => ['Content-Type', 'application/json; charset=UTF-8'],
+            'content' => json_encode($output),
         ];
         return $response;
     }
@@ -250,8 +250,8 @@ class HttpOutput
         }
         $response = [
             'status' => $code,
-            'header' => ['Content-Type','text/html; charset=UTF-8'],
-            'content'=> $output,
+            'header' => ['Content-Type', 'text/html; charset=UTF-8'],
+            'content' => $output,
         ];
         return $response;
     }
@@ -269,8 +269,8 @@ class HttpOutput
         }
         $response = [
             'status' => $code,
-            'header' => ['Content-Type','application/xml; charset=UTF-8'],
-            'content'=> $output,
+            'header' => ['Content-Type', 'application/xml; charset=UTF-8'],
+            'content' => $output,
         ];
         return $response;
     }
@@ -285,9 +285,9 @@ class HttpOutput
             return;
         }
 
-        if (is_array($output)||is_object($output)) {
+        if (is_array($output) || is_object($output)) {
             $this->setHeader('Content-Type', 'text/html; charset=UTF-8');
-            $output = json_encode($output, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
+            $output = json_encode($output, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
             $output = "<pre>$output</pre>";
         }
         $this->clientId();
@@ -322,7 +322,7 @@ class HttpOutput
             return;
         }
         foreach ($cookie as $k => $v) {
-            list($key, $value, $expire, $path , $domain , $secure, $httponly) = $v;
+            list($key, $value, $expire, $path, $domain, $secure, $httponly) = $v;
             $this->setCookie($key, $value, $expire, $path, $domain, $secure, $httponly);
         }
         return $this;
@@ -349,9 +349,10 @@ class HttpOutput
      */
     public function clientId()
     {
-        $client = $this->request->cookie['client_id'] ?? 0;
+        $client_key = getServerName();
+        $client = $this->request->cookie[$client_key] ?? 0;
         if ($client) {
-            $this->setCookie('client_id', $client, time()+86400, '/', '', false, true);
+            $this->setCookie($client_key, $client, time() + 86400, '/', '', false, true);
         }
     }
 }
