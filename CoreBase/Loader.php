@@ -110,6 +110,7 @@ class Loader implements ILoader
      */
     public function model($model, Child $parent)
     {
+        secho('d', $model);
         if (empty($model)) {
             return null;
         }

@@ -80,7 +80,6 @@ class TaskProxy extends CoreBase
         $this->help_call($name, $arguments);
         // getInstance()->server->task($this->task_proxy_data, $dst_worker_id, $callback);
         getInstance()->server->task($this->task_proxy_data, $dst_worker_id);
-
     }
 
     /**
