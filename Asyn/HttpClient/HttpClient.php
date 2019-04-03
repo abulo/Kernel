@@ -221,6 +221,7 @@ class HttpClient
         $data = $this->toArray();
         $data['path'] = $path;
         $data['method'] = 'GET';
+        $data['callMethod'] = 'execute';
         $this->reset();
         return Pool::getInstance()->get(HttpClientRequestCoroutine::class)->init($this->pool, $data, $set);
     }
