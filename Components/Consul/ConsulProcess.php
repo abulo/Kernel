@@ -48,8 +48,16 @@ class ConsulProcess extends Process
         $newConfig['bind_addr'] = getBindIp();
         if (array_key_exists('services', $config)) {
             foreach ($config['services'] as $service) {
-                list($service_name, $service_port) = explode(":", $service);
-                $service_port = (int)$service_port;
+                // list($service_name, $service_port) = explode(":", $service);
+
+                //解决consul配置文件为空时数组下标越界--
+                $services = explode(':', $service);
+
+                $service_name = isset($services[0]) ? $services[0] : '';
+
+                $service_port = isset($services[1]) ? $services[1] : '';
+
+                $service_port = (int) $service_port;
                 try {
                     $port_type = getInstance()->portManager->getPortType($service_port);
                 } catch (\Exception $e) {

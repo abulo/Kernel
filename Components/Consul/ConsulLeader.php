@@ -123,22 +123,14 @@ class ConsulLeader
         $this->consul_leader->setMethod('GET')
             ->setQuery(['index' => $index])
             ->execute("/v1/kv/servers/$this->leader_name/leader", function ($data) use ($index) {
-
                 if ($data['statusCode'] < 0) {
                     $this->checkLeader($index);
                     return;
                 }
-
                 $body = json_decode($data['body'], true)[0];
-
-                try {
-                    $index = $data['headers']['x-consul-index'];
-                } catch (\Throwable $th) {
-                    return;
-                }
-
-
-                if (!isset($body['Session'])) {//代表没有Leader
+                $index = $data['headers']['x-consul-index'];
+                if (!isset($body['Session']))//代表没有Leader
+                {
                     $this->leader($index);
                 } else {
                     $this->checkLeader($index);

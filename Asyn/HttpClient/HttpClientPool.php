@@ -94,67 +94,34 @@ class HttpClientPool extends AsynPool
                     foreach ($data['addFiles'] as $addFile) {
                         $client->addFile(...$addFile);
                     }
-                    $client->execute($path);
-
-                    if ($client->statusCode < 0) {
-                        return;
-                    }
-
-
-                    $data['token'] = $token;
-                    unset($this->command_backup[$token]);
-                    $data['result']['headers'] = $client->headers;
-                    $data['result']['body'] = $client->body;
-                    $data['result']['statusCode'] = $client->statusCode;
-                    $this->distribute($data);
-
-                    // if (strtolower($client->headers['connection'] ?? 'keep-alive') == 'keep-alive') {//代表是keepalive可以直接回归
-                        //回归连接
-                    $this->pushToPool($client);
-                    // }
-
-                    // $client->execute($path, function ($client) use ($token, $path, $data) {
-                    //     if ($client->statusCode < 0) {
-                    //         return;
-                    //     }
-                    //     //分发消息
-                    //     $data['token'] = $token;
-                    //     unset($this->command_backup[$token]);
-                    //     $data['result']['headers'] = $client->headers;
-                    //     $data['result']['body'] = $client->body;
-                    //     $data['result']['statusCode'] = $client->statusCode;
-                    //     $this->distribute($data);
-                    //     if (strtolower($client->headers['connection'] ?? 'keep-alive') == 'keep-alive') {//代表是keepalive可以直接回归
-                    //         //回归连接
-                    //         $this->pushToPool($client);
-                    //     } else {//需要延迟回归
-                    //         $client->delay = true;
-                    //     }
-                    // });
+                    $client->execute($path, function ($client) use ($token, $path, $data) {
+                        if ($client->statusCode < 0) {
+                            return;
+                        }
+                        //分发消息
+                        $data['token'] = $token;
+                        unset($this->command_backup[$token]);
+                        $data['result']['headers'] = $client->headers;
+                        $data['result']['body'] = $client->body;
+                        $data['result']['statusCode'] = $client->statusCode;
+                        $this->distribute($data);
+                        if (strtolower($client->headers['connection'] ?? 'keep-alive') == 'keep-alive') {//代表是keepalive可以直接回归
+                            //回归连接
+                            $this->pushToPool($client);
+                        } else {//需要延迟回归
+                            $client->delay = true;
+                        }
+                    });
                     break;
                 case 'download':
-                    if ($client->download($data['path'], $data['filename'], $data['offset'])) {
-                        $data['result'] = $data['filename'];
-                    } else {
-                        $data['result'] = false;
-                    }
-
-                    $data['token'] = $token;
-
-
-                    $this->distribute($data);
+                    $client->download($data['path'], $data['filename'], function ($client) use ($token) {
+                        //分发消息
+                        $data['token'] = $token;
+                        $data['result'] = $client->downloadFile;
+                        $this->distribute($data);
                         //回归连接
-                    $this->pushToPool($client);
-
-
-                    // $client->download($data['path'], $data['filename'], function ($client) use ($token) {
-                    //     //分发消息
-                    //     $data['token'] = $token;
-                    //     $data['result'] = $client->downloadFile;
-                    //     $this->distribute($data);
-                    //     //回归连接
-                    //     $this->pushToPool($client);
-                    // }, $data['offset']);
+                        $this->pushToPool($client);
+                    }, $data['offset']);
                     break;
             }
         }
@@ -180,19 +147,18 @@ class HttpClientPool extends AsynPool
             if (array_key_exists('port', $arr)) {
                 $data['port'] = $arr['port'];
             }
-            // swoole_async_dns_lookup($host, function ($host, $ip) use (&$data) {
-            $client = new \Swoole\Coroutine\Http\Client($host, $data['port'], $data['ssl']);
-
-            $client->set(['timeout' => -1]);
-            $this->host = $host;
-            $this->pushToPool($client);
-                // $client->on('close', function ($cli) {
-                //     if (isset($cli->delay)) {
-                //         $this->pushToPool($cli);
-                //         unset($cli->delay);
-                //     }
-                // });
-            // });
+            swoole_async_dns_lookup($host, function ($host, $ip) use (&$data) {
+                $client = new \swoole_http_client($ip, $data['port'], $data['ssl']);
+                $client->set(['timeout' => -1]);
+                $this->host = $host;
+                $this->pushToPool($client);
+                $client->on('close', function ($cli) {
+                    if (isset($cli->delay)) {
+                        $this->pushToPool($cli);
+                        unset($cli->delay);
+                    }
+                });
+            });
         }
     }
 

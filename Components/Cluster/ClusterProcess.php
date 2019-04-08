@@ -1,13 +1,11 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: abulo
+ * User: zhangjincheng
  * Date: 17-8-15
  * Time: 上午10:52
  */
-
 namespace Kernel\Components\Cluster;
-
 use Ds\Set;
 use Kernel\Asyn\HttpClient\HttpClient;
 use Kernel\Components\Event\EventDispatcher;
@@ -84,9 +82,7 @@ class ClusterProcess extends Process
     public function my_addActor($actor)
     {
         $node = $this->searchActor($actor);
-        if ($node) {
-            return false;
-        }
+        if ($node) return false;
         $this->th_addActor($this->node_name, $actor);
         foreach ($this->client as $client) {
             $client->addNodeActor($this->node_name, $actor);
@@ -135,9 +131,7 @@ class ClusterProcess extends Process
                 EventDispatcher::getInstance()->dispatch(Actor::SAVE_NAME . $actor, $data, false, true);
                 return;
             }
-            if (!isset($this->client[$node_name])) {
-                return;
-            }
+            if (!isset($this->client[$node_name])) return;
             $this->client[$node_name]->callActor($actor, $data);
         }
     }
@@ -156,9 +150,7 @@ class ClusterProcess extends Process
                 EventDispatcher::getInstance()->dispathToWorkerId($workerId, $token, $result);
                 return;
             }
-            if (!isset($this->client[$node_name])) {
-                return;
-            }
+            if (!isset($this->client[$node_name])) return;
             $this->client[$node_name]->callActorBack($workerId, $token, $result);
         }
     }
@@ -170,9 +162,7 @@ class ClusterProcess extends Process
      */
     public function searchActor($actor)
     {
-        if (empty($actor)) {
-            return false;
-        }
+        if (empty($actor)) return false;
         foreach ($this->actorMap as $node_name => $set) {
             if ($set->contains($actor)) {
                 return $node_name;
@@ -184,7 +174,7 @@ class ClusterProcess extends Process
     /**
      * 自身增加了一个uid
      * @param $uid
-     * @throws \Kernel\Asyn\MQTT\Exception
+     * @throws \Server\Asyn\MQTT\Exception
      */
     public function my_addUid($uid)
     {
@@ -200,7 +190,7 @@ class ClusterProcess extends Process
     /**
      * 自身减少了一个uid
      * @param $uid
-     * @throws \Kernel\Asyn\MQTT\Exception
+     * @throws \Server\Asyn\MQTT\Exception
      */
     public function my_removeUid($uid)
     {
@@ -222,14 +212,10 @@ class ClusterProcess extends Process
      */
     public function my_kickUid($uid)
     {
-        if (empty($uid)) {
-            return;
-        }
+        if (empty($uid)) return;
         $node_name = $this->searchUid($uid);
         if ($node_name) {
-            if (!isset($this->client[$node_name])) {
-                return;
-            }
+            if (!isset($this->client[$node_name])) return;
             $this->client[$node_name]->kickUid($uid);
         }
     }
@@ -240,14 +226,10 @@ class ClusterProcess extends Process
      */
     public function my_sendToUid($uid, $data)
     {
-        if (empty($uid)) {
-            return;
-        }
+        if (empty($uid)) return;
         $node_name = $this->searchUid($uid);
         if ($node_name) {
-            if (!isset($this->client[$node_name])) {
-                return;
-            }
+            if (!isset($this->client[$node_name])) return;
             $this->client[$node_name]->sendToUid($uid, $data);
         }
     }
@@ -295,9 +277,7 @@ class ClusterProcess extends Process
      */
     public function my_addSub($topic, $uid)
     {
-        if (empty($uid)) {
-            return;
-        }
+        if (empty($uid)) return;
         if (!isset($this->subArr[$topic])) {
             $this->subArr[$topic] = new Set();
         }
@@ -311,9 +291,7 @@ class ClusterProcess extends Process
      */
     public function my_removeSub($topic, $uid)
     {
-        if (empty($uid)) {
-            return;
-        }
+        if (empty($uid)) return;
         if (isset($this->subArr[$topic])) {
             $this->subArr[$topic]->remove($uid);
             if ($this->subArr[$topic]->count() == 0) {
@@ -391,14 +369,10 @@ class ClusterProcess extends Process
     {
         $count = count($arr);
         $m = 0;
-        if ($isSYS) {
-            $m = 1;
-        }
+        if ($isSYS) $m = 1;
         for ($i = $m; $i < $count; $i++) {
             $new = $arr;
-            if ($new[$i] == '+') {
-                continue;
-            }
+            if ($new[$i] == '+') continue;
             $new[$i] = '+';
             $temp[] = $new;
             $value = implode('/', $new);
@@ -415,9 +389,7 @@ class ClusterProcess extends Process
      */
     public function my_clearUidSub($uid)
     {
-        if (empty($uid)) {
-            return;
-        }
+        if (empty($uid)) return;
         foreach ($this->subArr as $sub) {
             $sub->remove($uid);
         }
@@ -447,7 +419,7 @@ class ClusterProcess extends Process
      * 增加一个
      * @param $node_name
      * @param $uid
-     * @throws \Kernel\Asyn\MQTT\Exception
+     * @throws \Server\Asyn\MQTT\Exception
      */
     public function th_addUid($node_name, $uid)
     {
@@ -464,7 +436,7 @@ class ClusterProcess extends Process
      * 减少一个
      * @param $node_name
      * @param $uid
-     * @throws \Kernel\Asyn\MQTT\Exception
+     * @throws \Server\Asyn\MQTT\Exception
      */
     public function th_removeUid($node_name, $uid)
     {
@@ -517,18 +489,13 @@ class ClusterProcess extends Process
                     return;
                 }
                 $body = json_decode($data['body'], true);
-                if (!is_array($body)) {
-                    return ;
-                }
                 //寻找增加的
                 $index = 0;
                 foreach ($body as $value) {
                     $node_name = $value['Node'];
                     $ips = $value['TaggedAddresses'];
-                    if (!isset($ips['lan'])) {
-                        continue;
-                    }
-                    if ($ips['lan'] == getBindIp()) {
+                    if (!isset($ips['lan'])) continue;
+                    if ($ips['lan'] == getBindIp()){
                         $this->node_index = $index;
                         continue;
                     }
@@ -554,6 +521,7 @@ class ClusterProcess extends Process
                 $index = $data['headers']['x-consul-index'];
                 $this->updateFromConsul($index);
             });
+
     }
 
     /**
@@ -605,7 +573,7 @@ class ClusterProcess extends Process
     /**
      * 移除一个Node
      * @param $node_name
-     * @throws \Kernel\Asyn\MQTT\Exception
+     * @throws \Server\Asyn\MQTT\Exception
      */
     protected function removeNode($node_name)
     {
@@ -624,9 +592,7 @@ class ClusterProcess extends Process
      */
     protected function searchUid($uid)
     {
-        if (empty($uid)) {
-            return false;
-        }
+        if (empty($uid)) return false;
         foreach ($this->map as $node_name => $set) {
             if ($set->contains($uid)) {
                 return $node_name;
@@ -760,9 +726,7 @@ class ClusterProcess extends Process
      */
     public function isOnline($uid)
     {
-        if (empty($uid)) {
-            return false;
-        }
+        if (empty($uid)) return false;
         foreach ($this->map as $node_name => $set) {
             if ($set->contains($uid)) {
                 return true;
@@ -779,6 +743,7 @@ class ClusterProcess extends Process
     {
         $sum = 0;
         foreach ($this->map as $node_name => $set) {
+
             $sum += $set->count();
         }
         return $sum;
@@ -842,7 +807,7 @@ class ClusterProcess extends Process
 
     /**
      * 发送状态
-     * @throws \Kernel\Asyn\MQTT\Exception
+     * @throws \Server\Asyn\MQTT\Exception
      */
     public function my_status()
     {
@@ -854,7 +819,7 @@ class ClusterProcess extends Process
 
     /**
      * 发送状态
-     * @throws \Kernel\Asyn\MQTT\Exception
+     * @throws \Server\Asyn\MQTT\Exception
      */
     public function th_status()
     {
@@ -879,9 +844,7 @@ class ClusterProcess extends Process
     {
         $node_name = $this->searchUid($uid);
         if ($node_name) {
-            if (!isset($this->client[$node_name])) {
-                return null;
-            }
+            if (!isset($this->client[$node_name])) return null;
             $token = $this->client[$node_name]->getUidInfo($uid);
             $fdInfo = $this->client[$node_name]->getTokenResult($token);
             return $fdInfo;
@@ -898,9 +861,7 @@ class ClusterProcess extends Process
      */
     public function my_getStatistics($node_name, $index, $num)
     {
-        if (!isset($this->client[$node_name])) {
-            return null;
-        }
+        if (!isset($this->client[$node_name])) return null;
         $token = $this->client[$node_name]->getStatistics($index, $num);
         $map = $this->client[$node_name]->getTokenResult($token);
         return $map;
