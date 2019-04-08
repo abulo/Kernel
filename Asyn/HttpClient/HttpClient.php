@@ -55,7 +55,7 @@ class HttpClient
      * @param $value
      * @return $this
      */
-    public function addHeader($key,$value)
+    public function addHeader($key, $value)
     {
         $this->headers[$key] = $value;
         return $this;
@@ -110,9 +110,13 @@ class HttpClient
      * @param int $offset
      * @return $this
      */
-    public function addFile(string $path, string $name, string $filename = null,
-                            string $mimeType = null, int $offset = 0)
-    {
+    public function addFile(
+        string $path,
+        string $name,
+        string $filename = null,
+        string $mimeType = null,
+        int $offset = 0
+    ) {
         $this->addFiles[] = [$path, $name, $filename, $mimeType, $offset];
         return $this;
     }

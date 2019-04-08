@@ -129,8 +129,7 @@ class ConsulLeader
                 }
                 $body = json_decode($data['body'], true)[0];
                 $index = $data['headers']['x-consul-index'];
-                if (!isset($body['Session']))//代表没有Leader
-                {
+                if (!isset($body['Session'])) {//代表没有Leader
                     $this->leader($index);
                 } else {
                     $this->checkLeader($index);
