@@ -424,6 +424,10 @@ class Arr
         return $resultArray;
     }
 
+
+
+
+
     /**
      * Return the values from a columns in the input array
      *
@@ -544,5 +548,26 @@ class Arr
         } else {
             return $prefix.'/'.md5($params);
         }
+    }
+
+
+    /**
+     * 返回二维数组
+     *
+     * @param  $key
+     * @param  $data
+     * @return void
+     */
+    public static function combine($key, $data)
+    {
+        $key = array_map('strtolower', $key);
+        $result = [];
+        if (count($data)>1 && is_array($data)) {
+            return null;
+        }
+        foreach ($data as $item) {
+            $result[] = array_combine($key, $item);
+        }
+        return  $result;
     }
 }
