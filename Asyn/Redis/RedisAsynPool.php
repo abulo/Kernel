@@ -30,7 +30,7 @@ class RedisAsynPool implements IAsynPool
     public function __construct($config, $active)
     {
         $this->active = $active;
-        $this->config = getInstance()->config;
+        $this->config = $config;
         $this->client_max_count = $this->config->get('redis.asyn_max_count', 10);
         if (getInstance()->isTaskWorker()) {
             return;
