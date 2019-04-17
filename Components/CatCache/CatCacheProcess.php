@@ -149,23 +149,25 @@ class CatCacheProcess extends Process
      */
     public function autoSave()
     {
-        $this->save_temp_file = $this->save_dir . "catCache.catdb." . time();
-        if (!file_exists($this->save_temp_file)) {
-            file_put_contents($this->save_temp_file, self::DB_HEADER);
-        }
-        foreach ($this->map->getContainer() as $key => $value) {
-            $one = [];
-            $one[$key] = $value;
-            $buffer = msgpack_pack($one);
-            $total_length = 4 + strlen($buffer);
-            $data = pack('N', $total_length) . $buffer;
-            file_put_contents($this->save_temp_file, $data, FILE_APPEND);
-        }
+        go(function () {
+            $this->save_temp_file = $this->save_dir . "catCache.catdb." . time();
+            if (!file_exists($this->save_temp_file)) {
+                file_put_contents($this->save_temp_file, self::DB_HEADER);
+            }
+            foreach ($this->map->getContainer() as $key => $value) {
+                $one = [];
+                $one[$key] = $value;
+                $buffer = msgpack_pack($one);
+                $total_length = 4 + strlen($buffer);
+                $data = pack('N', $total_length) . $buffer;
+                file_put_contents($this->save_temp_file, $data, FILE_APPEND);
+            }
         //写完
-        rename($this->save_temp_file, $this->save_file);
-        if (file_exists($this->save_log_file)) {
-            file_put_contents($this->save_log_file, self::DB_LOG_HEADER);
-        }
+            rename($this->save_temp_file, $this->save_file);
+            if (file_exists($this->save_log_file)) {
+                file_put_contents($this->save_log_file, self::DB_LOG_HEADER);
+            }
+        });
     }
 
     /**
@@ -231,7 +233,7 @@ class CatCacheProcess extends Process
                 if ($count == 1) {
                     $content = $this->checkFileHeader($content, self::DB_LOG_HEADER, self::DB_LOG_HEADER);
                 }
-                if (empty($content)) {
+                if (empty($content)&&!$this->ready) {
                     $this->autoSave();
                     EventDispatcher::getInstance()->dispatch(self::READY, null, false, true);
                     secho("CatCache", "已完成加载缓存文件");

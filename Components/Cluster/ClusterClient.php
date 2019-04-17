@@ -29,93 +29,42 @@ class ClusterClient
         $this->onConnect = $onConnect;
         $this->ip = $ip;
         $this->port = $port;
-        $this->client = new \Swoole\Coroutine\Client(SWOOLE_SOCK_TCP);
+        $this->client = new \swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);
         $this->pack = new ClusterPack();
         $this->client->set($this->pack->getProbufSet());
         $this->token = 0;
-        // $this->client->on("connect", function ($cli) {
-        //     $this->isClose = false;
-        //     if (!empty($this->reconnect_tick)) {
-        //         swoole_timer_clear($this->reconnect_tick);
-        //         $this->reconnect_tick = null;
-        //     }
-        //     sd_call_user_func($this->onConnect, $this);
-        // });
-        // $this->client->on("receive", function ($cli, $recdata) {
-        //     $data = $this->pack->unPack($recdata);
-        //     $token = $data['t'];
-        //     if (array_key_exists($token, $this->receive_call)) {
-        //         $this->receive_call[$token]($data['r']);
-        //         unset($this->receive_call[$token]);
-        //     }
-        // });
-        // $this->client->on("error", function ($cli) {
-        //     if (empty($this->reconnect_tick)) {
-        //         $this->reconnect_tick = swoole_timer_tick(1000, [$this, 'reConnect']);
-        //     }
-        // });
-        // $this->client->on("close", function ($cli) {
-        //     $this->isClose = true;
-        //     if (empty($this->reconnect_tick)) {
-        //         $this->reconnect_tick = swoole_timer_tick(1000, [$this, 'reConnect']);
-        //     }
-        // });
-        // $this->client->on("BufferEmpty", function ($cli) {
-        // });
-        // $this->client->on("BufferFull", function ($cli) {
-        // });
-        $this->onnect($this->ip, $this->port);
-    }
-
-    public function connect($ip, $port)
-    {
-
-        try {
-            if ($this->client->connect($ip, $port)) {
-                $this->isClose = false;
-                if (!empty($this->reconnect_tick)) {
-                    swoole_timer_clear($this->reconnect_tick);
-                    $this->reconnect_tick = null;
-                }
-                sd_call_user_func([$this, 'reConnect'], $this);
+        $this->client->on("connect", function ($cli) {
+            $this->isClose = false;
+            if (!empty($this->reconnect_tick)) {
+                swoole_timer_clear($this->reconnect_tick);
+                $this->reconnect_tick = null;
             }
-        } catch (\Throwable $th) {
-            //throw $th;
-        }
-    }
-    public function recv()
-    {
-        $recdata = $this->client->recv();
-        $data = $this->pack->unPack($recdata);
-        $token = $data['t'];
-        if (array_key_exists($token, $this->receive_call)) {
-            $this->receive_call[$token]($data['r']);
-            unset($this->receive_call[$token]);
-        }
-    }
-
-    /**
-     * 当错误时
-     */
-    public function error()
-    {
-        if (empty($this->reconnect_tick)) {
-            $this->reconnect_tick = swoole_timer_tick(1000, [$this, 'reConnect']);
-        }
-    }
-    /**
-     * 当缓存区低于最低水位线时触发此事件
-     */
-    public function BufferEmpty()
-    {
-    }
-    /**
-     * 当缓存区达到最高水位时触发此事件
-     *
-     * @return void
-     */
-    public function BufferFull()
-    {
+            sd_call_user_func($this->onConnect, $this);
+        });
+        $this->client->on("receive", function ($cli, $recdata) {
+            $data = $this->pack->unPack($recdata);
+            $token = $data['t'];
+            if (array_key_exists($token, $this->receive_call)) {
+                $this->receive_call[$token]($data['r']);
+                unset($this->receive_call[$token]);
+            }
+        });
+        $this->client->on("error", function ($cli) {
+            if (empty($this->reconnect_tick)) {
+                $this->reconnect_tick = swoole_timer_tick(1000, [$this, 'reConnect']);
+            }
+        });
+        $this->client->on("close", function ($cli) {
+            $this->isClose = true;
+            if (empty($this->reconnect_tick)) {
+                $this->reconnect_tick = swoole_timer_tick(1000, [$this, 'reConnect']);
+            }
+        });
+        $this->client->on("BufferEmpty", function ($cli) {
+        });
+        $this->client->on("BufferFull", function ($cli) {
+        });
+        $this->client->connect($this->ip, $this->port);
     }
     /**
      * 重连
@@ -177,7 +126,6 @@ class ClusterClient
         if (!empty($this->reconnect_tick)) {
             swoole_timer_clear($this->reconnect_tick);
             $this->reconnect_tick = null;
-            $this->reconnect_tick = swoole_timer_tick(1000, [$this, 'reConnect']);
         }
     }
 }

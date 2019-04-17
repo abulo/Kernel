@@ -141,10 +141,7 @@ function checkExtension()
         $check = false;
     }
 
-    if (!class_exists('swoole_redis')) {
-        secho("STA", "[编译错误]swoole编译缺少--enable-async-redis,具体参见文档http://docs.sder.xin/%E7%8E%AF%E5%A2%83%E8%A6%81%E6%B1%82.html");
-        $check = false;
-    }
+
     if (!extension_loaded('redis')) {
         secho("STA", "[扩展依赖]缺少redis扩展");
         $check = false;
@@ -154,18 +151,7 @@ function checkExtension()
         $check = false;
     }
 
-    if (getInstance()->config->has('consul_enable')) {
-        secho("STA", "consul_enable配置已被弃用，请换成['consul']['enable']");
-        $check = false;
-    }
-    if (getInstance()->config->has('use_dispatch')) {
-        secho("STA", "use_dispatch配置已被弃用，请换成['dispatch']['enable']");
-        $check = false;
-    }
-    if (getInstance()->config->has('dispatch_heart_time')) {
-        secho("STA", "dispatch_heart_time配置已被弃用，请换成['dispatch']['heart_time']");
-        $check = false;
-    }
+
 
 
     $dispatch_enable = getInstance()->config->get('dispatch.enable', false);
@@ -370,7 +356,7 @@ function sd_call_user_func_array($function, $parameter)
  */
 function sd_debug($arr)
 {
-    Server\Components\SDDebug\SDDebug::debug($arr);
+    \Kernel\Components\SDDebug\SDDebug::debug($arr);
 }
 
 function read_dir_queue($dir)
@@ -399,4 +385,167 @@ function read_dir_queue($dir)
         }
     }
     return $result;
+}
+
+if (!function_exists("swoole_async_read")) {
+    function swoole_async_read($file_path, $callback, $size = 8192, $offset = 0)
+    {
+        go(function () use ($file_path, $callback, $size, $offset) {
+            $fp = fopen($file_path, "r");
+            while (!feof($fp)) {//循环读取，直至读取完整个文件
+                $data = fread($fp, $size);
+                $callback($file_path, $data);
+            }
+            $callback($file_path, '');
+            fclose($fp);
+        });
+    }
+}
+if (!function_exists("swoole_async_write")) {
+    function swoole_async_write($file_path, $data)
+    {
+        go(function () use ($file_path, $data) {
+            file_put_contents($file_path, $data, FILE_APPEND);
+        });
+    }
+}
+
+if (!function_exists("swoole_async_dns_lookup")) {
+    function swoole_async_dns_lookup($host, $callback)
+    {
+        if (getInstance()->isTaskWorker()) {
+            return;
+        }
+        go(function () use ($host, $callback) {
+            $ip = Swoole\Coroutine::gethostbyname($host);
+            $callback($host, $ip);
+        });
+    }
+}
+
+if (!class_exists("swoole_client")) {
+    class swoole_client
+    {
+        private $client;
+        private $map = [];
+
+        function __construct($ip, $port)
+        {
+            if (getInstance()->isTaskWorker()) {
+                return;
+            }
+            $this->client = new \Swoole\Coroutine\Client($ip, $port);
+        }
+
+        function set($data)
+        {
+            $this->client->set($data);
+        }
+
+        public function on($name, $callback)
+        {
+            $this->map[$name] = $callback;
+        }
+
+        public function connect($host, $port)
+        {
+            go(function () use ($host, $port) {
+                if (!$this->client->connect($host, $port, 0.5)) {
+                    $this->map["error"]($this);
+                } else {
+                    $this->map['connect']($this);
+                    while (true) {
+                        $data = $this->client->recv();
+                        if ($data == false) {
+                            $this->map['close']($this);
+                            break;
+                        } else {
+                            $this->map['receive']($this, $data);
+                        }
+                    }
+                }
+            });
+        }
+
+        public function close()
+        {
+            return $this->client->close();
+        }
+
+        public function __get($name)
+        {
+            return $this->client->$name;
+        }
+    }
+}
+if (!class_exists("swoole_http_client")) {
+    class swoole_http_client
+    {
+        private $client;
+        private $map = [];
+
+        function __construct($ip, $port, $ssl)
+        {
+            if (getInstance()->isTaskWorker()) {
+                return;
+            }
+            $this->client = new \Swoole\Coroutine\Http\Client($ip, $port, $ssl);
+        }
+
+        function set($data)
+        {
+            $this->client->set($data);
+        }
+
+        function setMethod($method)
+        {
+            $this->client->setMethod($method);
+        }
+
+        function setHeaders($headers)
+        {
+            $this->client->setHeaders($headers);
+        }
+
+        function setCookies($cookies)
+        {
+            $this->client->setCookies($cookies);
+        }
+
+        function setData($data)
+        {
+            $this->client->setData($data);
+        }
+
+        function addFile(...$file)
+        {
+            $this->client->addFile(...$file);
+        }
+
+        function execute($path, $callback)
+        {
+            go(function () use ($path, $callback) {
+                $this->client->execute($path);
+                $callback($this);
+            });
+        }
+
+        function download($path, $filename, $callback, $offset)
+        {
+            go(function () use ($path, $filename, $callback, $offset) {
+                $this->client->download($path, $filename, $offset);
+                $callback($this);
+            });
+        }
+
+        public function __get($name)
+        {
+            return $this->client->$name;
+        }
+
+        public function on($name, $callback)
+        {
+            $this->map[$name] = $callback;
+        }
+    }
 }

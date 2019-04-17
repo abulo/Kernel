@@ -27,6 +27,10 @@ class HttpClient
     {
         $this->pool = $pool;
         $this->baseUrl = $baseUrl;
+        if (empty($this->baseUrl)) {
+            throw new SwooleException('httpClient not set baseUrl!');
+        }
+
         $this->reset();
     }
 
