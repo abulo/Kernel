@@ -319,8 +319,15 @@ class Pdo
     {
         $link = '';
         try {
-            $source = "mysql:host=".$conf['host'].";port=".$conf['port'].";dbname=".$conf['database'];
-            $link = new \PDO($source, $conf['user'], $conf['password']);
+            $dsn = 'mysql:dbname=' . $conf['database'] . ';host=' . $conf['host'] . ';port=' . $conf['port'] ?? 3306;
+            $link = new \PDO(
+                $dsn,
+                $conf['user'],
+                $conf['password'],
+                [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES ' . $conf['charset'] ?? 'utf8']
+            );
+            $link->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+            $link->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
         } catch (Exception $e) {
             throw new \Exception('PDO Connect Error! Code:'.$e->getCode().',ErrorInfo!:'.$e->getMessage().'<br />');
         }

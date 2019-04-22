@@ -57,14 +57,14 @@ class HttpClientPool extends AsynPool
             $this->data['port'] = $arr['port'];
         }
         $this->pool_chan = new \chan($this->client_max_count);
-        $this->data['ip'] = \Swoole\Coroutine::gethostbyname($this->host);
+        // $this->data['ip'] = \Swoole\Coroutine::gethostbyname($this->host);
         for ($i = 0; $i < $this->client_max_count; $i++) {
-            $client = new \Swoole\Coroutine\Http\Client($this->data['ip'], $this->data['port'], $this->data['ssl']);
+            $client = new \Swoole\Coroutine\Http\Client($this->host, $this->data['port'], $this->data['ssl']);
             $client->id = $i;
             $this->pushToPool($client);
         }
         $this->httpClient = new HttpClient($this, $baseUrl);
-        secho("HttpClientPool", "已初始化完HttpClientPool[$baseUrl]");
+        // secho("HttpClientPool", "已初始化完HttpClientPool[$baseUrl]");
     }
 
     /**

@@ -23,8 +23,7 @@ class SDHelpProcess extends Process
 
     public function start($process)
     {
-        new TimerTask();
-        new ClearTmp();
+
         if (getInstance()->config->get('auto_restart_enable', false)) {//定时重启服务
             new Restart();
         }
@@ -34,6 +33,8 @@ class SDHelpProcess extends Process
         if (getInstance()->config->get('auto_reload_enable', false)) {//代表启动单独进程进行reload管理
             new InotifyReload();
         }
+        new TimerTask();
+        new ClearTmp();
     }
 
     /**
