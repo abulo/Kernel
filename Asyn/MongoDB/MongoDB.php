@@ -628,8 +628,7 @@ class MongoDB implements IAsynPool
             $documents = $this->manager->$db->$table->listIndexes();
             $returns = array();
             foreach ($documents as $document) {
-                $bson = \MongoDB\BSON\fromPHP($document);
-                $returns[] = json_decode(\MongoDB\BSON\toJSON($bson), true);
+                $returns[] = $document->getName();
             }
             $this->clean();
             return $returns;
