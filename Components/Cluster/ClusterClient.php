@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Created by PhpStorm.
  * User: abulo
@@ -66,6 +65,7 @@ class ClusterClient
         });
         $this->client->connect($this->ip, $this->port);
     }
+
     /**
      * 重连
      */
