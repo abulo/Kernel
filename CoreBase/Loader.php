@@ -76,7 +76,7 @@ class Loader implements ILoader
 
 
     /**
-     * 获取一个redis
+     * 获取一个http
      * @param $name
      * @param Child $parent
      * @return \Http
