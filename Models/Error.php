@@ -44,7 +44,7 @@ class Error extends Model
      */
     public function push($title, $data)
     {
-        $id = session_create_id();
+        $id = create_uuid();
         $key = $this->redis_prefix . $id;
         $this->redis->set($key, $data, ["NX", "EX" => $this->redis_timeOut]);
         $url = $this->url . "?id=" . $id;

@@ -132,7 +132,7 @@ class RedisAsynPool implements IAsynPool
         $d = "[$name ".implode(" ", $arguments)."]";
         $request = "[redis]$d";
 
-        $notPush = false;
+        // $notPush = false;
         $delayRecv = $redisCoroutine->getDelayRecv();
         $client = $this->pool_chan->pop();
         $client->setDefer($delayRecv);
@@ -171,24 +171,24 @@ class RedisAsynPool implements IAsynPool
         }
         $redisCoroutine->destroy();
         if ($delayRecv) {//延迟收包
-            $data['delay_recv_fuc'] = function () use ($client) {
+            // $data['delay_recv_fuc'] = function () use ($client) {
                 $res = $client->recv();
                 $data['result'] = $res;
                 // $data['affected_rows'] = 0;
                 // $data['insert_id'] = 0;
                 $data['client_id'] = $client->id;
                 $this->pushToPool($client);
-                return $data;
-            };
+                // return $data;
+            // };
             return (new RedisSyncHelp($param, $data))->getRedisResult();
         }
         $data['result'] = $res;
         // $data['affected_rows'] = 0;
         // $data['insert_id'] = 0;
         $data['client_id'] = $client->id;
-        if (!$notPush) {
-            $this->pushToPool($client);
-        }
+        // if (!$notPush) {
+        $this->pushToPool($client);
+        // }
         return (new RedisSyncHelp($param, $data))->getRedisResult();
     }
 }

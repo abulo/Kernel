@@ -193,6 +193,7 @@ class RedisMiner extends Child
             return (new RedisSyncHelp($redisdata, $data))->getRedisResult();
         } else {
             $redisCoroutine->setRequest($redisdata);
+            $redisCoroutine->setDelayRecv();
             $this->clear();
             $result = $this->redis_pool->execute($redisdata, $redisCoroutine);
             return $result;

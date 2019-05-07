@@ -1,18 +1,18 @@
 <?php
 
 
-namespace Kernel\Asyn\Redis;
+namespace Kernel\Asyn\Http;
 
 use ArrayAccess;
 
-class RedisSyncHelp implements ArrayAccess
+class HttpClientSyncHelp implements ArrayAccess
 {
     private $elements;
     private $redis;
 
-    public function __construct($redis, $data)
+    public function __construct($http, $data)
     {
-        $this->redis = $redis;
+        $this->http = $http;
         $this->elements = $data;
     }
 
@@ -37,7 +37,7 @@ class RedisSyncHelp implements ArrayAccess
 
     public function dump()
     {
-        secho("REDIS", $this->redis);
+        secho("HTTP", $this->http);
         return $this;
     }
 
@@ -73,7 +73,7 @@ class RedisSyncHelp implements ArrayAccess
      *
      * @return void
      */
-    public function getRedisResult()
+    public function getHttpResult()
     {
         return $this->result_array();
     }
