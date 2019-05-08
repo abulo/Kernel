@@ -219,9 +219,8 @@ class HttpClientPool implements IAsynPool
         $path = $param['exec']['path'] ?: '/';
         $parse_url = parse_url($param['exec']['path']);
         $path = $parse_url['path'] ?: '/';
-        $path = '/'.ltrim($path,'/');
-        if($query)
-        {
+        $path = '/'.ltrim($path, '/');
+        if ($query) {
             $path .= '?'.$query;
         }
 
@@ -233,11 +232,9 @@ class HttpClientPool implements IAsynPool
         if (isset($param['download'])) {
             $client->requestPath = $param['download'][0];
             $client->download(...array_values($param['download']));
-
         } else {
             $client->requestPath = $path;
             $client->execute($path);
-
         }
         $httpClientCoroutine->destroy();
         if ($delayRecv) { //延迟收包

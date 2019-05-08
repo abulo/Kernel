@@ -8,14 +8,11 @@
 
 namespace Kernel\Asyn\Http;
 
-
 use Kernel\CoreBase\Child;
 use Kernel\Memory\Pool;
 use Kernel\CoreBase\SwooleException;
 
-
-
-class HttpClientRequest extends  Child
+class HttpClientRequest extends Child
 {
     /**
      * @var HttpClientPool
@@ -207,7 +204,7 @@ class HttpClientRequest extends  Child
      * @return void
      * 执行成功返回true
      */
-    public function download(string $path, string $filename,  int $offset = 0)
+    public function download(string $path, string $filename, int $offset = 0)
     {
         $this->queryData['download']['path'] = $path;
         $this->queryData['download']['filename'] = $filename;

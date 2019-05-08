@@ -2,7 +2,6 @@
 
 namespace Kernel\Asyn\Http;
 
-
 use SimpleXMLElement;
 use DOMDocument;
 

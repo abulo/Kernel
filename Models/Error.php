@@ -30,7 +30,7 @@ class Error extends Model
     {
         parent::__construct($proxy);
         $this->robot = $this->config->get('error.dingding_robot');
-        $this->client = $this->loader->http('dingdingRest',$this);
+        $this->client = $this->loader->http('dingdingRest', $this);
         $this->redis_timeOut = $this->config->get('error.redis_timeOut', 36000);
         $this->redis_prefix = $this->config->get('error.redis_prefix', "@sd-error");
         $this->dingding_enable = $this->config->get('error.dingding_enable', "false");

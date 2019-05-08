@@ -595,7 +595,7 @@ abstract class SwooleServer extends ProcessRPC
         $log = "WORKER Error ";
         $log .= json_encode($data);
         $backtrace = debug_backtrace();
-        $this->log->alert($log,['backtrace'=>$backtrace]);
+        $this->log->alert($log, ['backtrace'=>$backtrace]);
         if ($this->onErrorHandel != null) {
             sd_call_user_func($this->onErrorHandel, '【！！！】服务器进程异常退出', $log);
         }
@@ -769,7 +769,7 @@ abstract class SwooleServer extends ProcessRPC
         // secho("ERROR", $msg);
         // secho("ERROR", $log);
         $backtrace = debug_backtrace();
-        $this->log->error($log,['msg'=>$msg,'backtrace'=>$backtrace]);
+        $this->log->error($log, ['msg'=>$msg,'backtrace'=>$backtrace]);
         // $this->log->error($log);
     }
 

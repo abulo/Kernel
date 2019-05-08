@@ -23,5 +23,4 @@ class TypeDetector
     {
         return is_array($var) || (is_object($var) && $var instanceof \Iterator);
     }
-
 }
