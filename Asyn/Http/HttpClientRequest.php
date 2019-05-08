@@ -138,6 +138,21 @@ class HttpClientRequest extends  Child
         $this->queryData['setData'] = $data;
         return $this;
     }
+
+
+    /**
+     * 设置Http请求的包体
+     * $data 为字符串格式
+     * 设置$data后并且未设置$method，底层会自动设置为POST
+     * 未设置Http请求包体并且未设置$method，底层会自动设置为GET
+     * @param string $data
+     * @return this
+     */
+    public function setQuery($data)
+    {
+        $this->queryData['setQuery'] = $data;
+        return $this;
+    }
     /**
      * 添加POST文件
      *

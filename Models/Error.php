@@ -30,7 +30,7 @@ class Error extends Model
     {
         parent::__construct($proxy);
         $this->robot = $this->config->get('error.dingding_robot');
-        $this->client = getInstance()->getAsynPool('dingdingRest');
+        $this->client = $this->loader->http('dingdingRest',$this);
         $this->redis_timeOut = $this->config->get('error.redis_timeOut', 36000);
         $this->redis_prefix = $this->config->get('error.redis_prefix', "@sd-error");
         $this->dingding_enable = $this->config->get('error.dingding_enable', "false");
@@ -63,16 +63,16 @@ class Error extends Model
      */
     public function sendLinkMessage($title, $link = '')
     {
-        $json = json_encode([
+        $json = [
             'msgtype' => 'link',
             'link' => [
                 'title' => $title,
                 "messageUrl" => $link,
                 "text" => "点击查看"
             ]
-        ]);
-        $result = $this->client->httpClient->setData($json)
-            ->setHeaders(['Content-type' => 'application/json'])->setMethod('POST')->coroutineExecute($this->robot);
+        ];
+        $result = $this->client->setData($json)
+            ->setHeaders(['Content-type' => 'application/json'])->setMethod('POST')->exec($this->robot);
         return $result;
     }
 

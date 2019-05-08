@@ -124,6 +124,7 @@ class Loader implements ILoader
         $core_name = MysqlAsynPool::AsynName . ":" .$name;
         if ($root->hasChild($core_name)) {
             return $root->getChild($core_name);
+            // return AOP::getAOP($root->getChild($core_name));
         }
         $mysql_pool = getInstance()->getAsynPool($name);
         if ($mysql_pool == null) {
@@ -133,6 +134,7 @@ class Loader implements ILoader
         $db->setContext($root->getContext());
         $root->addChild($db);
         return $db;
+        // return AOP::getAOP($db);
     }
 
     /**

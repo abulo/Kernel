@@ -341,6 +341,8 @@ abstract class SwooleHttpServer extends SwooleServer
      */
     public function onSwooleRequest($request, $response)
     {
+
+
         if (Start::$testUnity) {
             $server_port = $request->server_port;
         } else {
@@ -360,7 +362,6 @@ abstract class SwooleHttpServer extends SwooleServer
             $this->middlewareManager->before($middlewares);
             //client_data进行处理
             $route = $this->portManager->getRoute($server_port);
-
             try {
                 $route->handleClientRequest($request);
                 $cHandler = $route->getHandler();
@@ -393,7 +394,7 @@ abstract class SwooleHttpServer extends SwooleServer
                     $controller_instance->setContext($context);
                     if ($route->getMethodName() == ConsulHelp::HEALTH) {//健康检查
                         $response->end('ok');
-                        // $controller_instance->destroy();
+                        $controller_instance->destroy();
                     } else {
                         $request->route = $cHandler;
                         $controller_instance->setRequestResponse($request, $response, $controller_name, $method_name, $route->getParams(), false);

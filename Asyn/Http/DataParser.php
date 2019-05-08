@@ -20,8 +20,56 @@ use DOMDocument;
 class DataParser
 {
 
+    public static function getCallableMap(): array
+    {
+        static $callMap;
+        if (!isset($callMap)) {
+            $reflection = new \ReflectionClass(self::class);
+            $methods = $reflection->getMethods(\ReflectionMethod::IS_STATIC);
+            foreach ($methods as $method) {
+                if (preg_match('/([a-z]+)To([A-Z][a-z]+)([A-Z][a-z]+)/', $methodName = $method->getName(), $matches)) {
+                    $targetFormat = $matches[2];
+                    $targetType = $matches[3];
+                    $fromType = $matches[1];
+                    $subName = '\\' . self::class . '::' . $methodName;
+                    $sub = new \ReflectionMethod($subName);
+                    $subReturnType = $sub->getReturnType();
+                    $callName = 'to' . $targetFormat . $targetType;
+                    $callMap[$callName]['supports'][$fromType] = $subName;
+                    $callMap[$callName]['returnTypes'][] = $subReturnType;
+                    $parameters = $method->getParameters();
+                    foreach ($parameters as $parameter) {
+                        $p_name = $parameter->getName();
+                        $p_type = $parameter->getType();
+                        $callMap[$callName]['parameters'][$p_name][] = $p_type;
+                    }
+                }
+            }
+        }
+
+        return $callMap;
+    }
+
+    public static function createComment(): string
+    {
+        $comments = "/**\n";
+        foreach (self::getCallableMap() as $method => $callInfo) {
+            $retTypes = implode('|', array_unique($callInfo['returnTypes']));
+            $parameters = [];
+            foreach ($callInfo['parameters'] as $p_name => $p_types) {
+                $parameters[] = (($p_types = implode('|', $p_types)) ? "{$p_types} " : '') . "\${$p_name}";
+            }
+            $parameters = implode(', ', $parameters);
+            $comments .= " * @method static {$retTypes} {$method}($parameters)\n";
+        }
+        $comments .= '*/';
+
+        return $comments;
+    }
+
     public static function __callStatic($name, $arguments)
     {
+
         $var = $arguments[0] ?? null;
         if ($var === null) {
             throw new \InvalidArgumentException("Argument can't be null!");

@@ -199,34 +199,49 @@ class HttpClientPool implements IAsynPool
                 case ContentType::get('query'):
                 default:
                     $client->setData(DataParser::toQueryString($param['setData']));
+                    // $query = http_build_query($param['setData']);
             }
         }
 
-        if (isset($param['addFile'])) {
-            $file = array_values($param['addFile']);
-            $client->addFile(...$file);
+        $query = "";
+        if (isset($param['setQuery'])) {
+            $query = http_build_query($param['setQuery']);
         }
 
+
+        if (isset($param['addFile'])) {
+            $client->addFile(...array_values($param['addFile']));
+        }
 
         if (isset($param['addData'])) {
-            $file = array_values($param['addData']);
-            $client->addFile(...$file);
+            $client->addData(...array_values($param['addData']));
         }
         $path = $param['exec']['path'] ?: '/';
+        $parse_url = parse_url($param['exec']['path']);
+        $path = $parse_url['path'] ?: '/';
+        $path = '/'.ltrim($path,'/');
+        if($query)
+        {
+            $path .= '?'.$query;
+        }
+
         $client->setHeaders($headers);
         $client->setCookies($cookies);
         $delayRecv = $httpClientCoroutine->getDelayRecv();
         $client->setDefer($delayRecv); //总是延迟回包以使用timeout定时器特性
 
         if (isset($param['download'])) {
-            $res = $client->download(...array_values($param['download']));
+            $client->requestPath = $param['download'][0];
+            $client->download(...array_values($param['download']));
+
         } else {
-            $res = $client->execute($path);
+            $client->requestPath = $path;
+            $client->execute($path);
+
         }
         $httpClientCoroutine->destroy();
-
         if ($delayRecv) { //延迟收包
-                $res = $client->recv();
+                $client->recv();
                 $data['result'] = $client;
                 $data['client_id'] = $client->id;
                 $this->pushToPool($client);
