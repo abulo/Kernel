@@ -93,7 +93,6 @@ class Loader implements ILoader
         $core_name = HttpClientPool::AsynName . ":" .$name;
         if ($root->hasChild($core_name)) {
             return $root->getChild($core_name);
-            // return AOP::getAOP($root->getChild($core_name));
         }
         $httpPool = getInstance()->getAsynPool($name);
         if ($httpPool == null) {
@@ -103,7 +102,6 @@ class Loader implements ILoader
         $http->setContext($root->getContext());
         $root->addChild($http);
         return $http;
-        // return AOP::getAOP($redis);
     }
 
     /**

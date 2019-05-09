@@ -9,7 +9,7 @@
 
 namespace Kernel\Models;
 
-use Kernel\Asyn\HttpClient\HttpClientPool;
+use Kernel\Asyn\Http\HttpClientPool;
 use Kernel\CoreBase\ChildProxy;
 use Kernel\CoreBase\Model;
 
@@ -72,7 +72,7 @@ class Error extends Model
             ]
         ];
         $result = $this->client->setData($json)
-            ->setHeaders(['Content-type' => 'application/json'])->setMethod('POST')->exec($this->robot);
+            ->setHeaders(['Content-type' => 'application/json'])->setMethod('POST')->execute($this->robot);
         return $result;
     }
 
@@ -91,8 +91,8 @@ class Error extends Model
                 "text" => $text
             ]
         ]);
-        $result = $this->client->httpClient->setData($json)
-            ->setHeaders(['Content-type' => 'application/json'])->setMethod('POST')->coroutineExecute($this->robot);
+        $result = $this->client->setData($json)
+            ->setHeaders(['Content-type' => 'application/json'])->setMethod('POST')->execute($this->robot);
         return $result;
     }
 }

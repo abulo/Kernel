@@ -218,14 +218,14 @@ class HttpClientRequest extends Child
      *
      * @return void
      */
-    public function exec($path = null)
+    public function execute($path = null)
     {
         $this->queryData['exec']['path'] = $path;
         // $this->queryData['exec']['data'] = $data;
         // secho('$this->http_pool',$this->http_pool);
         $this->queryData['active'] = $this->http_pool->active;
 
-        return $this->getProxy()->execute($this->queryData);
+        return $this->getProxy()->_execute($this->queryData);
     }
     /**
      * Undocumented function
@@ -234,7 +234,7 @@ class HttpClientRequest extends Child
      * @param array $data
      * @return void
      */
-    public function execute($queryData)
+    public function _execute($queryData)
     {
         $coroutine = Pool::getInstance()->get(HttpClientCoroutine::class);
         if (getInstance()->isTaskWorker()) {//如果是task进程自动转换为同步模式
