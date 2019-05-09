@@ -9,6 +9,7 @@
 namespace Kernel\Components\Cluster;
 
 use Ds\Set;
+use Kernel\Asyn\HttpClient\HttpClient;
 use Kernel\Components\Event\EventDispatcher;
 use Kernel\Components\Process\Process;
 use Kernel\CoreBase\Actor;
@@ -31,6 +32,8 @@ class ClusterProcess extends Process
      */
     protected $consul;
 
+
+
     /**
      * @param $process
      * @throws \Exception
@@ -50,7 +53,7 @@ class ClusterProcess extends Process
                     $this->map[$this->node_name]->add($uid);
                 }
             }
-            $this->consul = getInstance()->loader()->http('consulRest', $this); //new HttpClient(null, 'http://127.0.0.1:8500');
+            $this->consul = new HttpClient(null, 'http://127.0.0.1:8500');
             $this->port = $this->config['cluster']['port'];
             swoole_timer_after(2000, function () {
                 $this->updateFromConsul();
@@ -508,51 +511,47 @@ class ClusterProcess extends Process
      */
     public function updateFromConsul($index = 0)
     {
-
-        $data = $this->consul->setMethod('GET')
+        $this->consul->setMethod('GET')
             ->setQuery(['index' => $index])
-            ->execute("/v1/catalog/nodes");
-
-        if ($data['statusCode'] < 0) {
-            $this->updateFromConsul($index);
-            return;
-        }
-
-
-        $body = json_decode($data['body'], true);
-        //寻找增加的
-        $index = 0;
-        foreach ($body as $value) {
-            $node_name = $value['Node'];
-            $ips = $value['TaggedAddresses'];
-            if (!isset($ips['lan'])) {
-                continue;
-            }
-            if ($ips['lan'] == getBindIp()) {
-                $this->node_index = $index;
-                continue;
-            }
-            if (!isset($this->client[$node_name])) {
-                $this->addNode($node_name, $ips['lan']);
-            }
-            $index++;
-        }
-        //寻找减少的
-        foreach ($this->client as $node_name => $client) {
-            $find = false;
-            foreach ($body as $value) {
-                $one_node_name = $value['Node'];
-                if ($one_node_name == $node_name) {
-                    $find = true;
-                    break;
+            ->execute("/v1/catalog/nodes", function ($data) use ($index) {
+                if ($data['statusCode'] < 0) {
+                    $this->updateFromConsul($index);
+                    return;
                 }
-            }
-            if (!$find) {
-                $this->removeNode($node_name);
-            }
-        }
-        $index = $data['headers']['x-consul-index'];
-        $this->updateFromConsul($index);
+                $body = json_decode($data['body'], true);
+                //寻找增加的
+                $index = 0;
+                foreach ($body as $value) {
+                    $node_name = $value['Node'];
+                    $ips = $value['TaggedAddresses'];
+                    if (!isset($ips['lan'])) continue;
+                    if ($ips['lan'] == getBindIp()){
+                        $this->node_index = $index;
+                        continue;
+                    }
+                    if (!isset($this->client[$node_name])) {
+                        $this->addNode($node_name, $ips['lan']);
+                    }
+                    $index++;
+                }
+                //寻找减少的
+                foreach ($this->client as $node_name => $client) {
+                    $find = false;
+                    foreach ($body as $value) {
+                        $one_node_name = $value['Node'];
+                        if ($one_node_name == $node_name) {
+                            $find = true;
+                            break;
+                        }
+                    }
+                    if (!$find) {
+                        $this->removeNode($node_name);
+                    }
+                }
+                $index = $data['headers']['x-consul-index'];
+                $this->updateFromConsul($index);
+            });
+
     }
 
     /**

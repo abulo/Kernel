@@ -8,6 +8,7 @@
 
 namespace Kernel\Components\Consul;
 
+use Kernel\Asyn\HttpClient\HttpClient;
 use Kernel\Components\Event\EventDispatcher;
 use Kernel\Components\SDHelp\SDHelpProcess;
 use Kernel\Start;
@@ -29,7 +30,7 @@ class ConsulLeader
         $this->sdHelpProcess = $sdHelpProcess;
         $this->config = getInstance()->config;
         $this->leader_name = $this->config['consul']['leader_service_name'];
-        $this->consul_leader = getInstance()->loader()->http('consulRest', $this); //new HttpClient(null, 'http://127.0.0.1:8500');
+        $this->consul_leader = new HttpClient(null, 'http://127.0.0.1:8500');
         swoole_timer_after(2000, function () {
             $this->leader();
             $this->serviceHealthCheck();
@@ -44,7 +45,7 @@ class ConsulLeader
     {
         $watches = $this->config->get('consul.watches', []);
         foreach ($watches as $watch) {
-            $this->consul_service_client[$watch] = getInstance()->loader()->http('consulRest', $this); //new HttpClient(null, 'http://127.0.0.1:8500');
+            $this->consul_service_client[$watch] = new HttpClient(null, 'http://127.0.0.1:8500');
             $this->help_serviceHealthCheck($watch, 0);
         }
     }
@@ -55,21 +56,20 @@ class ConsulLeader
      */
     public function help_serviceHealthCheck($watch, $index)
     {
-
-        $data = $this->consul_service_client[$watch]->setMethod('GET')->setQuery(['passing' => true, 'index' => $index])->execute('/v1/health/service/' . $watch); //, function ($data) use ($watch, $index) {
-        if ($data['statusCode'] < 0) {
+        $this->consul_service_client[$watch]->setQuery(['passing' => true, 'index' => $index])->execute('/v1/health/service/' . $watch, function ($data) use ($watch, $index) {
+            if ($data['statusCode'] < 0) {
+                $this->help_serviceHealthCheck($watch, $index);
+                return;
+            }
+            $result[$watch] = $data['body'];
+            //存儲在SDHelpProcess中
+            $this->sdHelpProcess->data[ConsulHelp::DISPATCH_KEY][$watch] = $data['body'];
+            //分发到进程中去
+            EventDispatcher::getInstance()->dispatch(ConsulHelp::DISPATCH_KEY, $result);
+            //继续监听
+            $index = $data['headers']['x-consul-index'];
             $this->help_serviceHealthCheck($watch, $index);
-            return;
-        }
-        $result[$watch] = $data['body'];
-        //存儲在SDHelpProcess中
-        $this->sdHelpProcess->data[ConsulHelp::DISPATCH_KEY][$watch] = $data['body'];
-        //分发到进程中去
-        EventDispatcher::getInstance()->dispatch(ConsulHelp::DISPATCH_KEY, $result);
-        //继续监听
-        $index = $data['headers']['x-consul-index'];
-        $this->help_serviceHealthCheck($watch, $index);
-        // });
+        });
     }
 
     /**
@@ -79,10 +79,10 @@ class ConsulLeader
     public function getSession($call)
     {
         if (empty($this->sessionID)) {
-            $data = $this->consul_leader->setData(['LockDelay' => 0, 'Behavior' => 'release', 'Name' => $this->leader_name])->setMethod('PUT')->setHeaders(['Content-Type' => 'application/json'])->execute('/v1/session/create'); //, function ($data) use ($call) {
-            $this->sessionID = json_decode($data['body'], true)["ID"];
-            $call($this->sessionID);
-            // });
+            $this->consul_leader->setData(json_encode(['LockDelay' => 0, 'Behavior' => 'release', 'Name' => $this->leader_name]))->setMethod('PUT')->execute('/v1/session/create', function ($data) use ($call) {
+                $this->sessionID = json_decode($data['body'], true)["ID"];
+                $call($this->sessionID);
+            });
         } else {
             $call($this->sessionID);
         }
@@ -96,19 +96,19 @@ class ConsulLeader
     public function leader($index = 0)
     {
         $this->getSession(function ($id) use ($index) {
-            $queryData = ['ip' => getBindIp()];
-            $data = $this->consul_leader->setQuery(['acquire' => $id])
-                ->setData($queryData)->setMethod('PUT')->setHeaders(['Content-Type' => 'application/json'])->execute("/v1/kv/servers/$this->leader_name/leader"); //, function ($data) use ($index) {
-            $leader = $data['body'];
-            if ($leader == 'true') { //是leader
-                $leader = true;
-            } else {
-                $leader = false;
-            }
-            Start::setLeader($leader);
-            //继续监听
-            $this->checkLeader($index);
-            // });
+            $data = ['ip' => getBindIp()];
+            $this->consul_leader->setQuery(['acquire' => $id])
+                ->setData(json_encode($data))->setMethod('PUT')->execute("/v1/kv/servers/$this->leader_name/leader", function ($data) use ($index) {
+                    $leader = $data['body'];
+                    if ($leader == 'true') {//是leader
+                        $leader = true;
+                    } else {
+                        $leader = false;
+                    }
+                    Start::setLeader($leader);
+                    //继续监听
+                    $this->checkLeader($index);
+                });
         });
     }
 
@@ -119,20 +119,21 @@ class ConsulLeader
      */
     public function checkLeader($index = 0)
     {
-        $data = $this->consul_leader->setMethod('GET')
+        $this->consul_leader->setMethod('GET')
             ->setQuery(['index' => $index])
-            ->execute("/v1/kv/servers/$this->leader_name/leader"); //, function ($data) use ($index) {
-        if ($data['statusCode'] < 0) {
-            $this->checkLeader($index);
-            return;
-        }
-        $body = json_decode($data['body'], true)[0];
-        $index = $data['headers']['x-consul-index'];
-        if (!isset($body['Session'])) { //代表没有Leader
-            $this->leader($index);
-        } else {
-            $this->checkLeader($index);
-        }
-        // });
+            ->execute("/v1/kv/servers/$this->leader_name/leader", function ($data) use ($index) {
+                if ($data['statusCode'] < 0) {
+                    $this->checkLeader($index);
+                    return;
+                }
+                $body = json_decode($data['body'], true)[0];
+                $index = $data['headers']['x-consul-index'];
+                if (!isset($body['Session']))//代表没有Leader
+                {
+                    $this->leader($index);
+                } else {
+                    $this->checkLeader($index);
+                }
+            });
     }
 }

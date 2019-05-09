@@ -53,7 +53,7 @@ class HttpClientRequest extends Child
 
     public function clear()
     {
-        $this->queryData = [];
+        $this->queryData= [];
     }
 
     /**
@@ -103,6 +103,17 @@ class HttpClientRequest extends Child
     {
         // $this->http_pool->setHeaders($headers);
         $this->queryData['setHeaders'] = $headers;
+        return $this;
+    }
+
+    /**
+     * @param $key
+     * @param $value
+     * @return $this
+     */
+    public function addHeader($key, $value)
+    {
+        $this->queryData['setHeaders'][$key] = $value;
         return $this;
     }
 

@@ -83,6 +83,7 @@ class Loader implements ILoader
      */
     public function http($name, Child $parent)
     {
+        // secho('ddddddddddddddddddd',[$name,$parent]);
         if (empty($name)) {
             return null;
         }

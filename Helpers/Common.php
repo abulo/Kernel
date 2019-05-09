@@ -439,8 +439,8 @@ if (!function_exists("swoole_async_dns_lookup")) {
     }
 }
 
-if (!class_exists("swoole_client")) {
-    class swoole_client
+if (!class_exists("swoole_clients")) {
+    class swoole_clients
     {
         private $client;
         private $map = [];

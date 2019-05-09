@@ -8,6 +8,8 @@
 
 namespace Kernel\Components\TimerTask;
 
+use Kernel\Asyn\HttpClient\HttpClient;
+use Kernel\Asyn\HttpClient\HttpClientPool;
 use Kernel\Components\Event\Event;
 use Kernel\Components\Event\EventDispatcher;
 use Kernel\Components\Process\ProcessManager;
@@ -33,7 +35,7 @@ class TimerTask extends CoreBase
         parent::__construct();
         $this->leader_name = $this->config['consul']['leader_service_name'];
         if (getInstance()->isConsul()) {
-            $this->consul = getInstance()->loader()->http('consulRest', $this); //new HttpClient(null, 'http://127.0.0.1:8500');
+            $this->consul = new HttpClient(null, 'http://127.0.0.1:8500');
             swoole_timer_after(1000, function () {
                 $this->updateFromConsul();
             });
@@ -43,6 +45,8 @@ class TimerTask extends CoreBase
         $this->id = swoole_timer_tick(1000, function () {
             $this->timerTask();
         });
+
+
     }
 
 
@@ -148,28 +152,26 @@ class TimerTask extends CoreBase
      */
     public function updateFromConsul($index = 0)
     {
-
-
-        $data = $this->consul->setMethod('GET')
+        $this->consul->setMethod('GET')
             ->setQuery(['index' => $index, 'key' => '*', 'recurse' => true])
-            ->execute("/v1/kv/TimerTask/{$this->leader_name}/"); //, function ($data) use ($index) {
-        if ($data['statusCode'] < 0) {
-            $this->updateFromConsul($index);
-            return;
-        }
-        $body = json_decode($data['body'], true);
-        $consulTask = [];
-        if ($body != null) {
-            foreach ($body as $value) {
-                $consulTask[$value['Key']] = json_decode(base64_decode($value['Value']), true);
-            }
-            $this->updateTimerTask($consulTask);
-        } else {
-            $this->updateTimerTask(null);
-        }
-        $index = $data['headers']['x-consul-index'];
-        $this->updateFromConsul($index);
-        // });
+            ->execute("/v1/kv/TimerTask/{$this->leader_name}/", function ($data) use ($index) {
+                if ($data['statusCode'] < 0) {
+                    $this->updateFromConsul($index);
+                    return;
+                }
+                $body = json_decode($data['body'], true);
+                $consulTask = [];
+                if ($body != null) {
+                    foreach ($body as $value) {
+                        $consulTask[$value['Key']] = json_decode(base64_decode($value['Value']), true);
+                    }
+                    $this->updateTimerTask($consulTask);
+                } else {
+                    $this->updateTimerTask(null);
+                }
+                $index = $data['headers']['x-consul-index'];
+                $this->updateFromConsul($index);
+            });
     }
 
     /**
