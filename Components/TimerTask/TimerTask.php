@@ -8,8 +8,6 @@
 
 namespace Kernel\Components\TimerTask;
 
-use Kernel\Asyn\HttpClient\HttpClient;
-use Kernel\Asyn\HttpClient\HttpClientPool;
 use Kernel\Components\Event\Event;
 use Kernel\Components\Event\EventDispatcher;
 use Kernel\Components\Process\ProcessManager;
@@ -35,7 +33,7 @@ class TimerTask extends CoreBase
         parent::__construct();
         $this->leader_name = $this->config['consul']['leader_service_name'];
         if (getInstance()->isConsul()) {
-            $this->consul = new HttpClient(null, 'http://127.0.0.1:8500');
+            $this->consul = getInstance()->loader()->http('consulRest', $this); //new HttpClient(null, 'http://127.0.0.1:8500');
             swoole_timer_after(1000, function () {
                 $this->updateFromConsul();
             });
@@ -125,15 +123,13 @@ class TimerTask extends CoreBase
                 $count = round(($time - $timer_task['start_time']) / $timer_task['interval_time']);
                 $timer_task['next_time'] = $timer_task['start_time'] + $count * $timer_task['interval_time'];
             }
-            if ($timer_task['end_time'] != -1 && $time > $timer_task['end_time']) {//说明执行完了一轮，开始下一轮的初始化
+            if ($timer_task['end_time'] != -1 && $time > $timer_task['end_time']) { //说明执行完了一轮，开始下一轮的初始化
                 $timer_task['start_time'] = strtotime(date("Y-m-d H:i:s", $timer_task['start_time']) . $timer_task['span']);
                 $timer_task['end_time'] = strtotime(date("Y-m-d H:i:s", $timer_task['end_time']) . $timer_task['span']);
                 $timer_task['next_time'] = $timer_task['start_time'];
                 $timer_task['now_exec'] = 0;
             }
-            if (($time == $timer_task['next_time']) &&
-                ($time < $timer_task['end_time'] || $timer_task['end_time'] == -1) &&
-                ($timer_task['now_exec'] < $timer_task['max_exec'] || $timer_task['max_exec'] == -1)
+            if (($time == $timer_task['next_time']) && ($time < $timer_task['end_time'] || $timer_task['end_time'] == -1) && ($timer_task['now_exec'] < $timer_task['max_exec'] || $timer_task['max_exec'] == -1)
             ) {
                 if ($timer_task['delay']) {
                     $timer_task['next_time'] += $timer_task['interval_time'];
@@ -152,26 +148,28 @@ class TimerTask extends CoreBase
      */
     public function updateFromConsul($index = 0)
     {
-        $this->consul->setMethod('GET')
+
+
+        $data = $this->consul->setMethod('GET')
             ->setQuery(['index' => $index, 'key' => '*', 'recurse' => true])
-            ->execute("/v1/kv/TimerTask/{$this->leader_name}/", function ($data) use ($index) {
-                if ($data['statusCode'] < 0) {
-                    $this->updateFromConsul($index);
-                    return;
-                }
-                $body = json_decode($data['body'], true);
-                $consulTask = [];
-                if ($body != null) {
-                    foreach ($body as $value) {
-                        $consulTask[$value['Key']] = json_decode(base64_decode($value['Value']), true);
-                    }
-                    $this->updateTimerTask($consulTask);
-                } else {
-                    $this->updateTimerTask(null);
-                }
-                $index = $data['headers']['x-consul-index'];
-                $this->updateFromConsul($index);
-            });
+            ->execute("/v1/kv/TimerTask/{$this->leader_name}/"); //, function ($data) use ($index) {
+        if ($data['statusCode'] < 0) {
+            $this->updateFromConsul($index);
+            return;
+        }
+        $body = json_decode($data['body'], true);
+        $consulTask = [];
+        if ($body != null) {
+            foreach ($body as $value) {
+                $consulTask[$value['Key']] = json_decode(base64_decode($value['Value']), true);
+            }
+            $this->updateTimerTask($consulTask);
+        } else {
+            $this->updateTimerTask(null);
+        }
+        $index = $data['headers']['x-consul-index'];
+        $this->updateFromConsul($index);
+        // });
     }
 
     /**

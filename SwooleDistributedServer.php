@@ -2,7 +2,7 @@
 
 namespace Kernel;
 
-use Kernel\Asyn\HttpClient\HttpClientPool;
+use Kernel\Asyn\Http\HttpClientPool;
 use Kernel\Asyn\IAsynPool;
 use Kernel\Asyn\MQTT\Utility;
 use Kernel\Asyn\Mysql\Miner;
@@ -676,6 +676,10 @@ abstract class SwooleDistributedServer extends SwooleWebSocketServer
         }
         if ($this->config->get('error.dingding_enable', false)) {
             $this->addAsynPool('dingdingRest', new HttpClientPool($this->config, $this->config->get('error.dingding_url')));
+        }
+
+        if ($this->isCluster()) {
+            $this->addAsynPool('consulRest', new HttpClientPool($this->config, 'http://127.0.0.1:8500'));
         }
 
 
