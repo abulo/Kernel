@@ -85,9 +85,13 @@ class MysqlAsynPool implements IAsynPool
         try {
             $db->setClient($client);
             $result = $fuc($client);
+            $client->recv();
             $client->query("commit");
+            $client->recv();
         } catch (\Throwable $e) {
+            $client->recv();
             $client->query("rollback");
+            $client->recv();
             if ($errorFuc != null) {
                 $result = $errorFuc($client, $e);
             }
@@ -137,15 +141,15 @@ class MysqlAsynPool implements IAsynPool
         }
         $mysqlCoroutine->destroy();
         if ($delayRecv) {//延迟收包
-            $data['delay_recv_fuc'] = function () use ($client) {
+            // $data['delay_recv_fuc'] = function () use ($client) {
                 $res = $client->recv();
                 $data['result'] = $res;
                 $data['affected_rows'] = $client->affected_rows;
                 $data['insert_id'] = $client->insert_id;
                 $data['client_id'] = $client->id;
                 $this->pushToPool($client);
-                return $data;
-            };
+                // return $data;
+            // };
             return new MysqlSyncHelp($sql, $data);
         }
         $data['result'] = $res;

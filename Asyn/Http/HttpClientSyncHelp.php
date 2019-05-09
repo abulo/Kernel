@@ -75,6 +75,6 @@ class HttpClientSyncHelp implements ArrayAccess
      */
     public function getHttpResult()
     {
-        return $this->result_array();
+        return (array)$this->result_array();
     }
 }
