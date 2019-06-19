@@ -2544,7 +2544,6 @@ class Miner extends Child
             $sql = $this->getStatement(false);
             $this->clear();
             $mySqlCoroutine->setRequest($sql);
-            // $mySqlCoroutine->setDelayRecv();
             if ($set) {
                 $set($mySqlCoroutine);
             }
@@ -2582,7 +2581,6 @@ class Miner extends Child
         } else {
             if ($sql != null) {
                 $mySqlCoroutine->setRequest($sql);
-                // $mySqlCoroutine->setDelayRecv();
                 if ($set) {
                     $set($mySqlCoroutine);
                 }
@@ -2593,7 +2591,6 @@ class Miner extends Child
                 $sql = $this->getStatement(false);
                 $this->clear();
                 $mySqlCoroutine->setRequest($sql);
-                // $mySqlCoroutine->setDelayRecv();
                 if ($set) {
                     $set($mySqlCoroutine);
                 }

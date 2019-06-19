@@ -451,7 +451,7 @@ class Start
         }
 
 
-
+        usleep(1500);
 
         //主进程
         $master_pid = ServerPid::getMasterPid(self::$_worker->pidFilePath);
