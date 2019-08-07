@@ -86,7 +86,16 @@ class HttpInput
     public function get($index, $default = null, $use_xss = true)
     {
         if ($use_xss) {
-            return XssClean::getXssClean()->xss_clean($this->request->get[$index]??$default);
+            $str = XssClean::getXssClean()->xss_clean($this->request->get[$index]??$default);
+
+
+            $split_arr = array('\'','"');
+            foreach ($split_arr as $split_item) {
+                $str = str_replace($split_item, '', $str);
+            }
+            return $str;
+
+
         } else {
             return $this->request->get[$index]??$default;
         }

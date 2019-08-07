@@ -451,7 +451,7 @@ class Start
         }
 
 
-        usleep(1500);
+
 
         //主进程
         $master_pid = ServerPid::getMasterPid(self::$_worker->pidFilePath);
@@ -459,13 +459,16 @@ class Start
         $manager_pid = ServerPid::getManagerPid(self::$_worker->pidFilePath);
 
 
+
         $server_name = getServerName();
         if (!$master_pid) {
-            $master_pid = exec("ps -ef | grep $server_name:master | grep -v 'grep ' | awk '{print $2}'");
+            $master_pid = exec("ps -ef | grep $server_name-master | grep -v 'grep ' | awk '{print $2}'");
         }
         if (!$manager_pid) {
-            $manager_pid = exec("ps -ef | grep $server_name:manager | grep -v 'grep ' | awk '{print $2}'");
+            $manager_pid = exec("ps -ef | grep $server_name-manager | grep -v 'grep ' | awk '{print $2}'");
         }
+
+
 
         $master_is_alive = $master_pid && @posix_kill($master_pid, 0);
 
