@@ -10,6 +10,7 @@ class Paginator
     protected $itemsPerPage;
     protected $currentPage;
     protected $urlPattern;
+    protected $setPageNum;
     public $maxPagesToShow = 9;
     // protected $previousText = '上一页';
     // protected $nextText = '下一页';
@@ -19,12 +20,13 @@ class Paginator
      * @param int $currentPage
      * @param string $urlPattern
      */
-    public function __construct($totalItems, $itemsPerPage, $currentPage, $urlPattern = '')
+    public function __construct($totalItems, $itemsPerPage, $currentPage, $urlPattern = '',$setPageNum = '')
     {
         $this->totalItems = $totalItems;
         $this->itemsPerPage = $itemsPerPage;
         $this->currentPage = $currentPage;
         $this->urlPattern = $urlPattern;
+        $this->setPageNum = $setPageNum;
         $this->updateNumPages();
     }
     protected function updateNumPages()
@@ -241,26 +243,52 @@ class Paginator
      */
     public function toHtml()
     {
-        if ($this->numPages <= 1) {
-            return '';
-        }
-        $html = '<div class="layui-box layui-laypage layui-laypage-default" style="margin:0px;">';
-        if ($this->getPrevUrl()) {
-            // $html .= '<a class="layui-laypage-prev" href="' . $this->getPrevUrl() . '">'. $this->previousText .'</a>';
-        }
-        foreach ($this->getPages() as $page) {
-            if ($page['url']) {
-                if ($page['isCurrent']) {
-                    $html .= '<span class="layui-laypage-curr" ><em class="layui-laypage-em"></em><em>'.$page['num'].'</em></span>';
-                } else {
-                    $html .= '<a href="'.$page['url'].'">'.$page['num'].'</a>';
-                }
+        if ($this->setPageNum != '') {
+            $html = '<div class="layui-box layui-laypage layui-laypage-default" style="margin:0px;">';
+            if ($this->numPages <= 1) {
+                $html .= '<span> 1 </span>';
+                $html .= '<span class="layui-laypage-skip">每页 <input type="text" id="page_num" value="'. $this->setPageNum .'" class="layui-input">条
+                            <button type="button" class="layui-laypage-btn" id="layui-laypage-btn" value="'. $this->getPageUrl(1) .'"> 确定 </button>
+                          </span>';
+                $html .= '<span class="layui-laypage-skip">(当前页'. $this->totalItems .'条)</span>';
             } else {
-                $html .= '<span>' . $page['num'] . '</span>';
+                foreach ($this->getPages() as $page) {
+                    if ($page['url']) {
+                        if ($page['isCurrent']) {
+                            $html .= '<span class="layui-laypage-curr" ><em class="layui-laypage-em"></em><em>'.$page['num'].'</em></span>';
+                            $page = $page['num'];
+                        } else {
+                            $html .= '<a href="'.$page['url'].'&page_num='. $this->setPageNum .'">'.$page['num'].'</a>';
+                        }
+                    } else {
+                        $html .= '<span>' . $page['num'] . '</span>';
+                    }
+                }
+                $html .= '<span class="layui-laypage-skip">每页 <input type="text" id="page_num" value="'. $this->setPageNum .'" class="layui-input">条
+                            <button type="button" class="layui-laypage-btn" id="layui-laypage-btn" value="'. $this->getPageUrl(1) .'"> 确定 </button>
+                          </span>';
+
+                if ($page == count($this->getPages())) {
+                    $last_page_num = $this->setPageNum - ($this->setPageNum * count($this->getPages()) - $this->totalItems);
+                    getInstance()->log('123',[]);
+                    $html .= '<span class="layui-laypage-skip">(当前页'. $last_page_num .'条)</span>';
+                } else {
+                    $html .= '<span class="layui-laypage-skip">(当前页'. $this->setPageNum .'条)</span>';
+                }
             }
-        }
-        if ($this->getNextUrl()) {
-            // $html .= '<a  class ="layui-laypage-next" href="' . $this->getNextUrl() . '">'. $this->nextText .'</a>';
+        } else {
+            $html = '<div class="layui-box layui-laypage layui-laypage-default" style="margin:0px;">';
+            foreach ($this->getPages() as $page) {
+                if ($page['url']) {
+                    if ($page['isCurrent']) {
+                        $html .= '<span class="layui-laypage-curr" ><em class="layui-laypage-em"></em><em>'.$page['num'].'</em></span>';
+                    } else {
+                        $html .= '<a href="'.$page['url'].'">'.$page['num'].'</a>';
+                    }
+                } else {
+                    $html .= '<span>' . $page['num'] . '</span>';
+                }
+            }
         }
         $html .= '</div>';
         return $html;
