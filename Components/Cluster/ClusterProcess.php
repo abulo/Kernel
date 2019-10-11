@@ -524,8 +524,10 @@ class ClusterProcess extends Process
                 foreach ($body as $value) {
                     $node_name = $value['Node'];
                     $ips = $value['TaggedAddresses'];
-                    if (!isset($ips['lan'])) continue;
-                    if ($ips['lan'] == getBindIp()){
+                    if (!isset($ips['lan'])) {
+                        continue;
+                    }
+                    if ($ips['lan'] == getBindIp()) {
                         $this->node_index = $index;
                         continue;
                     }
@@ -551,7 +553,6 @@ class ClusterProcess extends Process
                 $index = $data['headers']['x-consul-index'];
                 $this->updateFromConsul($index);
             });
-
     }
 
     /**

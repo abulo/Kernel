@@ -45,8 +45,6 @@ class TimerTask extends CoreBase
         $this->id = swoole_timer_tick(1000, function () {
             $this->timerTask();
         });
-
-
     }
 
 

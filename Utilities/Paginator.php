@@ -20,7 +20,7 @@ class Paginator
      * @param int $currentPage
      * @param string $urlPattern
      */
-    public function __construct($totalItems, $itemsPerPage, $currentPage, $urlPattern = '',$setPageNum = '')
+    public function __construct($totalItems, $itemsPerPage, $currentPage, $urlPattern = '', $setPageNum = '')
     {
         $this->totalItems = $totalItems;
         $this->itemsPerPage = $itemsPerPage;
@@ -270,7 +270,7 @@ class Paginator
 
                 if ($page == count($this->getPages())) {
                     $last_page_num = $this->setPageNum - ($this->setPageNum * count($this->getPages()) - $this->totalItems);
-                    getInstance()->log('123',[]);
+                    getInstance()->log('123', []);
                     $html .= '<span class="layui-laypage-skip">(当前页'. $last_page_num .'条)</span>';
                 } else {
                     $html .= '<span class="layui-laypage-skip">(当前页'. $this->setPageNum .'条)</span>';

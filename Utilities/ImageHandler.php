@@ -6,7 +6,8 @@
  */
 namespace Kernel\Utilities;
 
-class ImageHandler {
+class ImageHandler
+{
 
     var $img_class = 0; //图片是缩放还是截取 1是截取 / 0为缩放
     var $dst_img; // 目标文件
@@ -62,7 +63,8 @@ class ImageHandler {
     /**
      * 构造函数
      */
-    function ThumbHandler() {
+    function ThumbHandler()
+    {
             $this->mask_font_color = "#ffffff";
             $this->font = 2;
             $this->font_size = 12;
@@ -71,14 +73,16 @@ class ImageHandler {
     /**
      * 取得图片的宽
      */
-    function getImgWidth($src) {
+    function getImgWidth($src)
+    {
             return imagesx($src);
     }
 
     /**
      * 取得图片的高
      */
-    function getImgHeight($src) {
+    function getImgHeight($src)
+    {
             return imagesy($src);
     }
 
@@ -87,33 +91,34 @@ class ImageHandler {
      *
      * @param    string    $src_img  处理图片路径
      */
-    function setSrcImg($src_img, $img_type = null) {
-            if (!file_exists($src_img)) {
-                    die("图片不存在");
-            }
+    function setSrcImg($src_img, $img_type = null)
+    {
+        if (!file_exists($src_img)) {
+                die("图片不存在");
+        }
 
-            if (!empty($img_type)) {
-                    $this->img_type = $img_type;
-            } else {
-                    $this->img_type = $this->_getImgType($src_img);
-            }
+        if (!empty($img_type)) {
+                $this->img_type = $img_type;
+        } else {
+                $this->img_type = $this->_getImgType($src_img);
+        }
 
 //                $this->_checkValid($this->img_type);
 
             // file_get_contents函数要求php版本>4.3.0
             $src = '';
-            if (function_exists("file_get_contents")) {
-                    $src = file_get_contents($src_img);
-            } else {
-                    $handle = fopen($src_img, "r");
-                    while (!feof($handle)) {
-                            $src .= fgets($handle, 4096);
-                    }
-                    fclose($handle);
+        if (function_exists("file_get_contents")) {
+                $src = file_get_contents($src_img);
+        } else {
+                $handle = fopen($src_img, "r");
+            while (!feof($handle)) {
+                    $src .= fgets($handle, 4096);
             }
-            if (empty($src)) {
-                    die("图片源为空");
-            }
+                fclose($handle);
+        }
+        if (empty($src)) {
+                die("图片源为空");
+        }
             $this->h_src = @ImageCreateFromString($src);
             $this->src_w = $this->getImgWidth($this->h_src);
             $this->src_h = $this->getImgHeight($this->h_src);
@@ -124,7 +129,8 @@ class ImageHandler {
      *
      * @param    string    $dst_img   图片生成路径
      */
-    function setDstImg($dst_img) {
+    function setDstImg($dst_img)
+    {
             $arr = explode('/', $dst_img);
             $last = array_pop($arr);
             $path = implode('/', $arr);
@@ -137,7 +143,8 @@ class ImageHandler {
      *
      * @param    string      $n    质量
      */
-    function setImgDisplayQuality($n) {
+    function setImgDisplayQuality($n)
+    {
 
             $this->img_display_quality =(int) $n;
     }
@@ -147,7 +154,8 @@ class ImageHandler {
      *
      * @param    string      $n    质量
      */
-    function setImgCreateQuality($n) {
+    function setImgCreateQuality($n)
+    {
 
             $this->img_create_quality = (int) $n;
     }
@@ -159,7 +167,8 @@ class ImageHandler {
      * @param    integer    $font    水印字体
      * @param    string     $color   水印字体颜色
      */
-    function setMaskWord($word) {
+    function setMaskWord($word)
+    {
             $this->mask_word .= $word;
     }
 
@@ -168,7 +177,8 @@ class ImageHandler {
      *
      * @param    string     $color    字体颜色
      */
-    function setMaskFontColor($color = "#ffffff") {
+    function setMaskFontColor($color = "#ffffff")
+    {
             $this->mask_font_color = $color;
     }
 
@@ -177,17 +187,19 @@ class ImageHandler {
      *
      * @param    string|integer    $font    字体
      */
-    function setMaskFont($font = 2) {
-            if (!is_numeric($font) && !file_exists($font)) {
-                    die("字体文件不存在");
-            }
+    function setMaskFont($font = 2)
+    {
+        if (!is_numeric($font) && !file_exists($font)) {
+                die("字体文件不存在");
+        }
             $this->font = $font;
     }
 
     /**
      * 设置文字字体大小,仅对truetype字体有效
      */
-    function setMaskFontSize($size = "12") {
+    function setMaskFontSize($size = "12")
+    {
             $this->font_size = $size;
     }
 
@@ -196,7 +208,8 @@ class ImageHandler {
      *
      * @param    string    $img     水印图片源
      */
-    function setMaskImg($img) {
+    function setMaskImg($img)
+    {
             $this->mask_img = $img;
     }
 
@@ -205,7 +218,8 @@ class ImageHandler {
      *
      * @param    integer     $x    横向偏移量
      */
-    function setMaskOffsetX($x) {
+    function setMaskOffsetX($x)
+    {
             $this->mask_offset_x = (int) $x;
     }
 
@@ -214,7 +228,8 @@ class ImageHandler {
      *
      * @param    integer     $y    纵向偏移量
      */
-    function setMaskOffsetY($y) {
+    function setMaskOffsetY($y)
+    {
             $this->mask_offset_y = (int) $y;
     }
 
@@ -223,7 +238,8 @@ class ImageHandler {
      *
      * @param    integer     $position    位置,1:左上,2:左下,3:右上,0/4:右下
      */
-    function setMaskPosition($position = 0) {
+    function setMaskPosition($position = 0)
+    {
             $this->mask_position = (int) $position;
     }
 
@@ -232,7 +248,8 @@ class ImageHandler {
      *
      * @param    integer     $n   合并透明程度
      */
-    function setMaskImgPct($n) {
+    function setMaskImgPct($n)
+    {
             $this->mask_img_pct = (int) $n;
     }
 
@@ -241,7 +258,8 @@ class ImageHandler {
      *
      * @param    integer     $n    合并程度
      */
-    function setMaskTxtPct($n) {
+    function setMaskTxtPct($n)
+    {
             $this->mask_txt_pct = (int) $n;
     }
 
@@ -250,7 +268,8 @@ class ImageHandler {
      *
      * @param    (类型)     (参数名)    (描述)
      */
-    function setDstImgBorder($size = 1, $color = "#000000") {
+    function setDstImgBorder($size = 1, $color = "#000000")
+    {
             $this->img_border_size = (int) $size;
             $this->img_border_color = $color;
     }
@@ -258,14 +277,16 @@ class ImageHandler {
     /**
      * 水平翻转
      */
-    function flipH() {
+    function flipH()
+    {
             $this->_flip_x++;
     }
 
     /**
      * 垂直翻转
      */
-    function flipV() {
+    function flipV()
+    {
             $this->_flip_y++;
     }
 
@@ -274,7 +295,8 @@ class ImageHandler {
      *
      * @param    (类型)     (参数名)    (描述)
      */
-    function setCutType($type) {
+    function setCutType($type)
+    {
             $this->cut_type = (int) $type;
     }
 
@@ -283,7 +305,8 @@ class ImageHandler {
      *
      * @param    integer     $width    矩形剪切
      */
-    function setRectangleCut($width, $height) {
+    function setRectangleCut($width, $height)
+    {
             $this->fill_w = (int) $width;
             $this->fill_h = (int) $height;
     }
@@ -293,7 +316,8 @@ class ImageHandler {
      *
      * @param    (类型)     (参数名)    (描述)
      */
-    function setSrcCutPosition($x, $y) {
+    function setSrcCutPosition($x, $y)
+    {
             $this->src_x = (int) $x;
             $this->src_y = (int) $y;
     }
@@ -304,148 +328,152 @@ class ImageHandler {
      *                             否则作为宽度值
      * @param    integer    $b     图片缩放后的高度
      */
-    function createImg($a, $b = null) {
+    function createImg($a, $b = null)
+    {
             $num = func_num_args();
-            if (1 == $num) {
-                    $r = (int) $a;
-                    if ($r < 1) {
-                            die("图片缩放比例不得小于1");
-                    }
-                    $this->img_scale = $r;
-                    $this->_setNewImgSize($r);
+        if (1 == $num) {
+                $r = (int) $a;
+            if ($r < 1) {
+                    die("图片缩放比例不得小于1");
             }
+                $this->img_scale = $r;
+                $this->_setNewImgSize($r);
+        }
 
-            if (2 == $num) {
-                    $w = (int) $a;
-                    $h = (int) $b;
-                    if (0 == $w) {
-                            die("目标宽度不能为0");
-                    }
-                    if (0 == $h) {
-                            die("目标高度不能为0");
-                    }
-                    $this->_setNewImgSize($w, $h);
+        if (2 == $num) {
+                $w = (int) $a;
+                $h = (int) $b;
+            if (0 == $w) {
+                    die("目标宽度不能为0");
             }
+            if (0 == $h) {
+                    die("目标高度不能为0");
+            }
+                $this->_setNewImgSize($w, $h);
+        }
 
-            if ($this->_flip_x % 2 != 0) {
-                    $this->_flipH($this->h_src);
-            }
+        if ($this->_flip_x % 2 != 0) {
+                $this->_flipH($this->h_src);
+        }
 
-            if ($this->_flip_y % 2 != 0) {
-                    $this->_flipV($this->h_src);
-            }
+        if ($this->_flip_y % 2 != 0) {
+                $this->_flipV($this->h_src);
+        }
 
             $this->_createMask();
             $this->_output();
 
 //                若生成图片大小为0，则删除该图片 BY S67 20131230
-            if (@filesize($this->h_src)== 0){
-                @unlink($this->h_src);
-            }
+        if (@filesize($this->h_src)== 0) {
+            @unlink($this->h_src);
+        }
 
             // 释放
-            if (imagedestroy($this->h_src) && imagedestroy($this->h_dst)) {
-                    return true;
-            } else {
-                    return false;
-            }
+        if (imagedestroy($this->h_src) && imagedestroy($this->h_dst)) {
+                return true;
+        } else {
+                return false;
+        }
     }
 
     /**
      * 生成水印,调用了生成水印文字和水印图片两个方法
      */
-    function _createMask() {
-            if ($this->mask_word) {
-                    // 获取字体信息
-                    $this->_setFontInfo();
+    function _createMask()
+    {
+        if ($this->mask_word) {
+                // 获取字体信息
+                $this->_setFontInfo();
 
-                    if ($this->_isFull()) {
-                            die("水印文字过大");
-                    } else {
-                            $this->h_dst = @imagecreatetruecolor($this->dst_w, $this->dst_h);
-                            $white = imagecolorallocate($this->h_dst, 255, 255, 255);
-                            imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $white); // 填充背景色
-                            $this->_drawBorder();
-                            imagecopyresampled($this->h_dst, $this->h_src, $this->start_x, $this->start_y, $this->src_x, $this->src_y, $this->fill_w, $this->fill_h, $this->copy_w, $this->copy_h);
-                            $this->_createMaskWord($this->h_dst);
-                    }
+            if ($this->_isFull()) {
+                    die("水印文字过大");
+            } else {
+                    $this->h_dst = @imagecreatetruecolor($this->dst_w, $this->dst_h);
+                    $white = imagecolorallocate($this->h_dst, 255, 255, 255);
+                    imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $white); // 填充背景色
+                    $this->_drawBorder();
+                    imagecopyresampled($this->h_dst, $this->h_src, $this->start_x, $this->start_y, $this->src_x, $this->src_y, $this->fill_w, $this->fill_h, $this->copy_w, $this->copy_h);
+                    $this->_createMaskWord($this->h_dst);
             }
+        }
 
-            if ($this->mask_img) {
-                    $this->_loadMaskImg(); //加载时，取得宽高
+        if ($this->mask_img) {
+                $this->_loadMaskImg(); //加载时，取得宽高
 
 
-                    if ($this->_isFull()) {
-                            // 将水印生成在原图上再拷
-                            $this->_createMaskImg($this->h_src);
-                            $this->h_dst = @imagecreatetruecolor($this->dst_w, $this->dst_h);
-                            $white = imagecolorallocate($this->h_dst, 255, 255, 255);
-                            imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $white); // 填充背景色
-                            $this->_drawBorder();
-                            imagecopyresampled($this->h_dst, $this->h_src, $this->start_x, $this->start_y, $this->src_x, $this->src_y, $this->fill_w, $this->start_y, $this->copy_w, $this->copy_h);
-                    } else {
-                            // 创建新图并拷贝
-                            $this->h_dst = @imagecreatetruecolor($this->dst_w, $this->dst_h);
-                            $white = imagecolorallocate($this->h_dst, 255, 255, 255);
-                            imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $white); // 填充背景色
-                            $this->_drawBorder();
-                            imagecopyresampled($this->h_dst, $this->h_src, $this->start_x, $this->start_y, $this->src_x, $this->src_y, $this->fill_w, $this->fill_h, $this->copy_w, $this->copy_h);
-                            $this->_createMaskImg($this->h_dst);
-                    }
+            if ($this->_isFull()) {
+                    // 将水印生成在原图上再拷
+                    $this->_createMaskImg($this->h_src);
+                    $this->h_dst = @imagecreatetruecolor($this->dst_w, $this->dst_h);
+                    $white = imagecolorallocate($this->h_dst, 255, 255, 255);
+                    imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $white); // 填充背景色
+                    $this->_drawBorder();
+                    imagecopyresampled($this->h_dst, $this->h_src, $this->start_x, $this->start_y, $this->src_x, $this->src_y, $this->fill_w, $this->start_y, $this->copy_w, $this->copy_h);
+            } else {
+                    // 创建新图并拷贝
+                    $this->h_dst = @imagecreatetruecolor($this->dst_w, $this->dst_h);
+                    $white = imagecolorallocate($this->h_dst, 255, 255, 255);
+                    imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $white); // 填充背景色
+                    $this->_drawBorder();
+                    imagecopyresampled($this->h_dst, $this->h_src, $this->start_x, $this->start_y, $this->src_x, $this->src_y, $this->fill_w, $this->fill_h, $this->copy_w, $this->copy_h);
+                    $this->_createMaskImg($this->h_dst);
             }
+        }
 
-            if (empty($this->mask_word) && empty($this->mask_img)) {
-
+        if (empty($this->mask_word) && empty($this->mask_img)) {
             //png的透明处理 by renfei 20151016
             //这里没有考虑gif的情况,目前是png
             @imagealphablending($this->dst_img, false);//取消默认的混色模式（为解决阴影为绿色的问题）
-            @imagesavealpha($this->dst_img,true);//设定保存完整的 alpha 通道信息（为解决阴影为绿色的问题)
+            @imagesavealpha($this->dst_img, true);//设定保存完整的 alpha 通道信息（为解决阴影为绿色的问题)
 
-                    $this->h_dst = @imagecreatetruecolor($this->dst_w, $this->dst_h);
-                    $white = imagecolorallocate($this->h_dst, 255, 255, 255);
-                                //设置透明
-                                imagecolortransparent($this->h_dst,$white);
-imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $white); // 填充背景色
+                $this->h_dst = @imagecreatetruecolor($this->dst_w, $this->dst_h);
+                $white = imagecolorallocate($this->h_dst, 255, 255, 255);
+                            //设置透明
+                            imagecolortransparent($this->h_dst, $white);
+            imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $white); // 填充背景色
 
 
-                    $this->_drawBorder();
+                $this->_drawBorder();
 
-                    imagecopyresampled($this->h_dst, $this->h_src, $this->start_x, $this->start_y, $this->src_x, $this->src_y, $this->fill_w, $this->fill_h, $this->copy_w, $this->copy_h);
-            }
+                imagecopyresampled($this->h_dst, $this->h_src, $this->start_x, $this->start_y, $this->src_x, $this->src_y, $this->fill_w, $this->fill_h, $this->copy_w, $this->copy_h);
+        }
     }
 
     /**
      * 画边框
      */
-    function _drawBorder() {
-            if (!empty($this->img_border_size)) {
-                    $c = $this->_parseColor($this->img_border_color);
-                    $color = imagecolorallocate($this->h_src, $c [0], $c [1], $c [2]);
-                    imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $color); // 填充背景色
-            }
+    function _drawBorder()
+    {
+        if (!empty($this->img_border_size)) {
+                $c = $this->_parseColor($this->img_border_color);
+                $color = imagecolorallocate($this->h_src, $c [0], $c [1], $c [2]);
+                imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $color); // 填充背景色
+        }
     }
 
     /**
      * 生成水印文字
      */
-    function _createMaskWord($src) {
+    function _createMaskWord($src)
+    {
             $this->_countMaskPos();
             $this->_checkMaskValid();
 
             $c = $this->_parseColor($this->mask_font_color);
             $color = imagecolorallocatealpha($src, $c [0], $c [1], $c [2], $this->mask_txt_pct);
 
-            if (is_numeric($this->font)) {
-                    imagestring($src, $this->font, $this->mask_pos_x, $this->mask_pos_y, $this->mask_word, $color);
-            } else {
-                    imagettftext($src, $this->font_size, 0, $this->mask_pos_x, $this->mask_pos_y, $color, $this->font, $this->mask_word);
-            }
+        if (is_numeric($this->font)) {
+                imagestring($src, $this->font, $this->mask_pos_x, $this->mask_pos_y, $this->mask_word, $color);
+        } else {
+                imagettftext($src, $this->font_size, 0, $this->mask_pos_x, $this->mask_pos_y, $color, $this->font, $this->mask_word);
+        }
     }
 
     /**
      * 生成水印图
      */
-    function _createMaskImg($src) {
+    function _createMaskImg($src)
+    {
             $this->_countMaskPos();
             $this->_checkMaskValid();
 
@@ -457,24 +485,25 @@ imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $white); //
     /**
      * 加载水印图
      */
-    function _loadMaskImg() {
+    function _loadMaskImg()
+    {
             $mask_type = $this->_getImgType($this->mask_img);
 //                $this->_checkValid($mask_type);
 
             // file_get_contents函数要求php版本>4.3.0
             $src = '';
-            if (function_exists("file_get_contents")) {
-                    $src = file_get_contents($this->mask_img);
-            } else {
-                    $handle = fopen($this->mask_img, "r");
-                    while (!feof($handle)) {
-                            $src .= fgets($handle, 4096);
-                    }
-                    fclose($handle);
+        if (function_exists("file_get_contents")) {
+                $src = file_get_contents($this->mask_img);
+        } else {
+                $handle = fopen($this->mask_img, "r");
+            while (!feof($handle)) {
+                    $src .= fgets($handle, 4096);
             }
-            if (empty($this->mask_img)) {
-                    die("水印图片为空");
-            }
+                fclose($handle);
+        }
+        if (empty($this->mask_img)) {
+                die("水印图片为空");
+        }
             $this->h_mask = ImageCreateFromString($src);
             $this->mask_w = $this->getImgWidth($this->h_mask);
             $this->mask_h = $this->getImgHeight($this->h_mask);
@@ -483,32 +512,33 @@ imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $white); //
     /**
      * 图片输出
      */
-    function _output() {
+    function _output()
+    {
             $img_type = $this->img_type;
             $func_name = $this->all_type [$img_type] ['output'];
-            if (function_exists($func_name)) {
-                    // 判断浏览器,若是IE就不发送头
-                    if (isset($_SERVER ['HTTP_USER_AGENT'])) {
-                            $ua = strtoupper($_SERVER ['HTTP_USER_AGENT']);
-                            if (!preg_match('/^.*MSIE.*\)$/i', $ua)) {
-                                    header("Content-type:$img_type");
-                            }
-                    }
+        if (function_exists($func_name)) {
+                // 判断浏览器,若是IE就不发送头
+            if (isset($_SERVER ['HTTP_USER_AGENT'])) {
+                    $ua = strtoupper($_SERVER ['HTTP_USER_AGENT']);
+                if (!preg_match('/^.*MSIE.*\)$/i', $ua)) {
+                    header("Content-type:$img_type");
+                }
+            }
 
 //                        图片生成容错 BY S67 20131230
-                    switch ($img_type){
-                        case 'png':
-                            $display_quality=round($this->img_display_quality*9/100);
-                        break;
-                        default:
-                            $display_quality=$this->img_display_quality;
-                        break;
-                    }
-
-                    $func_name($this->h_dst, $this->dst_img, $display_quality);
-            } else {
-                    return false;
+            switch ($img_type) {
+                case 'png':
+                    $display_quality=round($this->img_display_quality*9/100);
+                    break;
+                default:
+                    $display_quality=$this->img_display_quality;
+                    break;
             }
+
+                $func_name($this->h_dst, $this->dst_img, $display_quality);
+        } else {
+                return false;
+        }
     }
 
     /**
@@ -516,12 +546,13 @@ imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $white); //
      *
      * @param    string     $color    十六进制颜色
      */
-    function _parseColor($color) {
+    function _parseColor($color)
+    {
             $arr = array();
-            for ($ii = 1; $ii < strlen($color); $ii++) {
-                    $arr [] = hexdec(substr($color, $ii, 2));
-                    $ii++;
-            }
+        for ($ii = 1; $ii < strlen($color); $ii++) {
+                $arr [] = hexdec(substr($color, $ii, 2));
+                $ii++;
+        }
 
             return $arr;
     }
@@ -529,91 +560,93 @@ imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $white); //
     /**
      * 计算出位置坐标
      */
-    function _countMaskPos() {
-            if ($this->_isFull()) {
-                    switch ($this->mask_position) {
-                            case 1 :
-                                    // 左上
-                                    $this->mask_pos_x = $this->mask_offset_x + $this->img_border_size;
-                                    $this->mask_pos_y = $this->mask_offset_y + $this->img_border_size;
-                                    break;
+    function _countMaskPos()
+    {
+        if ($this->_isFull()) {
+            switch ($this->mask_position) {
+                case 1:
+                    // 左上
+                    $this->mask_pos_x = $this->mask_offset_x + $this->img_border_size;
+                    $this->mask_pos_y = $this->mask_offset_y + $this->img_border_size;
+                    break;
 
-                            case 2 :
-                                    // 左下
-                                    $this->mask_pos_x = $this->mask_offset_x + $this->img_border_size;
-                                    $this->mask_pos_y = $this->src_h - $this->mask_h - $this->mask_offset_y;
-                                    break;
+                case 2:
+                        // 左下
+                        $this->mask_pos_x = $this->mask_offset_x + $this->img_border_size;
+                        $this->mask_pos_y = $this->src_h - $this->mask_h - $this->mask_offset_y;
+                    break;
 
-                            case 3 :
-                                    // 右上
-                                    $this->mask_pos_x = $this->src_w - $this->mask_w - $this->mask_offset_x;
-                                    $this->mask_pos_y = $this->mask_offset_y + $this->img_border_size;
-                                    break;
+                case 3:
+                        // 右上
+                        $this->mask_pos_x = $this->src_w - $this->mask_w - $this->mask_offset_x;
+                        $this->mask_pos_y = $this->mask_offset_y + $this->img_border_size;
+                    break;
 
-                            case 4 :
-                                    // 右下
-                                    $this->mask_pos_x = $this->src_w - $this->mask_w - $this->mask_offset_x;
-                                    $this->mask_pos_y = $this->src_h - $this->mask_h - $this->mask_offset_y;
-                                    break;
+                case 4:
+                        // 右下
+                        $this->mask_pos_x = $this->src_w - $this->mask_w - $this->mask_offset_x;
+                        $this->mask_pos_y = $this->src_h - $this->mask_h - $this->mask_offset_y;
+                    break;
 
-                            default :
-                                    // 默认将水印放到右下,偏移指定像素
-                                    $this->mask_pos_x = $this->src_w - $this->mask_w - $this->mask_offset_x;
-                                    $this->mask_pos_y = $this->src_h - $this->mask_h - $this->mask_offset_y;
-                                    break;
-                    }
-            } else {
-                    switch ($this->mask_position) {
-                            case 1 :
-                                    // 左上
-                                    $this->mask_pos_x = $this->mask_offset_x + $this->img_border_size;
-                                    $this->mask_pos_y = $this->mask_offset_y + $this->img_border_size;
-                                    break;
-
-                            case 2 :
-                                    // 左下
-                                    $this->mask_pos_x = $this->mask_offset_x + $this->img_border_size;
-                                    $this->mask_pos_y = $this->dst_h - $this->mask_h - $this->mask_offset_y - $this->img_border_size;
-                                    break;
-
-                            case 3 :
-                                    // 右上
-                                    $this->mask_pos_x = $this->dst_w - $this->mask_w - $this->mask_offset_x - $this->img_border_size;
-                                    $this->mask_pos_y = $this->mask_offset_y + $this->img_border_size;
-                                    break;
-
-                            case 4 :
-                                    // 右下
-                                    $this->mask_pos_x = $this->dst_w - $this->mask_w - $this->mask_offset_x - $this->img_border_size;
-                                    $this->mask_pos_y = $this->dst_h - $this->mask_h - $this->mask_offset_y - $this->img_border_size;
-                                    break;
-
-                            default :
-                                    // 默认将水印放到右下,偏移指定像素
-                                    $this->mask_pos_x = $this->dst_w - $this->mask_w - $this->mask_offset_x - $this->img_border_size;
-                                    $this->mask_pos_y = $this->dst_h - $this->mask_h - $this->mask_offset_y - $this->img_border_size;
-                                    break;
-                    }
+                default:
+                        // 默认将水印放到右下,偏移指定像素
+                        $this->mask_pos_x = $this->src_w - $this->mask_w - $this->mask_offset_x;
+                        $this->mask_pos_y = $this->src_h - $this->mask_h - $this->mask_offset_y;
+                    break;
             }
+        } else {
+            switch ($this->mask_position) {
+                case 1:
+                    // 左上
+                    $this->mask_pos_x = $this->mask_offset_x + $this->img_border_size;
+                    $this->mask_pos_y = $this->mask_offset_y + $this->img_border_size;
+                    break;
+
+                case 2:
+                        // 左下
+                        $this->mask_pos_x = $this->mask_offset_x + $this->img_border_size;
+                        $this->mask_pos_y = $this->dst_h - $this->mask_h - $this->mask_offset_y - $this->img_border_size;
+                    break;
+
+                case 3:
+                        // 右上
+                        $this->mask_pos_x = $this->dst_w - $this->mask_w - $this->mask_offset_x - $this->img_border_size;
+                        $this->mask_pos_y = $this->mask_offset_y + $this->img_border_size;
+                    break;
+
+                case 4:
+                        // 右下
+                        $this->mask_pos_x = $this->dst_w - $this->mask_w - $this->mask_offset_x - $this->img_border_size;
+                        $this->mask_pos_y = $this->dst_h - $this->mask_h - $this->mask_offset_y - $this->img_border_size;
+                    break;
+
+                default:
+                        // 默认将水印放到右下,偏移指定像素
+                        $this->mask_pos_x = $this->dst_w - $this->mask_w - $this->mask_offset_x - $this->img_border_size;
+                        $this->mask_pos_y = $this->dst_h - $this->mask_h - $this->mask_offset_y - $this->img_border_size;
+                    break;
+            }
+        }
     }
 
     /**
      * 设置字体信息
      */
-    function _setFontInfo() {
-            if (is_numeric($this->font)) {
-                    $this->font_w = imagefontwidth($this->font);
-                    $this->font_h = imagefontheight($this->font);
+    function _setFontInfo()
+    {
+        if (is_numeric($this->font)) {
+                $this->font_w = imagefontwidth($this->font);
+                $this->font_h = imagefontheight($this->font);
 
-                    // 计算水印字体所占宽高
-                    $word_length = strlen($this->mask_word);
-                    $this->mask_w = $this->font_w * $word_length;
-                    $this->mask_h = $this->font_h;
-            } else {
-                    $arr = imagettfbbox($this->font_size, 0, $this->font, $this->mask_word);
-                    $this->mask_w = abs($arr [0] - $arr [2]);
-                    $this->mask_h = abs($arr [7] - $arr [1]);
-            }
+                // 计算水印字体所占宽高
+                $word_length = strlen($this->mask_word);
+                $this->mask_w = $this->font_w * $word_length;
+                $this->mask_h = $this->font_h;
+        } else {
+                $arr = imagettfbbox($this->font_size, 0, $this->font, $this->mask_word);
+                $this->mask_w = abs($arr [0] - $arr [2]);
+                $this->mask_h = abs($arr [7] - $arr [1]);
+        }
     }
 
     /**
@@ -622,117 +655,118 @@ imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $white); //
      * @param    integer     $img_w   目标宽度
      * @param    integer     $img_h   目标高度
      */
-    function _setNewImgSize($img_w, $img_h = null) {
+    function _setNewImgSize($img_w, $img_h = null)
+    {
             $num = func_num_args();
-            if (1 == $num) {
-                    $this->img_scale = $img_w; // 宽度作为比例
-                    $this->fill_w = round($this->src_w * $this->img_scale / 100) - $this->img_border_size * 2;
-                    $this->fill_h = round($this->src_h * $this->img_scale / 100) - $this->img_border_size * 2;
+        if (1 == $num) {
+                $this->img_scale = $img_w; // 宽度作为比例
+                $this->fill_w = round($this->src_w * $this->img_scale / 100) - $this->img_border_size * 2;
+                $this->fill_h = round($this->src_h * $this->img_scale / 100) - $this->img_border_size * 2;
 
-                    // 源文件起始坐标
-                    $this->src_x = 0;
-                    $this->src_y = 0;
-                    $this->copy_w = $this->src_w;
-                    $this->copy_h = $this->src_h;
+                // 源文件起始坐标
+                $this->src_x = 0;
+                $this->src_y = 0;
+                $this->copy_w = $this->src_w;
+                $this->copy_h = $this->src_h;
 
-                    // 目标尺寸
-                    $this->dst_w = $this->fill_w + $this->img_border_size * 2;
-                    $this->dst_h = $this->fill_h + $this->img_border_size * 2;
+                // 目标尺寸
+                $this->dst_w = $this->fill_w + $this->img_border_size * 2;
+                $this->dst_h = $this->fill_h + $this->img_border_size * 2;
+        }
+
+        if (2 == $num) {
+                $fill_w = (int) $img_w - $this->img_border_size * 2;
+                $fill_h = (int) $img_h - $this->img_border_size * 2;
+            if ($fill_w < 0 || $fill_h < 0) {
+                    die("图片边框过大，已超过了图片的宽度");
             }
+                $rate_w = $this->src_w / $fill_w;
+                $rate_h = $this->src_h / $fill_h;
 
-            if (2 == $num) {
-                    $fill_w = (int) $img_w - $this->img_border_size * 2;
-                    $fill_h = (int) $img_h - $this->img_border_size * 2;
-                    if ($fill_w < 0 || $fill_h < 0) {
-                            die("图片边框过大，已超过了图片的宽度");
+            switch ($this->cut_type) {
+                case 0:
+                        // 如果原图大于缩略图，产生缩小，否则不缩小
+                    if ($rate_w < 1 && $rate_h < 1) {
+                        $this->fill_w = (int) $this->src_w;
+                        $this->fill_h = (int) $this->src_h;
+                    } else {
+                        if ($rate_w >= $rate_h) {
+                            $this->fill_w = (int) $fill_w;
+                            $this->fill_h = round($this->src_h / $rate_w);
+                        } else {
+                                $this->fill_w = round($this->src_w / $rate_h);
+                                $this->fill_h = (int) $fill_h;
+                        }
                     }
-                    $rate_w = $this->src_w / $fill_w;
-                    $rate_h = $this->src_h / $fill_h;
 
-                    switch ($this->cut_type) {
-                            case 0 :
-                                    // 如果原图大于缩略图，产生缩小，否则不缩小
-                                    if ($rate_w < 1 && $rate_h < 1) {
-                                            $this->fill_w = (int) $this->src_w;
-                                            $this->fill_h = (int) $this->src_h;
-                                    } else {
-                                            if ($rate_w >= $rate_h) {
-                                                    $this->fill_w = (int) $fill_w;
-                                                    $this->fill_h = round($this->src_h / $rate_w);
-                                            } else {
-                                                    $this->fill_w = round($this->src_w / $rate_h);
-                                                    $this->fill_h = (int) $fill_h;
-                                            }
-                                    }
+                        $this->src_x = 0;
+                        $this->src_y = 0;
 
-                                    $this->src_x = 0;
-                                    $this->src_y = 0;
+                        $this->copy_w = $this->src_w;
+                        $this->copy_h = $this->src_h;
 
-                                    $this->copy_w = $this->src_w;
-                                    $this->copy_h = $this->src_h;
+                        // 目标尺寸
+                        $this->dst_w = $this->fill_w + $this->img_border_size * 2;
+                        $this->dst_h = $this->fill_h + $this->img_border_size * 2;
+                    break;
 
-                                    // 目标尺寸
-                                    $this->dst_w = $this->fill_w + $this->img_border_size * 2;
-                                    $this->dst_h = $this->fill_h + $this->img_border_size * 2;
-                                    break;
+                    // 自动裁切
+                case 1:
+                        // 如果图片是缩小剪切才进行操作
+                    if ($rate_w >= 1 && $rate_h >= 1) {
+                        if ($this->src_w > $this->src_h) {
+                            $src_x = round($this->src_w - $this->src_h) / 2;
+                            $this->setSrcCutPosition($src_x, 0);
+                            $this->setRectangleCut($fill_h, $fill_h);
 
-                            // 自动裁切
-                            case 1 :
-                                    // 如果图片是缩小剪切才进行操作
-                                    if ($rate_w >= 1 && $rate_h >= 1) {
-                                            if ($this->src_w > $this->src_h) {
-                                                    $src_x = round($this->src_w - $this->src_h) / 2;
-                                                    $this->setSrcCutPosition($src_x, 0);
-                                                    $this->setRectangleCut($fill_h, $fill_h);
+                            $this->copy_w = $this->src_h;
+                            $this->copy_h = $this->src_h;
+                        } elseif ($this->src_w < $this->src_h) {
+                                $src_y = round($this->src_h - $this->src_w) / 2;
+                                $this->setSrcCutPosition(0, $src_y);
+                                $this->setRectangleCut($fill_w, $fill_h);
 
-                                                    $this->copy_w = $this->src_h;
-                                                    $this->copy_h = $this->src_h;
-                                            } elseif ($this->src_w < $this->src_h) {
-                                                    $src_y = round($this->src_h - $this->src_w) / 2;
-                                                    $this->setSrcCutPosition(0, $src_y);
-                                                    $this->setRectangleCut($fill_w, $fill_h);
+                                $this->copy_w = $this->src_w;
+                                $this->copy_h = $this->src_w;
+                        } else {
+                                $this->setSrcCutPosition(0, 0);
+                                $this->copy_w = $this->src_w;
+                                $this->copy_h = $this->src_w;
+                                $this->setRectangleCut($fill_w, $fill_h);
+                        }
+                    } else {
+                            $this->setSrcCutPosition(0, 0);
+                            $this->setRectangleCut($this->src_w, $this->src_h);
 
-                                                    $this->copy_w = $this->src_w;
-                                                    $this->copy_h = $this->src_w;
-                                            } else {
-                                                    $this->setSrcCutPosition(0, 0);
-                                                    $this->copy_w = $this->src_w;
-                                                    $this->copy_h = $this->src_w;
-                                                    $this->setRectangleCut($fill_w, $fill_h);
-                                            }
-                                    } else {
-                                            $this->setSrcCutPosition(0, 0);
-                                            $this->setRectangleCut($this->src_w, $this->src_h);
-
-                                            $this->copy_w = $this->src_w;
-                                            $this->copy_h = $this->src_h;
-                                    }
-
-                                    // 目标尺寸
-                                    $this->dst_w = $this->fill_w + $this->img_border_size * 2;
-                                    $this->dst_h = $this->fill_h + $this->img_border_size * 2;
-
-                                    break;
-
-                            // 手工裁切
-                            case 2 :
-                                    if ($this->img_class) {
-                                            $this->copy_w = $this->fill_w;
-                                            $this->copy_h = $this->fill_h;
-                                    } else {
-                                            $this->copy_w = $this->src_w;
-                                            $this->copy_h = $this->src_h;
-                                    }
-
-                                    // 目标尺寸
-                                    $this->dst_w = $this->fill_w + $this->img_border_size * 2;
-                                    $this->dst_h = $this->fill_h + $this->img_border_size * 2;
-
-                                    break;
-                            default :
-                                    break;
+                            $this->copy_w = $this->src_w;
+                            $this->copy_h = $this->src_h;
                     }
+
+                        // 目标尺寸
+                        $this->dst_w = $this->fill_w + $this->img_border_size * 2;
+                        $this->dst_h = $this->fill_h + $this->img_border_size * 2;
+
+                    break;
+
+                    // 手工裁切
+                case 2:
+                    if ($this->img_class) {
+                            $this->copy_w = $this->fill_w;
+                            $this->copy_h = $this->fill_h;
+                    } else {
+                            $this->copy_w = $this->src_w;
+                            $this->copy_h = $this->src_h;
+                    }
+
+                        // 目标尺寸
+                        $this->dst_w = $this->fill_w + $this->img_border_size * 2;
+                        $this->dst_h = $this->fill_h + $this->img_border_size * 2;
+
+                    break;
+                default:
+                    break;
             }
+        }
 
             // 目标文件起始坐标
             $this->start_x = $this->img_border_size;
@@ -742,17 +776,19 @@ imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $white); //
     /**
      * 检查水印图是否大于生成后的图片宽高
      */
-    function _isFull() {
+    function _isFull()
+    {
             return ($this->mask_w + $this->mask_offset_x > $this->fill_w || $this->mask_h + $this->mask_offset_y > $this->fill_h) ? true : false;
     }
 
     /**
      * 检查水印图是否超过原图
      */
-    function _checkMaskValid() {
-            if ($this->mask_w + $this->mask_offset_x > $this->src_w || $this->mask_h + $this->mask_offset_y > $this->src_h) {
-                    die("水印图片尺寸大于原图，请缩小水印图");
-            }
+    function _checkMaskValid()
+    {
+        if ($this->mask_w + $this->mask_offset_x > $this->src_w || $this->mask_h + $this->mask_offset_y > $this->src_h) {
+                die("水印图片尺寸大于原图，请缩小水印图");
+        }
     }
 
     /**
@@ -760,16 +796,17 @@ imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $white); //
      *
      * @param    string     $file_path    文件路径
      */
-    function _getImgType($file_path) {
+    function _getImgType($file_path)
+    {
             $type_list = array("1" => "gif", "2" => "jpg", "3" => "png", "4" => "swf", "5" => "psd", "6" => "bmp", "15" => "wbmp");
-            if (file_exists($file_path)) {
-                    $img_info = @getimagesize($file_path);
-                    if (isset($type_list [$img_info [2]])) {
-                            return $type_list [$img_info [2]];
-                    }
-            } else {
-                    die("文件不存在,不能取得文件类型!");
+        if (file_exists($file_path)) {
+                $img_info = @getimagesize($file_path);
+            if (isset($type_list [$img_info [2]])) {
+                    return $type_list [$img_info [2]];
             }
+        } else {
+                die("文件不存在,不能取得文件类型!");
+        }
     }
 
     /**
@@ -789,23 +826,24 @@ imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $white); //
      *
      * @param    string     $path    路径
      */
-    function _mkdirs($path) {
+    function _mkdirs($path)
+    {
             $adir = explode('/', $path);
             $dirlist = '';
             $rootdir = array_shift($adir);
-            if (($rootdir != '.' || $rootdir != '..') && !file_exists($rootdir)) {
-                    @mkdir($rootdir);
+        if (($rootdir != '.' || $rootdir != '..') && !file_exists($rootdir)) {
+                @mkdir($rootdir);
+        }
+        foreach ($adir as $key => $val) {
+            if ($val != '.' && $val != '..') {
+                    $dirlist .= "/" . $val;
+                    $dirpath = $rootdir . $dirlist;
+                if (!file_exists($dirpath)) {
+                    @mkdir($dirpath);
+                    @chmod($dirpath, 0777);
+                }
             }
-            foreach ($adir as $key => $val) {
-                    if ($val != '.' && $val != '..') {
-                            $dirlist .= "/" . $val;
-                            $dirpath = $rootdir . $dirlist;
-                            if (!file_exists($dirpath)) {
-                                    @mkdir($dirpath);
-                                    @chmod($dirpath, 0777);
-                            }
-                    }
-            }
+        }
     }
     //创建目录
     function create_folders($dir)
@@ -818,14 +856,15 @@ imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $white); //
      *
      * @param    string     $src    图片源
      */
-    function _flipV($src) {
+    function _flipV($src)
+    {
             $src_x = $this->getImgWidth($src);
             $src_y = $this->getImgHeight($src);
 
             $new_im = @imagecreatetruecolor($src_x, $src_y);
-            for ($y = 0; $y < $src_y; $y++) {
-                    imagecopy($new_im, $src, 0, $src_y - $y - 1, 0, $y, $src_x, 1);
-            }
+        for ($y = 0; $y < $src_y; $y++) {
+                imagecopy($new_im, $src, 0, $src_y - $y - 1, 0, $y, $src_x, 1);
+        }
             $this->h_src = $new_im;
     }
 
@@ -834,17 +873,17 @@ imagefilledrectangle($this->h_dst, 0, 0, $this->dst_w, $this->dst_h, $white); //
      *
      * @param    string     $src    图片源
      */
-    function _flipH($src) {
+    function _flipH($src)
+    {
             $src_x = $this->getImgWidth($src);
             $src_y = $this->getImgHeight($src);
 
             $new_im = @imagecreatetruecolor($src_x, $src_y);
-            for ($x = 0; $x < $src_x; $x++) {
-                    imagecopy($new_im, $src, $src_x - $x - 1, 0, $x, 0, 1, $src_y);
-            }
+        for ($x = 0; $x < $src_x; $x++) {
+                imagecopy($new_im, $src, $src_x - $x - 1, 0, $x, 0, 1, $src_y);
+        }
             $this->h_src = $new_im;
     }
-
 }
 
 /*
