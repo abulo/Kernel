@@ -69,7 +69,7 @@ class Message
      */
     const DISCONNECT = 0x0E;
 
-    static public $name = array(
+    public static $name = array(
         Message::CONNECT => 'CONNECT',
         Message::CONNACK => 'CONNACK',
         Message::PUBLISH => 'PUBLISH',

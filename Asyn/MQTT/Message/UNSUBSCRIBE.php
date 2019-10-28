@@ -54,7 +54,7 @@ class UNSUBSCRIBE extends Base
         return $buffer;
     }
 
-    protected function decodePayload(& $packet_data, & $payload_pos)
+    protected function decodePayload(&$packet_data, &$payload_pos)
     {
         $this->topics = $this->readUTF($packet_data);
     }

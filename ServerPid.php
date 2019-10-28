@@ -5,7 +5,7 @@ use Kernel\Utilities\Arr;
 
 abstract class ServerPid
 {
-    static protected $pidFileName;
+    protected static $pidFileName;
     /**
      * 初始化
      * @param $path

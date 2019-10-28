@@ -48,7 +48,7 @@ class SUBACK extends Base
      * @param int    & $payload_pos
      * @return void
      */
-    protected function decodePayload(& $packet_data, & $payload_pos)
+    protected function decodePayload(&$packet_data, &$payload_pos)
     {
         $return_code = array();
 

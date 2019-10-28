@@ -26,7 +26,7 @@ class Debug
      *
      * @var bool
      */
-    static protected $enabled = false;
+    protected static $enabled = false;
 
     /**
      * Enable Debug
@@ -49,7 +49,7 @@ class Debug
      *
      * @var int
      */
-    static protected $priority = self::WARN;
+    protected static $priority = self::WARN;
 
     /**
      * Log Priority

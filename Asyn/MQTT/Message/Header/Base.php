@@ -74,7 +74,7 @@ class Base
      * @param int    & $payload_pos
      * @throws \Kernel\Asyn\MQTT\Exception
      */
-    final public function decode(& $packet_data, $remaining_length, & $payload_pos)
+    final public function decode(&$packet_data, $remaining_length, &$payload_pos)
     {
         $cmd = Utility::ParseCommand(ord($packet_data[0]));
         $message_type = $cmd['message_type'];
@@ -117,7 +117,7 @@ class Base
      * @param int    & $pos
      * @return bool
      */
-    protected function decodeVariableHeader(& $packet_data, & $pos)
+    protected function decodeVariableHeader(&$packet_data, &$pos)
     {
         return true;
     }
@@ -229,7 +229,7 @@ class Base
         return pack('n', $this->msgid);
     }
 
-    final protected function decodePacketIdentifier(& $packet_data, & $pos)
+    final protected function decodePacketIdentifier(&$packet_data, &$pos)
     {
         $msgid = Utility::ExtractUShort($packet_data, $pos);
         $this->setMsgID($msgid);

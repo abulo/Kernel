@@ -35,7 +35,7 @@ class SUBSCRIBE extends Base
      * @return bool
      * @throws Exception
      */
-    protected function decodeVariableHeader(& $packet_data, & $pos)
+    protected function decodeVariableHeader(&$packet_data, &$pos)
     {
         return $this->decodePacketIdentifier($packet_data, $pos);
     }
