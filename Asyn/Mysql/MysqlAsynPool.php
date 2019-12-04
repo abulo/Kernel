@@ -132,7 +132,6 @@ class MysqlAsynPool implements IAsynPool
             if ($client->errno == 110) {
                 $mysqlCoroutine->onTimeOut();
             } else {
-
                 $data['result'] = [];
                 $data['affected_rows'] = 0;
                 $data['insert_id'] = 0;

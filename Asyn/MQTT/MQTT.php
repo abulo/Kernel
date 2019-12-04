@@ -615,7 +615,7 @@ class MQTT implements IMqtt
      * @param int $dup Optional, Default to 0
      * @return array|bool
      */
-    public function do_publish($topic, $message, $qos = 0, $retain = 0, & $msgid = 0, $dup = 0)
+    public function do_publish($topic, $message, $qos = 0, $retain = 0, &$msgid = 0, $dup = 0)
     {
         /**
          * @var PacketIdentifier[] $pis
@@ -916,7 +916,7 @@ class MQTT implements IMqtt
      * @return int
      * @throws Exception
      */
-    protected function message_write(Base $object, & $length = 0)
+    protected function message_write(Base $object, &$length = 0)
     {
         Debug::Log(Debug::DEBUG, 'Message write: message_type=' . Message::$name[$object->getMessageType()]);
         $length = 0;

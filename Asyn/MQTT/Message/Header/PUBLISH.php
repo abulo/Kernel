@@ -186,7 +186,7 @@ class PUBLISH extends Base
      * @param int    & $pos
      * @return bool
      */
-    protected function decodeVariableHeader(& $packet_data, & $pos)
+    protected function decodeVariableHeader(&$packet_data, &$pos)
     {
         $topic = Utility::UnpackStringWithLength($packet_data, $pos);
         $this->message->setTopic($topic);

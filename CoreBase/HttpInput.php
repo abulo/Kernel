@@ -94,8 +94,6 @@ class HttpInput
                 $str = str_replace($split_item, '', $str);
             }
             return $str;
-
-
         } else {
             return $this->request->get[$index]??$default;
         }

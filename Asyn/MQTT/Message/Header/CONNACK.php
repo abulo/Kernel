@@ -47,7 +47,7 @@ class CONNACK extends Base
      *
      * @var array
      */
-    static public $connect_errors = array(
+    public static $connect_errors = array(
         0   =>  'Connection Accepted',
         1   =>  'Connection Refused: unacceptable protocol version',
         2   =>  'Connection Refused: identifier rejected',
@@ -64,7 +64,7 @@ class CONNACK extends Base
      * @return bool
      * @throws Exception
      */
-    protected function decodeVariableHeader(& $packet_data, & $pos)
+    protected function decodeVariableHeader(&$packet_data, &$pos)
     {
         $this->session_present = ord($packet_data[2]) & 0x01;
 

@@ -55,7 +55,7 @@ class SUBSCRIBE extends Base
         return $buffer;
     }
 
-    protected function decodePayload(& $packet_data, & $payload_pos)
+    protected function decodePayload(&$packet_data, &$payload_pos)
     {
         while (isset($packet_data[$payload_pos])) {
             $topic = Utility::UnpackStringWithLength($packet_data, $payload_pos);

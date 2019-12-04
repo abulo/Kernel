@@ -23,8 +23,8 @@ class Crypt3Des
     {
 
 
-        $data= openssl_encrypt($input, 'des-ede3-cbc', $this->key, 0, $this->iv);
-        return $data;
+        // $data= openssl_encrypt($input, 'des-ede3-cbc', $this->key, 0, $this->iv);
+        // return $data;
 
         $text = $input;
         $key = $this->key;

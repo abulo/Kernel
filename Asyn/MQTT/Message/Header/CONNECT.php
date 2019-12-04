@@ -168,7 +168,7 @@ class CONNECT extends Base
      * @return bool
      * @throws Exception
      */
-    protected function decodeVariableHeader(& $packet_data, & $pos)
+    protected function decodeVariableHeader(&$packet_data, &$pos)
     {
         Debug::Log(Debug::DEBUG, "CONNECT", $packet_data);
         $pos++;

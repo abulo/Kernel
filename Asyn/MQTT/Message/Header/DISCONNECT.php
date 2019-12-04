@@ -35,7 +35,7 @@ class DISCONNECT extends Base
      * @return bool
      * @throws Exception
      */
-    protected function decodeVariableHeader(& $packet_data, & $pos)
+    protected function decodeVariableHeader(&$packet_data, &$pos)
     {
         return;
     }

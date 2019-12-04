@@ -137,7 +137,7 @@ class CONNECT extends Base
         $this->password = $password;
     }
 
-    protected function decodePayload(& $packet_data, & $payload_pos)
+    protected function decodePayload(&$packet_data, &$payload_pos)
     {
         $message = substr($packet_data, $payload_pos);
         $messages = $this->readUTF($message);

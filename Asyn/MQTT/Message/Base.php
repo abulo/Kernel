@@ -85,7 +85,7 @@ abstract class Base
         return $this->decodePayload($packet_data, $payload_pos);
     }
 
-    protected function decodePayload(& $packet_data, & $payload_pos)
+    protected function decodePayload(&$packet_data, &$payload_pos)
     {
         return true;
     }

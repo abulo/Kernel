@@ -37,7 +37,7 @@ class SUBACK extends Base
      * @param int    & $pos
      * @return bool
      */
-    protected function decodeVariableHeader(& $packet_data, & $pos)
+    protected function decodeVariableHeader(&$packet_data, &$pos)
     {
         return $this->decodePacketIdentifier($packet_data, $pos);
     }
