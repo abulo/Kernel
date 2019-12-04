@@ -103,3 +103,6 @@
 [submodule "Library/PHPOffice/PhpSpreadsheet"]
 	path = Library/PHPOffice/PhpSpreadsheet
 	url = https://github.com/PHPOffice/PhpSpreadsheet.git
+[submodule "Library/miladrahimi/php-jwt"]
+	path = Library/miladrahimi/php-jwt
+	url = https://github.com/miladrahimi/php-jwt.git

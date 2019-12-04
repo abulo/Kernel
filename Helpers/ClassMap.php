@@ -47,6 +47,8 @@ return [
 
         'PhpOffice\PhpSpreadsheet'=> dirname(__DIR__).DS.'Library'.DS.'PHPOffice'.DS.'PhpSpreadsheet'.DS.'src'.DS.'PhpSpreadsheet',
 
+        'MiladRahimi\Jwt' => dirname(__DIR__).DS.'Library'.DS.'miladrahimi'.DS.'php-jwt'.DS.'src',
+
         'Kernel'=>dirname(__DIR__),
     ],
     'files' => [
